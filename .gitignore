@@ -393,3 +393,5 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/jetbrains,python,jupyternotebooks,pycharm,visualstudiocode
 
+.DS_Store
+
