@@ -16,5 +16,8 @@ class NSGA2:
         population_size = population.size
         population_objectives = population.num_objectives
 
-        # Initialize the front number to 0
+        S = set()
+        n_p = 0
+        for i in range(population_size):
+            ...
 
