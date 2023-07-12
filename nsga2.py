@@ -1,22 +1,40 @@
 from utils import *
 from population import Population
+from member import Member
 
 
 class NSGA2:
-    def __init__(self, population: Population, num_generations: int, num_sort: int, crossover_rate: float):
-        self.population = population
+    def __init__(self, population_size: int, num_variables: int, num_objectives: int, num_generations: int,
+                 num_sort: int, crossover_rate: float):
+        self.population = self.init_population(population_size, num_objectives, num_variables)
+        self.num_variables = num_variables
+        self.num_objectives = num_objectives
         self.num_generations = num_generations
         self.num_sort = num_sort
         self.crossover_rate = crossover_rate
 
-    def fast_non_dominated_sort(self, num_sort: int):
+    def init_population(self, population_size: int, num_objectives: int, num_variables: int) -> Population:
+        """
+        Initialize the population
+        :param population_size: The size of the population
+        :param num_objectives: The number of objectives
+        :param num_variables: The number of variables
+        :return: The initialized population
+        """
+        population = Population([])
+        for i in range(population_size):
+            chromosome = np.random.rand(num_variables)
+            objectives = np.random.rand(num_objectives)
+            population.append(Member(objectives, chromosome))
+        return population
+
+    def fast_non_dominated_sort(self) -> list[set]:
         """
         Fast Non-Dominated Sorting
         :param num_sort: Number of sorts
-        :return:
+        :return: A list of fronts
         """
         population_size = self.population.size
-        population_objectives = self.population.num_objectives
 
         dominated_solutions = {x.name: set() for x in self.population}
         domination_count = {x.name: 0 for x in self.population}
@@ -45,3 +63,31 @@ class NSGA2:
             front.append(next_front)
 
         return front[:-1]
+
+    def compute_crowding_distance(self, front: set[Member]) -> None:
+        """
+        Compute the crowding distance for a front
+        :param front: The front to compute the crowding distance for
+        :return: The front with the crowding distance computed
+        """
+
+        n = len(front)
+        if n == 0:
+            return
+
+        for member in front:
+            member.crowding_distance = 0.0
+
+        front = list(front)
+
+        for m in range(self.num_objectives):
+            front = sorted(front, key=lambda x: x.objectives[m])
+            front[0].crowding_distance = float('inf')
+            front[n].crowding_distance = float('inf')
+
+            scale = front[n - 1].objectives[m] - front[0].objectives[m]
+            for i in range(1, n - 1):
+                front[i].crowding_distance += (front[i + 1].objectives[m] - front[i - 1].objectives[m]) / scale
+
+    def crossover(self, parent1: Member, parent2: Member) -> (Member, Member):
+        ...

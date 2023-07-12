@@ -1,4 +1,4 @@
-from utils import np
+import numpy as np
 from member import Member
 
 
@@ -16,8 +16,21 @@ class Population(object):
     def num_objectives(self) -> int:
         return self.shape[1]
 
+    def append(self, member: Member):
+        self.population.append(member)
+
     def __getitem__(self, item):
         return self.population[item]
 
     def __setitem__(self, key, value):
         self.population[key] = value
+
+    def __repr__(self):
+        representation = "*****\n"
+        for member in self.population:
+            representation += f"-->\n{member}\n"
+        representation += "*****"
+        return representation
+
+    def __str__(self):
+        return self.__repr__()
