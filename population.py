@@ -25,6 +25,11 @@ class Population(object):
     def __setitem__(self, key, value):
         self.population[key] = value
 
+    def __add__(self, other):
+        if isinstance(other, Population):
+            return Population(self.population + other.population)
+        return Population(self.population + other)
+
     def __repr__(self):
         representation = "*****\n"
         for member in self.population:

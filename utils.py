@@ -36,19 +36,20 @@ def sort_front_by_value(front: set) -> Population:
 
 if __name__ == "__main__":
     # create a population of 10 members with 5 objectives
-    population = Population([])
-    for i in range(10):
-        objectives = np.random.rand(5)
-        population.append(Member(objectives))
-
-    print("========================")
-    print("Unsorted population:")
-    print(population)
-    print("========================\n\n")
-
-    # sort the population
-    sorted_population = sort_population_by_value(population)
-    print("========================")
-    print("Sorted population:")
-    print(sorted_population)
-    print("========================\n\n")
+    # population = Population([])
+    # for _ in range(10):
+    #     objectives = np.random.rand(5)
+    #     population.append(Member(objectives))
+    #
+    # print("========================")
+    # print("Unsorted population:")
+    # print(population)
+    # print("========================\n\n")
+    #
+    # # sort the population
+    # sorted_population = sort_population_by_value(population)
+    # print("========================")
+    # print("Sorted population:")
+    # print(sorted_population)
+    # print("========================\n\n")
+    pass
