@@ -8,16 +8,17 @@ from member import Member
 
 class NSGA2:
     def __init__(self, population_size: int, num_objectives: int, objectives: list[Callable], lower_bounds: np.array,
-                 upper_bounds: np.array, num_generations: int, num_sort: int, eta_crossover: float = 1.0,
+                 upper_bounds: np.array, num_generations: int, tournament_size: int = 2, eta_crossover: float = 1.0,
                  eta_mutation: float = 1.0, crossover_probability: float = 0.9):
         self.population_size = population_size
         self.num_objectives = num_objectives
         self.objectives = objectives
         self.lower_bounds = lower_bounds
         self.upper_bounds = upper_bounds
-        self.population = self.init_population()
+        self.population: Population = self.init_population()
+        self.offsprings: Population = Population([])
         self.num_generations = num_generations
-        self.num_sort = num_sort
+        self.tournament_size = tournament_size
         self.eta_crossover = eta_crossover
         self.eta_mutation = eta_mutation
         self.crossover_probability = crossover_probability
@@ -50,27 +51,28 @@ class NSGA2:
             population.append(self.create_member())
         return population
 
-    def fast_non_dominated_sort(self) -> list[list]:
+    @classmethod
+    def fast_non_dominated_sort(cls, population: Population) -> list[list]:
         """
         Fast Non-Dominated Sorting
         :return: A list of fronts
         """
-        population_size = self.population.size
+        population_size = population.size
 
-        dominated_solutions = {x.name: set() for x in self.population}
-        domination_count = {x.name: 0 for x in self.population}
+        dominated_solutions = {x.name: set() for x in population}
+        domination_count = {x.name: 0 for x in population}
         front = [set()]
         for i in range(population_size):
             for j in range(population_size):
                 if i == j:
                     continue
-                if self.population[i].dominates(self.population[j]):
-                    dominated_solutions[self.population[i].name].add(self.population[j])
-                elif self.population[j].dominates(self.population[i]):
+                if population[i].dominates(population[j]):
+                    dominated_solutions[population[i].name].add(population[j])
+                elif population[j].dominates(population[i]):
                     domination_count[i] += 1
             if domination_count[i] == 0:
-                self.population[i].rank = 1
-                front[0].add(self.population[i])
+                population[i].rank = 1
+                front[0].add(population[i])
         i = 0
         while front[i]:
             next_front = set()
@@ -87,10 +89,12 @@ class NSGA2:
 
         return front
 
-    def compute_crowding_distance(self, front: list[Member]) -> None:
+    @classmethod
+    def compute_crowding_distance(cls, front: list[Member], num_objectives: int) -> None:
         """
         Compute the crowding distance for a front
         :param front: The front to compute the crowding distance for
+        :param num_objectives: the number of objectives for member of fronts
         :return: The front with the crowding distance computed
         """
 
@@ -101,7 +105,7 @@ class NSGA2:
         for member in front:
             member.crowding_distance = 0.0
 
-        for m in range(self.num_objectives):
+        for m in range(num_objectives):
             front = sorted(front, key=lambda x: x.objective_values[m])
             front[0].crowding_distance = float('inf')
             front[n].crowding_distance = float('inf')
@@ -152,21 +156,50 @@ class NSGA2:
         child2.chromosome = x_1 - beta * x_2
         return self.mutate(child1), self.mutate(child2)
 
-    def make_new_population(self, population: Population) -> Population:
-        ...
+    def make_new_population(self) -> Population:
+        offsprings = Population([])
+        while offsprings.size < self.population_size:
+            parent1, parent2 = np.random.choice(self.population.population, 2, replace=False)
+            while parent1 == parent2:
+                parent1, parent2 = np.random.choice(self.population.population, 2, replace=False)
+            child1, child2 = self.crossover(parent1, parent2)
+            offsprings += [child1, child2]
+        return offsprings
 
-    def run(self):
-        # TODO: compute Q
-        Q = []
-        self.population = self.population + Q
-        # compute R_t based on the population and offsprings
-        fronts = self.fast_non_dominated_sort()
+    def run_generation(self) -> None:
+        """
+        Run the algorithm for one generation
+        """
+        R = self.population + self.offsprings
+        fronts = self.fast_non_dominated_sort(R)
         next_population = Population([])
         i = 0
         while next_population.size + len(fronts[i]) <= self.population_size:
-            self.compute_crowding_distance(fronts[i])
+            self.compute_crowding_distance(fronts[i], self.num_objectives)
             next_population += fronts[i]
             i += 1
         fronts[i] = sorted(fronts[i], reverse=True)
         next_population += fronts[i][:self.population_size - next_population.size]
-        Q = self.make_new_population(next_population)
+        self.population = next_population
+        self.offsprings = self.make_new_population()
+
+    def run(self, num_generations: int) -> None:
+        """
+        Run the algorithm for a given number of generations
+        :param num_generations: The number of generations to run the algorithm for
+        """
+        for i in range(num_generations):
+            self.run_generation()
+            print(f'Generation {i + 1} done')
+
+    def evaluate_distance_metric(self):
+        """
+        Evaluate the distance of the solutions in the population to the actual Pareto front
+        """
+        ...
+
+    def evaluate_diversity_metric(self):
+        """
+        Evaluate the diversity of the solutions in the population
+        """
+        ...
