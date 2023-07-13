@@ -1,6 +1,8 @@
 import numpy as np
 from population import Population
 from member import Member
+import argparse as ap
+import os
 
 
 def index_of(a: list, value):
@@ -34,22 +36,18 @@ def sort_front_by_value(front: set) -> Population:
     return sort_population_by_value(front_population)
 
 
-if __name__ == "__main__":
-    # create a population of 10 members with 5 objectives
-    # population = Population([])
-    # for _ in range(10):
-    #     objectives = np.random.rand(5)
-    #     population.append(Member(objectives))
-    #
-    # print("========================")
-    # print("Unsorted population:")
-    # print(population)
-    # print("========================\n\n")
-    #
-    # # sort the population
-    # sorted_population = sort_population_by_value(population)
-    # print("========================")
-    # print("Sorted population:")
-    # print(sorted_population)
-    # print("========================\n\n")
-    pass
+def create_parser():
+    """
+    Create the parser for the command line arguments to create a new NSGA2 instance
+    """
+    args = ap.ArgumentParser()
+    args.add_argument("--population-size", type=int, default=100, help="The size of the population")
+    args.add_argument("--num-variables", type=int, default=2, help="The number of variables")
+    args.add_argument("--num-objectives", type=int, default=2, help="The number of objectives")
+    args.add_argument("--num-generations", type=int, default=100, help="The number of generations")
+    args.add_argument("--tournament-size", type=int, default=2, help="The tournament size")
+    args.add_argument("--eta-crossover", type=float, default=1.0, help="The eta crossover")
+    args.add_argument("--eta-mutation", type=float, default=1.0, help="The eta mutation")
+    args.add_argument("--crossover-probability", type=float, default=0.9, help="The crossover probability")
+    args.add_argument("--output-dir", type=str, default="output", help="The output directory")
+    return args.parse_args()

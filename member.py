@@ -1,4 +1,5 @@
 import numpy as np
+import uuid
 
 ID = 0
 
@@ -24,6 +25,7 @@ class Member(object):
         self.chromosome: np.array = chromosome
         self.rank: int = 0
         self.crowding_distance: float = 0.0
+        self.uuid = uuid.uuid4()
 
     def dominates(self, other):
         """
@@ -41,7 +43,19 @@ class Member(object):
         return self.rank == other.rank and self.crowding_distance == other.crowding_distance
 
     def __repr__(self):
-        return f"{self.name},\n{self.objective_values},\n{self.chromosome},\n{self.rank}, {self.crowding_distance}"
+        return f"{self.name},\nObjectives:{self.objective_values},\nChromosomes: {self.chromosome}," \
+               f"\nRank: {self.rank}, Crowding Distance: {self.crowding_distance}"
 
     def __str__(self):
         return self.__repr__()
+
+    def __hash__(self):
+        return hash(self.uuid)
+
+    def reset(self):
+        """
+        Reset the member
+        :return: None
+        """
+        self.rank = 0
+        self.crowding_distance = 0.0

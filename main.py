@@ -1,16 +1,27 @@
-# This is a sample Python script.
-
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+from nsga2 import NSGA2
+from utils import *
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+def main():
+    args = create_parser()
+
+    # create a new NSGA2 instance
+    # create two objectives
+    obj1 = lambda x: x[0] ** 2
+    obj2 = lambda x: (x[0] - 2) ** 2
+    objectives = [obj1, obj2]
+    nsga2 = NSGA2(args.population_size, args.num_variables, args.num_objectives, objectives,
+                  num_generations=args.num_generations, tournament_size=args.tournament_size,
+                  eta_crossover=args.eta_crossover, eta_mutation=args.eta_mutation,
+                  crossover_probability=args.crossover_probability)
+
+    print("initial population size: ", nsga2.population.size)
+
+    # run the algorithm
+    nsga2.run()
+
+    # print(nsga2.population)
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+if __name__ == "__main__":
+    main()
