@@ -1,15 +1,3 @@
-import numpy as np
-import uuid
-
-ID = 0
-
-
-def get_id():
-    global ID
-    ID += 1
-    return ID
-
-
 class Member(object):
     """
     Member class to represent a member of the population.
@@ -18,14 +6,12 @@ class Member(object):
         - objectives: The objective functions of the member
     """
 
-    def __init__(self, objective_values: np.array, chromosome: np.array = np.array([]), name: str = ""):
-        temp_name = get_id()
-        self.name = name if name != "" else f"Member {temp_name}"
-        self.objective_values: np.array = objective_values
-        self.chromosome: np.array = chromosome
+    def __init__(self, chromosome: list[float], objective_values: list[float]):
+        self.chromosome = chromosome
+        self.objective_values = objective_values
+        self.dominated_by_count: int = 0
         self.rank: int = 0
         self.crowding_distance: float = 0.0
-        self.uuid = uuid.uuid4()
 
     def dominates(self, other):
         """
@@ -33,24 +19,9 @@ class Member(object):
         :param other: The other member
         :return: True if this member dominates the other, False otherwise
         """
-        return np.all(self.objective_values <= other.objective_values) and np.any(
-            self.objective_values < other.objective_values)
-
-    def __lt__(self, other):
-        return self.rank > other.rank or (self.rank == other.rank and self.crowding_distance < other.crowding_distance)
-
-    def __eq__(self, other):
-        return self.rank == other.rank and self.crowding_distance == other.crowding_distance
-
-    def __repr__(self):
-        return f"{self.name},\nObjectives:{self.objective_values},\nChromosomes: {self.chromosome}," \
-               f"\nRank: {self.rank}, Crowding Distance: {self.crowding_distance}"
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __hash__(self):
-        return hash(self.uuid)
+        comp1 = [x <= y for x, y in zip(self.objective_values, other.objective_values)]
+        comp2 = [x < y for x, y in zip(self.objective_values, other.objective_values)]
+        return all(comp1) and any(comp2)
 
     def reset(self):
         """
@@ -59,3 +30,30 @@ class Member(object):
         """
         self.rank = 0
         self.crowding_distance = 0.0
+
+    def copy(self):
+        """
+        Copy the member
+        :return: The copied member
+        """
+        return Member(self.chromosome.copy(), self.objective_values.copy())
+
+    def __gt__(self, other):
+        if self.rank < other.rank:
+            return True
+        if self.rank == other.rank:
+            return self.crowding_distance > other.crowding_distance
+        return False
+
+    def __eq__(self, other):
+        return self.rank == other.rank and self.crowding_distance == other.crowding_distance
+
+    def __repr__(self):
+        return f"\nObjectives:{self.objective_values},\nChromosomes: {self.chromosome}," \
+               f"\nRank: {self.rank}, Crowding Distance: {self.crowding_distance}"
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __hash__(self):
+        return hash(str(self.objective_values)) + hash(str(self.chromosome))

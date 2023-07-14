@@ -15,7 +15,7 @@ def main():
                   eta_crossover=args.eta_crossover, eta_mutation=args.eta_mutation,
                   crossover_probability=args.crossover_probability)
 
-    print("initial population size: ", nsga2.population.size)
+    print("initial population size: ", len(nsga2.population))
 
     # run the algorithm
     nsga2.run()

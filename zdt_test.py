@@ -1,30 +1,49 @@
 from pymoo.problems import get_problem
-from pymoo.util.plotting import plot
+from moop import MOOP
 
-from utils import create_parser, np
+import matplotlib.pyplot as plt
+from utils import *
 from nsga2 import NSGA2
+import math
 
 
 def main():
-    zdts = ["ZDT1", "ZDT2", "ZDT3", "ZDT4", "ZDT6"]
-
-    problem = get_problem(zdts[2])
-    plot(problem.pareto_front(), no_fill=True, show=True)
-
-    # get objective functions and bounds
-    obj1 = problem.pareto_front()[:, 0]
-    obj2 = problem.pareto_front()[:, 1]
+    problem = get_problem("zdt3")
     lower_bound = problem.xl
     upper_bound = problem.xu
 
     # create a new NSGA2 instance
     # create two objectives
     f1 = lambda x: x[0]
-    g = lambda x: 1 + 9 * sum(x[1:]) / (x.shape[0] - 1)
-    f2 = lambda x: g(x) * (1 - np.sqrt(x[0] / g(x)))
-
+    g = lambda x: 1 + 9 * sum(x[1:]) / (len(x) - 1)
+    # f2 = lambda x: g(x) * (1 - np.sqrt(x[0] / g(x)))
+    # f2 = lambda x: g(x) * (1 - (x[0] / g(x)) ** 2)
+    f2 = lambda x: g(x) * (1 - math.sqrt(x[0] / g(x)) - (x[0] / g(x)) * math.sin(10 * math.pi * x[0]))
     objectives = [f1, f2]
 
-    nsga2 = NSGA2(50, problem.n_var, problem.n_obj, objectives, num_generations=20, tournament_size=2,
-                  eta_crossover=1.0, eta_mutation=1.0, crossover_probability=0.9, lower_bounds=lower_bound,
-                  upper_bounds=upper_bound)
+    moop = MOOP(problem.n_var, objectives, problem.pareto_front(), lower_bound, upper_bound)
+
+    nsga2 = NSGA2(moop, 100, 500, 0.9, 20, 20)
+
+    # run the algorithm
+    nsga2.run()
+
+    front = np.array(nsga2.fast_non_dominated_sort(nsga2.population)[0])
+    front = np.array([member.objective_values for member in front])
+
+    # plot the results and save the figure
+    plt.scatter(problem.pareto_front()[:, 0], problem.pareto_front()[:, 1], color="red", label="Pareto Front")
+    plt.scatter(front[:, 0], front[:, 1], color="blue", label="NSGA-II")
+
+    plt.xlabel("$f_1(x)$")
+    plt.ylabel("$f_2(x)$")
+    plt.title("ZDT3")
+    plt.legend()
+    plt.savefig("zdt3.png")
+
+    # create a GIF from the images in the images directory
+    create_gif("images", "zdt3.gif")
+
+
+if __name__ == "__main__":
+    main()

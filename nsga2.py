@@ -1,57 +1,51 @@
-from utils import *
 import random
-from typing import Callable
-from population import Population
+from moop import MOOP
 from member import Member
+from population import Population
+import matplotlib.pyplot as plt
+from utils import np
 
 
 class NSGA2:
-    def __init__(self, population_size: int, num_variables: int, num_objectives: int, objectives: list[Callable],
-                 lower_bounds: np.array = None, upper_bounds: np.array = None, num_generations: int = 250,
-                 tournament_size: int = 2, eta_crossover: float = 1.0, eta_mutation: float = 1.0,
-                 crossover_probability: float = 0.9):
+    def __init__(self, moop: MOOP, num_generation: int, population_size: int, crossover_probability: float = 0.9,
+                 tournament_size: int = 2, eta_crossover: float = 1.0, eta_mutation: float = 1.0):
+        self.moop = moop
+        self.num_generation = num_generation
         self.population_size = population_size
-        self.num_variables = num_variables
-        self.num_objectives = num_objectives
-        self.objectives = objectives
-        self.lower_bounds = lower_bounds if lower_bounds is not None else - np.ones(num_variables)
-        self.upper_bounds = upper_bounds if upper_bounds is not None else np.ones(num_variables)
-        self.population: Population = self.init_population()
-        self.offsprings: Population = Population([])
-        self.num_generations = num_generations
+        self.population = self.init_population()
+        self.offsprings: Population = Population()
+        self.crossover_probability = crossover_probability
+        self.mutation_probability = 1 / (moop.num_objectives + 5)
         self.tournament_size = tournament_size
         self.eta_crossover = eta_crossover
         self.eta_mutation = eta_mutation
-        self.crossover_probability = crossover_probability
-        self.mutation_probability = 1.0 / self.num_objectives
 
     def create_member(self) -> Member:
         """
         Create a member of the population
         :return: The created member
         """
+        chromosome = self.moop.generate_chromosome()
+        objective_values = self.moop.evaluate(chromosome)
+        return Member(chromosome, objective_values)
 
-        # create a random chromosome in the range self.lower_bounds to self.upper_bounds which are vectors
-        chromosome = self.lower_bounds + (self.upper_bounds - self.lower_bounds) * np.random.rand(self.num_variables)
-        objective_values = np.array([objective(chromosome) for objective in self.objectives])
-        return Member(objective_values, chromosome)
-
-    def compute_objectives(self, member: Member) -> None:
+    def evaluate_population(self, population: Population = None) -> None:
         """
-        Compute the objectives of the member
-        :param member: The member to compute the objectives for
+        Evaluate the population
+        :param population: The population to evaluate
         :return: None
         """
-
-        member.objective_values = np.array([objective(member.chromosome) for objective in self.objectives])
+        if population is None:
+            population = self.population
+        for member in population:
+            member.objective_values = self.moop.evaluate(member.chromosome)
 
     def init_population(self) -> Population:
         """
         Initialize the population
         :return: The initialized population
         """
-
-        population = Population([])
+        population = Population()
         for i in range(self.population_size):
             population.append(self.create_member())
         return population
@@ -60,45 +54,45 @@ class NSGA2:
     def fast_non_dominated_sort(cls, population: Population) -> list[list]:
         """
         Fast Non-Dominated Sorting
+        :param population: The population to sort
         :return: A list of fronts
         """
 
-        # population.reset()
-        # print("population size: ", population.size)
-        # counter = 0
-
-        dominated_solutions = {x.name: set() for x in population}
-        domination_count = {x.name: 0 for x in population}
-        front = [set()]
+        dominated_members = {member: [] for member in population}
+        fronts = [[]]
         for p in population:
             for q in population:
-                if p.name == q.name:
-                    continue
                 if p.dominates(q):
-                    dominated_solutions[p.name].add(q)
-                elif q.dominates(p):
-                    domination_count[p.name] += 1
-            if domination_count[p.name] == 0:
-                p.rank = 1
-                front[0].add(p)
-                # counter += 1
-        # print(domination_count)
-        i = 1
-        while front[-1]:
-            next_front = set()
-            for p in front[-1]:
-                for q in dominated_solutions[p.name]:
-                    domination_count[q.name] -= 1
-                    if domination_count[q.name] == 0 and q.rank == 0:
-                        q.rank = i + 1
-                        next_front.add(q)
-                        # counter += 1
-            i += 1
-            front.append(next_front)
+                    dominated_members[p].append(q)
+                    q.dominated_by_count += 1
 
-        front = [list(x) for x in front]
-        # print("counter: ", counter)
-        return front
+        for p in population:
+            if p.dominated_by_count == 0:
+                p.rank = 1
+                fronts[0].append(p)
+
+        i = 1
+        while fronts[-1]:
+            next_front = []
+            for p in fronts[-1]:
+                for q in dominated_members[p]:
+                    q.dominated_by_count -= 1
+                    if q.dominated_by_count == 0:
+                        q.rank = i + 1
+                        next_front.append(q)
+            i += 1
+            fronts.append(next_front)
+
+        return fronts
+
+    @classmethod
+    def normalize_values(cls, values: list[float]):
+        v_max = max(values)
+        v_min = min(values)
+        scale = v_max - v_min
+        if abs(scale) < 1e-10 or scale == float('inf'):
+            return [0 for _ in values]
+        return [(v - v_min) / scale for v in values]
 
     @classmethod
     def compute_crowding_distance(cls, front: list[Member], num_objectives: int) -> None:
@@ -114,17 +108,15 @@ class NSGA2:
             return
 
         for member in front:
-            member.crowding_distance = 0.0
+            member.crowding_distance = 0
 
         for m in range(num_objectives):
-            front = sorted(front, key=lambda x: x.objective_values[m])
+            front.sort(key=lambda x: x.objective_values[m])
             front[0].crowding_distance = float('inf')
             front[-1].crowding_distance = float('inf')
-
-            scale = front[-1].objective_values[m] - front[0].objective_values[m]
+            norm_values = cls.normalize_values([member.objective_values[m] for member in front])
             for i in range(1, n - 1):
-                front[i].crowding_distance += (front[i + 1].objective_values[m] - front[i - 1].objective_values[
-                    m]) / scale
+                front[i].crowding_distance += norm_values[i + 1] - norm_values[i - 1]
 
     def mutate(self, member: Member) -> Member:
         """
@@ -132,19 +124,13 @@ class NSGA2:
         :param member: The member to mutate
         :return: The mutated member
         """
-
-        if np.random.rand() > self.mutation_probability:
-            return member
-        mu = np.random.rand(self.num_variables)
-        delta = np.zeros(self.num_variables)
-        delta[mu <= 0.5] = np.power(2 * mu[mu <= 0.5], 1.0 / (self.eta_mutation + 1)) - 1
-        delta[mu > 0.5] = 1 - np.power(2 * (1 - mu[mu > 0.5]), 1.0 / (self.eta_mutation + 1))
-        # print(delta, mu, member.chromosome, self.lower_bounds, self.upper_bounds)
-        member.chromosome[mu <= 0.5] += delta[mu <= 0.5] * (member.chromosome[mu <= 0.5] - self.lower_bounds[mu <= 0.5])
-        member.chromosome[mu > 0.5] += delta[mu > 0.5] * (self.upper_bounds[mu > 0.5] - member.chromosome[mu > 0.5])
-
-        member.chromosome = np.clip(member.chromosome, self.lower_bounds, self.upper_bounds)
-
+        for i in range(self.moop.num_variables):
+            if random.random() < self.mutation_probability:
+                member.chromosome[i] += random.uniform(-0.1 * self.eta_mutation, 0.1 * self.eta_mutation)
+            if member.chromosome[i] < self.moop.lower_bounds[i]:
+                member.chromosome[i] = self.moop.lower_bounds[i]
+            elif member.chromosome[i] > self.moop.upper_bounds[i]:
+                member.chromosome[i] = self.moop.upper_bounds[i]
         return member
 
     def crossover(self, parent1: Member, parent2: Member) -> tuple[Member, Member]:
@@ -155,36 +141,35 @@ class NSGA2:
         :return: The two children
         """
 
-        if np.random.rand() > self.crossover_probability:
+        if random.random() > self.crossover_probability:
             return parent1, parent2
 
-        child1: Member = self.create_member()
-        child2 = self.create_member()
-        mu = np.random.rand(self.num_variables)
-        beta = np.zeros(self.num_variables)
-        beta[mu <= 0.5] = np.power(2 * mu[mu <= 0.5], 1.0 / (self.eta_crossover + 1))
-        beta[mu > 0.5] = np.power(1.0 / (2 * (1 - mu[mu > 0.5])), -1.0 / (self.eta_crossover + 1))
-        x_1 = (parent1.chromosome + parent2.chromosome) / 2
-        x_2 = np.abs((parent1.chromosome - parent2.chromosome) / 2)
-        child1.chromosome = x_1 + beta * x_2
-        child2.chromosome = x_1 - beta * x_2
-        return self.mutate(child1), self.mutate(child2)
+        crossover_point = random.randint(0, self.moop.num_variables - 1)
+        child1 = parent1.copy()
+        child2 = parent2.copy()
+
+        child1.chromosome[crossover_point:] = parent2.chromosome[crossover_point:]
+        child2.chromosome[crossover_point:] = parent1.chromosome[crossover_point:]
+
+        return child1, child2
 
     def tournament(self):
-        participants = random.sample(self.population.population, self.tournament_size)
-        best = participants[0]
-        for p in participants:
-            if p > best:
-                best = p
-        return best
+        member1: Member = random.choice(self.population.population)
+        member2: Member = random.choice(self.population.population)
+        if member1 > member2:
+            return member1
+        return member2
 
+    # def make_new_population(self) -> Population:
     def make_new_population(self) -> Population:
-        offsprings = Population([])
+        # offsprings = Population([])
+        offsprings = Population()
+        # while offsprings.size < self.population_size:
         while offsprings.size < self.population_size:
             parent1, parent2 = self.tournament(), self.tournament()
-            while parent1.name == parent2.name:
-                parent2 = self.tournament()
             child1, child2 = self.crossover(parent1, parent2)
+            child1 = self.mutate(child1)
+            child2 = self.mutate(child2)
             offsprings += [child1, child2]
         return offsprings
 
@@ -193,46 +178,104 @@ class NSGA2:
         Run the algorithm for one generation
         """
 
-        R = self.population + self.offsprings
-        # print(R.size)
-        front = self.fast_non_dominated_sort(R)
-        next_population = Population([])
-        i = 0
-        # print(fronts)
-        # print("front size: ", sum(len(x) for x in front))
-        while i < len(front) and next_population.size + len(front[i]) <= self.population_size:
-            self.compute_crowding_distance(front[i], self.num_objectives)
-            # print(front)
-            next_population += front[i]
-            # print(next_population.size)
-            i += 1
-        if i < len(front) and next_population.size < self.population_size:
-            front[i] = sorted(front[i], reverse=True)
-            next_population += front[i][:self.population_size - next_population.size]
-        self.population = next_population
         self.offsprings = self.make_new_population()
+        self.evaluate_population(self.offsprings)
+
+        r = self.population + self.offsprings
+        fronts = self.fast_non_dominated_sort(r)
+        for front in fronts:
+            self.compute_crowding_distance(front, self.moop.num_objectives)
+
+        next_population = Population()
+
+        i = 0
+        while i < len(fronts) and next_population.size < self.population_size:
+            front = fronts[i]
+            front = sorted(front, key=lambda x: x.crowding_distance, reverse=True)
+            if next_population.size + len(front) <= self.population_size:
+                next_population += front
+            else:
+                next_population += front[:self.population_size - next_population.size]
+            i += 1
+
+        self.population = next_population
 
     def run(self) -> None:
         """
         Run the algorithm for a given number of generations
-        :param num_generations: The number of generations to run the algorithm for
         """
-
-        self.fast_non_dominated_sort(self.population)
-        self.offsprings = self.make_new_population()
-        for i in range(self.num_generations):
+        self.plot_population_frame(0, f'images/generation_{0}.png')
+        fronts = self.fast_non_dominated_sort(self.population)
+        for front in fronts:
+            self.compute_crowding_distance(front, self.moop.num_objectives)
+        for i in range(self.num_generation):
             self.run_generation()
-            # print(self.population)
             print(f'Generation {i + 1} done')
+            # create a gif of the evolution of the population
+            self.plot_population_frame(i + 1, f'images/generation_{i + 1}.png')
 
-    def evaluate_distance_metric(self, pareto_front: np.array):
+    def plot_population_frame(self, generation, filename: str) -> None:
+        """
+        Plot the population and save the plot to a file as a frame for a gif
+        :param generation: The generation number
+        :param filename: The name of the file to save the plot to
+        """
+        fig = plt.figure(figsize=(6, 6))
+
+        objective_values = np.array([member.objective_values for member in self.population])
+
+        # plot the Pareto front
+        plt.scatter(self.moop.pareto_front[:, 0], self.moop.pareto_front[:, 1], color='red', s=10)
+
+        # plot the population
+        plt.scatter(objective_values[:, 0], objective_values[:, 1], color='blue', s=10, alpha=0.7)
+
+        # plt.xlim(-0.1, 1)
+        # plt.ylim(-1, 2)
+        plt.xlabel('Objective 1')
+        plt.ylabel('Objective 2')
+        plt.title(f'Generation {generation}')
+        plt.savefig(filename)
+        plt.close(fig)
+
+        # def evaluate_distance_metric(self, pareto_front: np.array):
         """
         Evaluate the distance of the solutions in the population to the actual Pareto front
         """
 
+        # compute the distance of each solution to the closest solution in the Pareto front
+        # distances = np.zeros(self.population.size)
+        # distances = np.zeros(len(self.population))
+        # for i in range(len(self.population)):
+        #     distances[i] = np.min(np.linalg.norm(self.population[i].objective_values - pareto_front, axis=1))
+        #
+        # # return the average distance and the standard deviation
+        # return np.mean(distances), np.std(distances)
 
-    def evaluate_diversity_metric(self):
+        # def evaluate_diversity_metric(self, front: np.array, pareto_front: np.array):
         """
         Evaluate the diversity of the solutions in the population
         """
-        ...
+
+        # compute the distance consecutive solutions in the front
+
+        # get objective values of the solutions in the front
+        # sort the front by the first and second objective
+        # front = front[np.lexsort((front[:, 1], -front[:, 0]))]
+
+        # compute the distance between consecutive solutions
+        # distances = np.linalg.norm(front[1:] - front[:-1], axis=1)
+        # avg_distance = np.mean(distances)
+        #
+        # get the extreme solutions in the pareto front
+        # f_extr, l_extr = pareto_front[0], pareto_front[-1]
+
+        # compute the distance of the extreme solutions to the front
+        # dl, df = np.linalg.norm(front[0] - l_extr, axis=1), np.linalg.norm(front[-1] - f_extr, axis=1)
+
+        # # compute the diversity of the population
+        # diversity = 0
+        # diversity = (df + dl + np.sum(np.abs(distances - avg_distance))) / (
+        #         df + dl + (self.population_size - 1) * avg_distance)
+
+        # return diversity

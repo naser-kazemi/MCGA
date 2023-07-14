@@ -1,9 +1,10 @@
-import numpy as np
 from member import Member
 
 
 class Population(object):
-    def __init__(self, population: list[Member]):
+    def __init__(self, population: list[Member] = None):
+        if population is None:
+            population = []
         self.population: list[Member] = population
 
     def reset(self):
