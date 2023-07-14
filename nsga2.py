@@ -238,44 +238,43 @@ class NSGA2:
         plt.savefig(filename)
         plt.close(fig)
 
-        # def evaluate_distance_metric(self, pareto_front: np.array):
+    def evaluate_distance_metric(self):
         """
         Evaluate the distance of the solutions in the population to the actual Pareto front
         """
 
         # compute the distance of each solution to the closest solution in the Pareto front
-        # distances = np.zeros(self.population.size)
-        # distances = np.zeros(len(self.population))
-        # for i in range(len(self.population)):
-        #     distances[i] = np.min(np.linalg.norm(self.population[i].objective_values - pareto_front, axis=1))
-        #
-        # # return the average distance and the standard deviation
-        # return np.mean(distances), np.std(distances)
+        distances = np.zeros(self.population.size)
+        population_objective_values = np.array([member.objective_values for member in self.population])
+        for i in range(self.population.size):
+            distances[i] = np.min(np.linalg.norm(population_objective_values[i] - self.moop.pareto_front, axis=1))
 
-        # def evaluate_diversity_metric(self, front: np.array, pareto_front: np.array):
+        # return the average distance and the standard deviation
+        return np.mean(distances), np.std(distances)
+
+    def evaluate_diversity_metric(self):
         """
         Evaluate the diversity of the solutions in the population
         """
 
-        # compute the distance consecutive solutions in the front
-
         # get objective values of the solutions in the front
         # sort the front by the first and second objective
-        # front = front[np.lexsort((front[:, 1], -front[:, 0]))]
+        front = np.array(self.fast_non_dominated_sort(self.population)[0])
+        front = np.array([member.objective_values for member in front])
+        front = front[np.lexsort((front[:, 1], -front[:, 0]))]
 
         # compute the distance between consecutive solutions
-        # distances = np.linalg.norm(front[1:] - front[:-1], axis=1)
-        # avg_distance = np.mean(distances)
+        distances = np.linalg.norm(front[1:] - front[:-1], axis=1)
+        avg_distance = np.mean(distances)
         #
         # get the extreme solutions in the pareto front
-        # f_extr, l_extr = pareto_front[0], pareto_front[-1]
+        f_extr, l_extr = self.moop.pareto_front[0], self.moop.pareto_front[-1]
 
         # compute the distance of the extreme solutions to the front
-        # dl, df = np.linalg.norm(front[0] - l_extr, axis=1), np.linalg.norm(front[-1] - f_extr, axis=1)
+        dl, df = np.linalg.norm(front[0] - l_extr), np.linalg.norm(front[-1] - f_extr)
 
         # # compute the diversity of the population
-        # diversity = 0
-        # diversity = (df + dl + np.sum(np.abs(distances - avg_distance))) / (
-        #         df + dl + (self.population_size - 1) * avg_distance)
+        diversity = (df + dl + np.sum(np.abs(distances - avg_distance))) / (
+                df + dl + (self.population_size - 1) * avg_distance)
 
-        # return diversity
+        return diversity
