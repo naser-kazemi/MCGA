@@ -8,22 +8,35 @@ import math
 
 
 def main():
-    problem = get_problem("zdt2")
+    problem = get_problem("zdt3")
     lower_bound = problem.xl
     upper_bound = problem.xu
+
+    pareto_front = problem.pareto_front()
+
+    # plot the pareto front in polar system
+
+    # convert the pareto front to polar system
+    # r, theta = to_polar(pareto_front)
+
+    # plot the polar pareto front
+    # plt.axes(projection="polar")
+    # plt.scatter(theta, r, color="red", label="Pareto Front")
+    # plt.legend()
+    # plt.show()
 
     # create a new NSGA2 instance
     # create two objectives
     f1 = lambda x: x[0]
     g = lambda x: 1 + 9 * sum(x[1:]) / (len(x) - 1)
     # f2 = lambda x: g(x) * (1 - np.sqrt(x[0] / g(x)))
-    f2 = lambda x: g(x) * (1 - (x[0] / g(x)) ** 2)
-    # f2 = lambda x: g(x) * (1 - math.sqrt(x[0] / g(x)) - (x[0] / g(x)) * math.sin(10 * math.pi * x[0]))
+    # f2 = lambda x: g(x) * (1 - (x[0] / g(x)) ** 2)
+    f2 = lambda x: g(x) * (1 - math.sqrt(x[0] / g(x)) - (x[0] / g(x)) * math.sin(10 * math.pi * x[0]))
     objectives = [f1, f2]
 
     moop = MOOP(problem.n_var, objectives, problem.pareto_front(), lower_bound, upper_bound)
 
-    nsga2 = NSGA2(moop, 100, 250, 0.9, 20, 20)
+    nsga2 = NSGA2(moop, 100, 100, 0.9, 20, 20)
 
     # run the algorithm
     nsga2.run()
@@ -42,12 +55,12 @@ def main():
 
     plt.xlabel("$f_1(x)$")
     plt.ylabel("$f_2(x)$")
-    plt.title("ZDT2")
+    plt.title("ZDT3")
     plt.legend()
-    plt.savefig("zdt2.png")
+    plt.savefig("images/zdt3.png")
 
-    # create a GIF from the images in the images directory
-    create_gif("images", "zdt2.gif")
+    # create a GIF from the gif_images in the gif_images directory
+    create_gif("gif_images", "gifs/zdt3.gif")
 
 
 if __name__ == "__main__":

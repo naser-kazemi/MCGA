@@ -7,6 +7,24 @@ from utils import np
 
 
 class NSGA2:
+    """
+    NSGA-II algorithm implementation
+    The algorithm is based on the paper:
+    A fast and elitist multiobjective genetic algorithm: NSGA-II
+    by Kalyanmoy Deb, Samir Agrawal, Amrit Pratap, and T Meyarivan
+    It will contain the following attributes:
+        - moop: The multi-objective optimization problem
+        - num_generation: The number of generations
+        - population_size: The size of the population
+        - population: The population
+        - offsprings: The offsprings
+        - crossover_probability: The crossover probability
+        - mutation_probability: The mutation probability
+        - tournament_size: The tournament size
+        - eta_crossover: The eta crossover
+        - eta_mutation: The eta mutation
+    """
+
     def __init__(self, moop: MOOP, num_generation: int, population_size: int, crossover_probability: float = 0.9,
                  tournament_size: int = 2, eta_crossover: float = 1.0, eta_mutation: float = 1.0):
         self.moop = moop
@@ -204,7 +222,7 @@ class NSGA2:
         """
         Run the algorithm for a given number of generations
         """
-        self.plot_population_frame(0, f'images/generation_{0}.png')
+        self.plot_population_frame(0, f'gif_images/generation_{0}.png')
         fronts = self.fast_non_dominated_sort(self.population)
         for front in fronts:
             self.compute_crowding_distance(front, self.moop.num_objectives)
@@ -212,7 +230,7 @@ class NSGA2:
             self.run_generation()
             print(f'Generation {i + 1} done')
             # create a gif of the evolution of the population
-            self.plot_population_frame(i + 1, f'images/generation_{i + 1}.png')
+            self.plot_population_frame(i + 1, f'gif_images/generation_{i + 1}.png')
 
     def plot_population_frame(self, generation, filename: str) -> None:
         """
@@ -230,8 +248,6 @@ class NSGA2:
         # plot the population
         plt.scatter(objective_values[:, 0], objective_values[:, 1], color='blue', s=10, alpha=0.7)
 
-        # plt.xlim(-0.1, 1)
-        # plt.ylim(-1, 2)
         plt.xlabel('Objective 1')
         plt.ylabel('Objective 2')
         plt.title(f'Generation {generation}')

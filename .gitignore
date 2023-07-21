@@ -397,7 +397,8 @@ pyrightconfig.json
 
 tmp_member.py
 
-*.png
+#*.png
 *.gif
-/images
+/gif_images
+plot_polar.py
 

@@ -2,6 +2,12 @@ from member import Member
 
 
 class Population(object):
+    """
+    Population class to represent a population of members. It is a wrapper around a list of members.
+    It will contain the following attributes:
+        - population: The population
+    """
+
     def __init__(self, population: list[Member] = None):
         if population is None:
             population = []
@@ -17,6 +23,14 @@ class Population(object):
 
     def append(self, member: Member):
         self.population.append(member)
+
+    def to_polar(self):
+        for member in self.population:
+            member.to_polar()
+
+    def to_cartesian(self):
+        for member in self.population:
+            member.to_cartesian()
 
     def __getitem__(self, item):
         return self.population[item]

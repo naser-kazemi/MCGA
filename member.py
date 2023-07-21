@@ -1,14 +1,21 @@
+from utils import np, vector_to_polar, vector_to_cartesian
+
+
 class Member(object):
     """
     Member class to represent a member of the population.
     It will contain the following attributes:
         - chromosome: The chromosome of the member
         - objectives: The objective functions of the member
+        - dominated_by_count: The number of members that dominate this member
+        - rank: The rank of the member
+        - crowding_distance: The crowding distance of the member
     """
 
     def __init__(self, chromosome: list[float], objective_values: list[float]):
         self.chromosome = chromosome
         self.objective_values = objective_values
+        self.polar_objective_values = [0 for _ in range(len(objective_values))]
         self.dominated_by_count: int = 0
         self.rank: int = 0
         self.crowding_distance: float = 0.0
@@ -37,6 +44,43 @@ class Member(object):
         :return: The copied member
         """
         return Member(self.chromosome.copy(), self.objective_values.copy())
+
+    def to_polar(self):
+        """
+        Convert the objective values to polar coordinates
+        :return: The polar coordinates
+        """
+
+        r, theta = vector_to_polar(np.array(self.objective_values))
+
+        self.polar_objective_values = [r] + theta.tolist()
+
+    def to_cartesian(self):
+        """
+        Convert the objective values to cartesian coordinates
+        :return: The cartesian coordinates
+        """
+
+        r, theta = self.polar_objective_values[0], self.polar_objective_values[1:]
+        theta = np.array(theta)
+        self.objective_values = vector_to_cartesian(r, theta).tolist()
+
+    def is_in_sectors(self, sector):
+        """
+        Check if the member is in the sectors
+        :param sector: The sector
+        :return: True if the member is in the sectors, False otherwise
+        """
+
+        is_in_bounds = True
+        for start, end in sector:
+            if end <= 2 * np.pi:
+                in_this_sector = all([start <= x < end for x in self.polar_objective_values[1:]])
+            else:
+                in_this_sector = all(
+                    [(start <= x < 2 * np.pi or 0 <= x < end - 2 * np.pi) for x in self.polar_objective_values[1:]])
+            is_in_bounds = is_in_bounds and in_this_sector
+        return is_in_bounds
 
     def __gt__(self, other):
         if self.rank < other.rank:
