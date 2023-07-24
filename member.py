@@ -1,4 +1,6 @@
-from utils import np, vector_to_polar, vector_to_cartesian
+from utils import np, vector_to_polar, vector_to_cartesian, random
+
+ID = 0.0
 
 
 class Member(object):
@@ -21,6 +23,10 @@ class Member(object):
         self.front_frequency = []
         self.crowding_distance: float = 0.0
 
+        global ID
+        self.id = ID * 1000 + random.randint(0, 1000) + 2 * ID + 0.5 * ID ** 2
+        ID += 5.0
+
     def dominates(self, other):
         """
         Check if this member dominates the other
@@ -37,6 +43,7 @@ class Member(object):
         :return: None
         """
         self._rank = 0
+        self.front_frequency = [0 for _ in self.front_frequency]
         self.crowding_distance = 0.0
 
     def copy(self):
@@ -44,7 +51,9 @@ class Member(object):
         Copy the member
         :return: The copied member
         """
-        return Member(self.chromosome.copy(), self.objective_values.copy())
+        member = Member(self.chromosome.copy(), self.objective_values.copy())
+        member.front_frequency = self.front_frequency.copy()
+        return member
 
     def to_polar(self):
         """
@@ -100,15 +109,26 @@ class Member(object):
         self._rank = value
         self.front_frequency[self._rank] += 1
 
+    # def __gt__(self, other):
+    #     if self._rank < other.rank:
+    #         return True
+    #     if self._rank == other.rank:
+    #         return self.crowding_distance > other.crowding_distance
+    #     return False
+
     def __gt__(self, other):
-        if self._rank < other.rank:
-            return True
-        if self._rank == other.rank:
-            return self.crowding_distance > other.crowding_distance
+        for x, y in zip(self.front_frequency, other.front_frequency):
+            if x > y:
+                return True
+            if x < y:
+                return False
         return False
 
+    # def __eq__(self, other):
+    #     return self._rank == other.rank and self.crowding_distance == other.crowding_distance
+
     def __eq__(self, other):
-        return self._rank == other.rank and self.crowding_distance == other.crowding_distance
+        return all([x == y for x, y in zip(self.front_frequency, other.front_frequency)])
 
     def __repr__(self):
         return f"\nObjectives:{self.objective_values},\nChromosomes: {self.chromosome}," \
@@ -118,4 +138,4 @@ class Member(object):
         return self.__repr__()
 
     def __hash__(self):
-        return hash(str(self.objective_values)) + hash(str(self.chromosome))
+        return hash(str(self.objective_values)) + hash(str(self.chromosome)) + hash(self.id)

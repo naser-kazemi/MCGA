@@ -128,6 +128,10 @@ def vector_to_polar(_x):
         theta[i] = np.arctan2(x[i], x[i + 1])
         x[i + 1] = x[i + 1] / np.cos(theta[i])
 
+    for i in range(len(theta)):
+        if theta[i] < 0:
+            theta[i] += 2 * np.pi
+
     return r, theta
 
 

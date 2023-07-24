@@ -47,7 +47,7 @@ class NSGA2:
         objective_values = self.moop.evaluate(chromosome)
         member = Member(chromosome, objective_values)
         member.to_polar()
-        member.front_frequency = [0 for _ in range(self.population_size)]
+        member.front_frequency = [0 for _ in range(self.population_size * 2)]
         return member
 
     def evaluate_population(self, population: Population = None) -> None:
@@ -182,11 +182,12 @@ class NSGA2:
             return member1
         return member2
 
-    # def make_new_population(self) -> Population:
     def make_new_population(self) -> Population:
-        # offsprings = Population([])
+        """
+        Make a new population from the current population
+        :return: The offsprings
+        """
         offsprings = Population()
-        # while offsprings.size < self.population_size:
         while offsprings.size < self.population_size:
             parent1, parent2 = self.tournament(), self.tournament()
             child1, child2 = self.crossover(parent1, parent2)

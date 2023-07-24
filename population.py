@@ -24,6 +24,12 @@ class Population(object):
     def append(self, member: Member):
         self.population.append(member)
 
+    def extend(self, population):
+        self.population.extend(population)
+
+    def copy(self):
+        return Population([member.copy() for member in self.population])
+
     def to_polar(self):
         for member in self.population:
             member.to_polar()
