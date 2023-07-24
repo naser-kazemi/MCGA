@@ -52,3 +52,6 @@ class Population(object):
 
     def __str__(self):
         return self.__repr__()
+
+    def __len__(self):
+        return len(self.population)

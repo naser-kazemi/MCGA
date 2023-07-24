@@ -153,3 +153,15 @@ def vector_to_cartesian(r, _theta):
         x[i] = r * np.cos(theta[i - 1]) * sin_prod
 
     return x
+
+
+def generate_color():
+    """
+    Generate a random color in base16 format
+    :return: the random color
+    """
+
+    color = "#"
+    for i in range(6):
+        color += random.choice("0123456789ABCDEF")
+    return color

@@ -45,7 +45,10 @@ class NSGA2:
         """
         chromosome = self.moop.generate_chromosome()
         objective_values = self.moop.evaluate(chromosome)
-        return Member(chromosome, objective_values)
+        member = Member(chromosome, objective_values)
+        member.to_polar()
+        member.front_frequency = [0 for _ in range(self.population_size)]
+        return member
 
     def evaluate_population(self, population: Population = None) -> None:
         """
@@ -57,6 +60,7 @@ class NSGA2:
             population = self.population
         for member in population:
             member.objective_values = self.moop.evaluate(member.chromosome)
+            member.to_polar()
 
     def init_population(self) -> Population:
         """
@@ -273,8 +277,6 @@ class NSGA2:
         Evaluate the diversity of the solutions in the population
         """
 
-        # get objective values of the solutions in the front
-        # sort the front by the first and second objective
         front = np.array(self.fast_non_dominated_sort(self.population)[0])
         front = np.array([member.objective_values for member in front])
         front = front[np.lexsort((front[:, 1], -front[:, 0]))]
@@ -282,14 +284,14 @@ class NSGA2:
         # compute the distance between consecutive solutions
         distances = np.linalg.norm(front[1:] - front[:-1], axis=1)
         avg_distance = np.mean(distances)
-        #
+
         # get the extreme solutions in the pareto front
         f_extr, l_extr = self.moop.pareto_front[0], self.moop.pareto_front[-1]
 
         # compute the distance of the extreme solutions to the front
         dl, df = np.linalg.norm(front[0] - l_extr), np.linalg.norm(front[-1] - f_extr)
 
-        # # compute the diversity of the population
+        # compute the diversity of the population
         diversity = (df + dl + np.sum(np.abs(distances - avg_distance))) / (
                 df + dl + (self.population_size - 1) * avg_distance)
 

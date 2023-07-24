@@ -17,7 +17,8 @@ class Member(object):
         self.objective_values = objective_values
         self.polar_objective_values = [0 for _ in range(len(objective_values))]
         self.dominated_by_count: int = 0
-        self.rank: int = 0
+        self._rank: int = 0
+        self.front_frequency = []
         self.crowding_distance: float = 0.0
 
     def dominates(self, other):
@@ -35,7 +36,7 @@ class Member(object):
         Reset the member
         :return: None
         """
-        self.rank = 0
+        self._rank = 0
         self.crowding_distance = 0.0
 
     def copy(self):
@@ -82,19 +83,36 @@ class Member(object):
             is_in_bounds = is_in_bounds and in_this_sector
         return is_in_bounds
 
+    @property
+    def rank(self):
+        """
+        Get the rank of the member
+        :return: The rank
+        """
+        return self._rank
+
+    @rank.setter
+    def rank(self, value):
+        """
+        Update the rank and front frequency of the member
+        :return: None
+        """
+        self._rank = value
+        self.front_frequency[self._rank] += 1
+
     def __gt__(self, other):
-        if self.rank < other.rank:
+        if self._rank < other.rank:
             return True
-        if self.rank == other.rank:
+        if self._rank == other.rank:
             return self.crowding_distance > other.crowding_distance
         return False
 
     def __eq__(self, other):
-        return self.rank == other.rank and self.crowding_distance == other.crowding_distance
+        return self._rank == other.rank and self.crowding_distance == other.crowding_distance
 
     def __repr__(self):
         return f"\nObjectives:{self.objective_values},\nChromosomes: {self.chromosome}," \
-               f"\nRank: {self.rank}, Crowding Distance: {self.crowding_distance}"
+               f"\nRank: {self._rank}, Crowding Distance: {self.crowding_distance}"
 
     def __str__(self):
         return self.__repr__()

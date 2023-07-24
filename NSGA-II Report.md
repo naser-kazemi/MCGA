@@ -155,12 +155,12 @@ points (0, 1) and (1, 0).
 
 The objective functions of the ZDT1 problem are defined as follows:
 
-\begin{aligned}
+$$\begin{aligned}
 f_1(x) &= x_1 \\
 f_2(x) &= g(x) \cdot h(f_1(x), g(x)) \\
 g(x) &= 1 + \frac{9}{n - 1} \sum_{i=2}^{n} x_i \\
 h(f_1(x), g(x)) &= 1 - \sqrt{\frac{f_1(x)}{g(x)}}
-\end{aligned}
+\end{aligned}$$
 
 The following figure shows the Pareto front of the ZDT1 problem:
 
@@ -174,12 +174,12 @@ variables are real numbers between 0 and 1. The Pareto front of the ZDT2 problem
 
 The objective functions of the ZDT2 problem are defined as follows:
 
-\begin{aligned}
+$$\begin{aligned}
 f_1(x) &= x_1 \\
 f_2(x) &= g(x) \cdot h(f_1(x), g(x)) \\
 g(x) &= 1 + \frac{9}{n - 1} \sum_{i=2}^{n} x_i \\
 h(f_1(x), g(x)) &= 1 - \left(\frac{f_1(x)}{g(x)}\right)^2
-\end{aligned}
+\end{aligned}$$
 
 The following figure shows the Pareto front of the ZDT2 problem:
 
@@ -194,12 +194,12 @@ points (0, 1) and (1, 0).
 
 The objective functions of the ZDT3 problem are defined as follows:
 
-\begin{aligned}
+$$\begin{aligned}
 f_1(x) &= x_1 \\
 f_2(x) &= g(x) \cdot h(f_1(x), g(x)) \\
 g(x) &= 1 + \frac{9}{n - 1} \sum_{i=2}^{n} x_i \\
 h(f_1(x), g(x)) &= 1 - \sqrt{\frac{f_1(x)}{g(x)}} - \frac{f_1(x)}{g(x)} \cdot \sin(10 \pi f_1(x))
-\end{aligned}
+\end{aligned}$$
 
 The following figure shows the Pareto front of the ZDT3 problem:
 

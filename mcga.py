@@ -7,10 +7,18 @@ from itertools import product
 
 
 class MCGA(NSGA2):
+    """
+    Monte Carlo Genetic Algorithm
+    This class inherits from the NSGA2 class. It will contain the following additional attributes:
+        - polar_offset_limit: The limit of the polar offset
+        - num_max_sectors: The maximum number of sectors to divide the polar space into
+    """
 
-    def __init__(self, moop: MOOP, population_size: int, num_variables: int, crossover_probability: float,
-                 num_iterations: int, polar_offset_limit: np.float64 = 2 * np.pi, num_max_sectors: int = 10):
-        super().__init__(moop, population_size, num_variables, crossover_probability, num_iterations)
+    def __init__(self, moop: MOOP, num_generation: int, population_size: int, crossover_probability: float = 0.9,
+                 tournament_size: int = 2, eta_crossover: float = 1.0, eta_mutation: float = 1.0,
+                 polar_offset_limit: np.float64 = 2 * np.pi, num_max_sectors: int = 10):
+        super().__init__(moop, num_generation, population_size, crossover_probability, tournament_size, eta_crossover,
+                         eta_mutation)
         self.polar_offset_limit = polar_offset_limit
         self.num_max_sectors = num_max_sectors
 
@@ -25,11 +33,11 @@ class MCGA(NSGA2):
         # create a list of sectors
         sectors_points = []
 
-        num_sectors = random.randint(1, self.num_max_sectors)
+        num_sectors = random.randint(3 * self.num_max_sectors // 4, self.num_max_sectors)
 
         # divide the 2 * pi radians into num_sectors sectors randomly
         for i in range(self.moop.num_objectives):
-            sector = [random.uniform(0, 2 * np.pi) for _ in range(num_sectors - 1)]
+            sector = [random.uniform(0, 2 * np.pi) for _ in range(num_sectors)]
             sector = sorted(sector)
             sector = np.array(sector)
             sectors_points.append(sector)
@@ -80,7 +88,7 @@ class MCGA(NSGA2):
 
         sliced_population = [Population() for _ in range(len(sectors))]
         # divide the population into sectors
-        for member in population.members:
+        for member in population.population:
             for i in range(len(sectors)):
                 if member.is_in_sectors(sectors[i]):
                     sliced_population[i].append(member)
