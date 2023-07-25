@@ -1,10 +1,10 @@
 from pymoo.problems import get_problem
-from moop import MOOP
+from nsga2.moop import MOOP
 
 import matplotlib.pyplot as plt
-from utils import *
-from nsga2 import NSGA2
-from mcga import MCGA
+from nsga2.utils import *
+from nsga2.model import NSGA2
+from mcga.model import MCGA
 import math
 
 
@@ -25,8 +25,8 @@ def main():
     mcga = MCGA(moop, 120, 50, 0.9, 2, 1, 1, np.pi / 4, 20, 0.01)
 
     # clearing the gif_images directory
-    for image in os.listdir("gif_images"):
-        os.remove(os.path.join("gif_images", image))
+    for image in os.listdir("../gif_images"):
+        os.remove(os.path.join("../gif_images", image))
 
     # run the algorithm
     mcga.run()
@@ -50,13 +50,13 @@ def main():
     plt.close()
 
     # create a GIF from the gif_images in the gif_images directory
-    create_gif("gif_images", "gifs/zdt3_mcga.gif")
+    create_gif("gif_images", "../gifs/zdt3_mcga.gif")
 
     nsga2 = NSGA2(moop, 120, 50, 0.9, 20, 20)
 
     # clearing the gif_images directory
-    for image in os.listdir("gif_images"):
-        os.remove(os.path.join("gif_images", image))
+    for image in os.listdir("../gif_images"):
+        os.remove(os.path.join("../gif_images", image))
 
     # run the algorithm
     nsga2.run()
@@ -79,7 +79,7 @@ def main():
     plt.savefig("images/zdt3_nsga.png")
     plt.close()
 
-    create_gif("gif_images", "gifs/zdt3_nsga.gif")
+    create_gif("gif_images", "../gifs/zdt3_nsga.gif")
 
 
 if __name__ == "__main__":

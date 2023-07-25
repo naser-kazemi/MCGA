@@ -1,5 +1,5 @@
 from nsga2 import NSGA2
-from utils import *
+from nsga2.utils import *
 
 
 def main():

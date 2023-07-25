@@ -1,4 +1,4 @@
-from member import Member
+from nsga2.member import Member
 
 
 class Population(object):

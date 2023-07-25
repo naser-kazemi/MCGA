@@ -164,7 +164,7 @@ h(f_1(x), g(x)) &= 1 - \sqrt{\frac{f_1(x)}{g(x)}}
 
 The following figure shows the Pareto front of the ZDT1 problem:
 
-![ZDT1](images/zdt1.png "ZDT1")
+![ZDT1](../images/zdt1.png "ZDT1")
 
 2. #### ZDT2
 
@@ -183,7 +183,7 @@ h(f_1(x), g(x)) &= 1 - \left(\frac{f_1(x)}{g(x)}\right)^2
 
 The following figure shows the Pareto front of the ZDT2 problem:
 
-![ZDT2](images/zdt2.png "ZDT2")
+![ZDT2](../images/zdt2.png "ZDT2")
 
 3. #### ZDT3
 
@@ -203,7 +203,7 @@ h(f_1(x), g(x)) &= 1 - \sqrt{\frac{f_1(x)}{g(x)}} - \frac{f_1(x)}{g(x)} \cdot \s
 
 The following figure shows the Pareto front of the ZDT3 problem:
 
-![ZDT3](images/zdt3.png "ZDT3")
+![ZDT3](../images/zdt3.png "ZDT3")
 
 ### Algorithm Generations Visualization
 
@@ -211,7 +211,7 @@ The following GIFs show the visualization of the algorithm generations for the Z
 
 ZDT2            |  ZDT3
 :-------------------------:|:-------------------------:
-![ZDT2](gifs/zdt2.gif "ZDT2")  |  ![ZDT3](gifs/zdt3.gif "ZDT3")
+![ZDT2](../gifs/zdt2.gif "ZDT2")  |  ![ZDT3](../gifs/zdt3.gif "ZDT3")
 
 ## Challenges
 

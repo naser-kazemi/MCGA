@@ -50,7 +50,7 @@ distance calculation.
 
 MCGA            |  NSGA-II
 :-------------------------:|:-------------------------:
-![MCGA](./images/zdt3_mcga.png)  |  ![NSGA-II](./images/zdt3_nsga.png)
+![MCGA](../images/zdt3_mcga.png)  |  ![NSGA-II](../images/zdt3_nsga.png)
 
 #### 1.2. Using the crowding distance as an objective
 
