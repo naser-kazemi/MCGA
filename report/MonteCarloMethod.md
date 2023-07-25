@@ -52,6 +52,8 @@ MCGA            |  NSGA-II
 :-------------------------:|:-------------------------:
 ![MCGA](../images/zdt3_mcga.png)  |  ![NSGA-II](../images/zdt3_nsga.png)
 
+The implementation for this approach is available in branch `approach1.1` on teh github repository.
+
 #### 1.2. Using the crowding distance as an objective
 
 In this approach, we use the crowding distance as an objective. The crowding distance we use here is somehow different
