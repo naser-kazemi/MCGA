@@ -1,8 +1,7 @@
-from nsga2 import NSGA2
-from member import Member
-from population import Population
-from moop import MOOP
-from utils import *
+from nsga2.model import NSGA2
+from nsga2.population import Population
+from nsga2.moop import MOOP
+from nsga2.utils import *
 from itertools import product
 
 

@@ -242,7 +242,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Unit test / coverage report
 htmlcov/
 .tox/
 .nox/
@@ -400,6 +400,6 @@ tmp_member.py
 #*.png
 #*.gif
 /gif_images
-plot_polar.py
+test/plot_polar.py
 
 *_tmp.py
