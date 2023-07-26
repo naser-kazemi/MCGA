@@ -1,5 +1,6 @@
 from nsga2.model import NSGA2
 from nsga2.population import Population
+from nsga2.member import Member
 from nsga2.moop import MOOP
 from nsga2.utils import *
 from itertools import product
@@ -13,17 +14,101 @@ class MCGA(NSGA2):
         - num_max_sectors: The maximum number of sectors to divide the polar space into
     """
 
-    def __init__(self, moop: MOOP, num_generation: int, population_size: int, crossover_probability: float = 0.9,
-                 tournament_size: int = 2, eta_crossover: float = 1.0, eta_mutation: float = 1.0,
-                 polar_offset_limit: np.float64 = 2 * np.pi, num_max_sectors: int = 10,
-                 front_frequency_threshold: float = 0.1):
-        super().__init__(moop, num_generation, population_size, crossover_probability, tournament_size, eta_crossover,
-                         eta_mutation)
+    def __init__(
+            self,
+            moop: MOOP,
+            num_generation: int,
+            population_size: int,
+            crossover_probability: float = 0.9,
+            tournament_size: int = 2,
+            eta_crossover: float = 1.0,
+            eta_mutation: float = 1.0,
+            polar_offset_limit: np.float64 = 2 * np.pi,
+            num_max_sectors: int = 10,
+            front_frequency_threshold: float = 0.1,
+    ):
+        super().__init__(
+            moop,
+            num_generation,
+            population_size,
+            crossover_probability,
+            tournament_size,
+            eta_crossover,
+            eta_mutation,
+        )
+        self.add_diversity_objective()
         self.polar_offset_limit = polar_offset_limit
         self.num_max_sectors = num_max_sectors
         self.cached_population: Population = Population()
         self.front_frequency_difference: float = np.inf
         self.front_frequency_threshold: float = front_frequency_threshold
+
+    def add_diversity_objective(self, population: Population = None) -> None:
+        """
+        Add Performance Space Diversity (PSD) and Design Space Diversity (DSD) objectives to the MOOP
+        :return: None
+        """
+
+        if population is None:
+            population = self.population
+
+        # compute the PSD for each member of the population
+        for member in population:
+            member.psd = self.compute_psd(population, member)
+            member.dsd = self.compute_dsd(population, member)
+            # member.to_polar()
+
+    @classmethod
+    def compute_psd(cls, population: Population, member: Member) -> float:
+        """
+        Compute the Performance Space Diversity (PSD) for a member
+        :param member: The member to compute the PSD for
+        :param population: The population
+        :return: The PSD
+        """
+
+        objective_values = np.array([member.objective_values])
+        population_objectives = np.array(
+            [x.objective_values for x in population if hash(x) != hash(member)]
+        )
+        diff = np.linalg.norm(objective_values - population_objectives, axis=1)
+
+        # the two closest members
+        idx = np.argmin(diff)
+        neighbor1 = diff[idx]
+        diff[idx] = np.inf
+        idx = np.argmin(diff)
+        neighbor2 = diff[idx]
+
+        psd = -(neighbor1 ** 2 + neighbor2 ** 2)
+
+        return psd
+
+    @classmethod
+    def compute_dsd(cls, population: Population, member: Member) -> float:
+        """
+        Compute the Design Space Diversity (DSD) for a member
+        :param member: The member to compute the DSD for
+        :param population: The population
+        :return: The DSD
+        """
+
+        chromosome = np.array([member.chromosome])
+        population_chromosomes = np.array(
+            [x.chromosome for x in population if hash(x) != hash(member)]
+        )
+        diff = np.linalg.norm(chromosome - population_chromosomes, axis=1)
+
+        # the two closest members
+        idx = np.argmin(diff)
+        neighbor1 = diff[idx]
+        diff[idx] = np.inf
+        idx = np.argmin(diff)
+        neighbor2 = diff[idx]
+
+        dsd = -(neighbor1 ** 2 + neighbor2 ** 2)
+
+        return dsd
 
     def divide_planes(self):
         """
@@ -36,7 +121,9 @@ class MCGA(NSGA2):
         # create a list of sectors
         sectors_points = []
 
-        num_sectors = random.randint(3 * self.num_max_sectors // 4, self.num_max_sectors)
+        num_sectors = random.randint(
+            3 * self.num_max_sectors // 4, self.num_max_sectors
+        )
 
         # divide the 2 * pi radians into num_sectors sectors randomly
         for i in range(self.moop.num_objectives):
@@ -48,9 +135,14 @@ class MCGA(NSGA2):
         sectors = []
         # now create the (start, end) tuples for each sector
         for i in range(self.moop.num_objectives):
-            sectors.append([(0, sectors_points[i][0])] + [(sectors_points[i][j], sectors_points[i][j + 1]) for j in
-                                                          range(len(sectors_points[i]) - 1)] + [
-                               (sectors_points[i][-1], 2 * np.pi)])
+            sectors.append(
+                [(0, sectors_points[i][0])]
+                + [
+                    (sectors_points[i][j], sectors_points[i][j + 1])
+                    for j in range(len(sectors_points[i]) - 1)
+                ]
+                + [(sectors_points[i][-1], 2 * np.pi)]
+            )
 
         # now rotate the sectors to create the offset
         offset = random.uniform(0, self.polar_offset_limit)
@@ -97,7 +189,7 @@ class MCGA(NSGA2):
                     sliced_population[i].append(member)
                     break
             else:
-                print(f"Error: Member {member} not in any sector")
+                print(f"Error: Member {member.polar_objective_values} not in any sector")
 
         return sliced_population
 
@@ -130,8 +222,9 @@ class MCGA(NSGA2):
         # run non-dominated sorting on the sliced population
         self.mc_nds(sliced_population)
 
-    def compute_front_frequency_difference(self, population: Population = None,
-                                           cached_population: Population = None) -> None:
+    def compute_front_frequency_difference(
+            self, population: Population = None, cached_population: Population = None
+    ) -> None:
         """
         Compute the difference between the front frequencies of the cached population and the current population
         :param population: The current population
@@ -166,7 +259,9 @@ class MCGA(NSGA2):
         offsprings = Population()
         while offsprings.size < self.population_size:
             # select two members from the population based on the probabilities
-            selected_members = np.random.choice(self.population.population, size=2, p=probabilities)
+            selected_members = np.random.choice(
+                self.population.population, size=2, p=probabilities
+            )
             parent1, parent2 = selected_members[0], selected_members[1]
             child1, child2 = self.crossover(parent1, parent2)
             child1 = self.mutate(child1)
@@ -185,6 +280,7 @@ class MCGA(NSGA2):
         self.evaluate_population(self.offsprings)
 
         R: Population = self.population + self.offsprings
+        self.add_diversity_objective(R)
         R.reset()
         self.run_monte_carlo_step(R)
         while self.front_frequency_difference > self.front_frequency_threshold:
@@ -196,13 +292,13 @@ class MCGA(NSGA2):
 
         sorted_R = sorted(R.population, reverse=True)
 
-        self.population = Population(sorted_R[:self.population_size])
+        self.population = Population(sorted_R[: self.population_size])
 
     def run(self) -> None:
         """
         Run the algorithm for the given number of generations
         """
-        self.plot_population_frame(0, f'gif_images/generation_{0}.png')
+        self.plot_population_frame(0, f"gif_images/generation_{0}.png")
         self.run_monte_carlo_step()
         self.run_monte_carlo_step()
         while self.front_frequency_difference > self.front_frequency_threshold:
@@ -215,5 +311,5 @@ class MCGA(NSGA2):
 
         for i in range(self.num_generation):
             self.run_generation()
-            print(f'Generation {i + 1} done')
-            self.plot_population_frame(i + 1, f'gif_images/generation_{i + 1}.png')
+            print(f"Generation {i + 1} done")
+            self.plot_population_frame(i + 1, f"gif_images/generation_{i + 1}.png")

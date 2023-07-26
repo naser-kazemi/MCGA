@@ -50,7 +50,7 @@ distance calculation.
 
 MCGA            |  NSGA-II
 :-------------------------:|:-------------------------:
-![MCGA](../images/zdt3_mcga.png)  |  ![NSGA-II](../images/zdt3_nsga.png)
+![MCGA](../images/zdt3_mcga1.1.png)  |  ![NSGA-II](../images/zdt3_nsga1.1.png)
 
 The implementation for this approach is available in branch `approach1.1` on teh github repository.
 
@@ -61,3 +61,13 @@ from the crowding distance used in the NSGA-II algorithm. The crowding distance 
 the points that are far from the other points in the pareto front. The crowding distance we use here, trys to populate
 the points with high rank and which are far from others.
 
+The result in this approach is shown in the following figure. For the ZDT3 problem, with population of 50 individuals
+and 120 generations.
+
+I think Considering this metric directly as an objective is not a good idea. Because it promotes the far points, which are
+
+MCGA            |  NSGA-II
+:-------------------------:|:-------------------------:
+![MCGA](../images/zdt3_mcga1.2.png)  |  ![NSGA-II](../images/zdt3_nsga1.2.png)
+
+### Approach 2 (Changing the selection method)

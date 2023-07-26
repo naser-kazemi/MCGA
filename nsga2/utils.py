@@ -10,15 +10,36 @@ def create_parser():
     Create the parser for the command line arguments to create a new NSGA2 instance
     """
     args = ap.ArgumentParser()
-    args.add_argument("--population-size", type=int, default=100, help="The size of the population")
-    args.add_argument("--num-variables", type=int, default=2, help="The number of variables")
-    args.add_argument("--num-objectives", type=int, default=2, help="The number of objectives")
-    args.add_argument("--num-generations", type=int, default=100, help="The number of generations")
-    args.add_argument("--tournament-size", type=int, default=2, help="The tournament size")
-    args.add_argument("--eta-crossover", type=float, default=1.0, help="The eta crossover")
-    args.add_argument("--eta-mutation", type=float, default=1.0, help="The eta mutation")
-    args.add_argument("--crossover-probability", type=float, default=0.9, help="The crossover probability")
-    args.add_argument("--output-dir", type=str, default="output", help="The output directory")
+    args.add_argument(
+        "--population-size", type=int, default=100, help="The size of the population"
+    )
+    args.add_argument(
+        "--num-variables", type=int, default=2, help="The number of variables"
+    )
+    args.add_argument(
+        "--num-objectives", type=int, default=2, help="The number of objectives"
+    )
+    args.add_argument(
+        "--num-generations", type=int, default=100, help="The number of generations"
+    )
+    args.add_argument(
+        "--tournament-size", type=int, default=2, help="The tournament size"
+    )
+    args.add_argument(
+        "--eta-crossover", type=float, default=1.0, help="The eta crossover"
+    )
+    args.add_argument(
+        "--eta-mutation", type=float, default=1.0, help="The eta mutation"
+    )
+    args.add_argument(
+        "--crossover-probability",
+        type=float,
+        default=0.9,
+        help="The crossover probability",
+    )
+    args.add_argument(
+        "--output-dir", type=str, default="output", help="The output directory"
+    )
     return args.parse_args()
 
 
@@ -51,7 +72,7 @@ def cartesian_to_polar(x):
     x1 = x[:, 0]
     x2 = x[:, 1]
 
-    r = np.sqrt(x1 ** 2 + x2 ** 2)
+    r = np.sqrt(x1**2 + x2**2)
     theta = np.arctan2(x2, x1)
     # theta = np.arctan(x2 / x1)
 
@@ -68,7 +89,7 @@ def to_polar(_x):
     x = np.copy(_x)
 
     # compute the radius
-    r = np.sqrt(np.sum(x ** 2, axis=1))
+    r = np.sqrt(np.sum(x**2, axis=1))
 
     # compute the angles
     theta = np.zeros((x.shape[0], x.shape[1] - 1))
@@ -117,7 +138,7 @@ def vector_to_polar(_x):
     x = np.copy(_x)
 
     # compute the radius
-    r = np.sqrt(np.sum(x ** 2))
+    r = np.sqrt(np.sum(x**2))
 
     # compute the angles
     theta = np.zeros((len(x) - 1))

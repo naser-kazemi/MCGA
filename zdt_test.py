@@ -17,16 +17,20 @@ def main():
     # create two objectives
     f1 = lambda x: x[0]
     g = lambda x: 1 + 9 * sum(x[1:]) / (len(x) - 1)
-    f2 = lambda x: g(x) * (1 - math.sqrt(x[0] / g(x)) - (x[0] / g(x)) * math.sin(10 * math.pi * x[0]))
+    f2 = lambda x: g(x) * (
+            1 - math.sqrt(x[0] / g(x)) - (x[0] / g(x)) * math.sin(10 * math.pi * x[0])
+    )
     objectives = [f1, f2]
 
-    moop = MOOP(problem.n_var, objectives, problem.pareto_front(), lower_bound, upper_bound)
+    moop = MOOP(
+        problem.n_var, objectives, problem.pareto_front(), lower_bound, upper_bound
+    )
 
     mcga = MCGA(moop, 120, 50, 0.9, 2, 1, 1, np.pi / 4, 20, 0.01)
 
     # clearing the gif_images directory
-    for image in os.listdir("../gif_images"):
-        os.remove(os.path.join("../gif_images", image))
+    for image in os.listdir("gif_images"):
+        os.remove(os.path.join("gif_images", image))
 
     # run the algorithm
     mcga.run()
@@ -39,24 +43,29 @@ def main():
     print("Diversity metric: ", diversity)
 
     # plot the results and save the figure
-    plt.scatter(problem.pareto_front()[:, 0], problem.pareto_front()[:, 1], color="red", label="Pareto Front")
+    plt.scatter(
+        problem.pareto_front()[:, 0],
+        problem.pareto_front()[:, 1],
+        color="red",
+        label="Pareto Front",
+    )
     plt.scatter(front[:, 0], front[:, 1], color="blue", label="MCGA")
 
     plt.xlabel("$f_1(x)$")
     plt.ylabel("$f_2(x)$")
     plt.title("ZDT3")
     plt.legend()
-    plt.savefig("images/zdt3_mcga.png")
+    plt.savefig("images/zdt3_mcga1.2.png")
     plt.close()
 
     # create a GIF from the gif_images in the gif_images directory
-    create_gif("gif_images", "../gifs/zdt3_mcga.gif")
+    create_gif("gif_images", "gifs/zdt3_mcga1.2.gif")
 
     nsga2 = NSGA2(moop, 120, 50, 0.9, 20, 20)
 
     # clearing the gif_images directory
-    for image in os.listdir("../gif_images"):
-        os.remove(os.path.join("../gif_images", image))
+    for image in os.listdir("gif_images"):
+        os.remove(os.path.join("gif_images", image))
 
     # run the algorithm
     nsga2.run()
@@ -69,17 +78,22 @@ def main():
     print("Diversity metric: ", diversity)
 
     # plot the results and save the figure
-    plt.scatter(problem.pareto_front()[:, 0], problem.pareto_front()[:, 1], color="red", label="Pareto Front")
+    plt.scatter(
+        problem.pareto_front()[:, 0],
+        problem.pareto_front()[:, 1],
+        color="red",
+        label="Pareto Front",
+    )
     plt.scatter(front[:, 0], front[:, 1], color="blue", label="NSGA-II")
 
     plt.xlabel("$f_1(x)$")
     plt.ylabel("$f_2(x)$")
     plt.title("ZDT3")
     plt.legend()
-    plt.savefig("images/zdt3_nsga.png")
+    plt.savefig("images/zdt3_nsga1.2.png")
     plt.close()
 
-    create_gif("gif_images", "../gifs/zdt3_nsga.gif")
+    create_gif("gif_images", "gifs/zdt3_nsga1.2.gif")
 
 
 if __name__ == "__main__":

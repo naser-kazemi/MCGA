@@ -22,7 +22,9 @@ def Kursawe(x_list):
     # -5 <= xi <= 5, i = 3
     f1, f2 = 0.0, 0.0
     for i in range(0, 2):
-        f1 = f1 - 10 * math.exp(-0.2 * math.sqrt(pow(x_list[i], 2.0) + pow(x_list[i + 1], 2.0)))
+        f1 = f1 - 10 * math.exp(
+            -0.2 * math.sqrt(pow(x_list[i], 2.0) + pow(x_list[i + 1], 2.0))
+        )
     for i in range(0, 3):
         f2 = f2 + pow(abs(x_list[i]), 0.8) + 5 * math.sin(pow(x_list[i], 3.0))
     target = [f1, f2]
@@ -74,8 +76,13 @@ def Rosenbrock(x_list):
     # global minimal is at [1,1,..] where value = 0
     x1 = 0.0
     for i in range(0, len(x_list) - 1):
-        x1 = x1 + 100 * (x_list[i] * x_list[i] - x_list[i + 1]) * (x_list[i] * x_list[i] - x_list[i + 1]) + \
-             (1 - x_list[i]) * (1 - x_list[i])
+        x1 = (
+            x1
+            + 100
+            * (x_list[i] * x_list[i] - x_list[i + 1])
+            * (x_list[i] * x_list[i] - x_list[i + 1])
+            + (1 - x_list[i]) * (1 - x_list[i])
+        )
     return x1
 
 
@@ -92,7 +99,7 @@ def Ackley(x_list):
     return -20 * math.pow(math.e, x1) - math.pow(math.e, x2) + 22.7182818285
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     print(Ackley([0, 0]))
 
