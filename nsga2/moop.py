@@ -1,5 +1,5 @@
 from typing import Callable
-from utils import np, random
+from .utils import np, random
 
 
 class MOOP:

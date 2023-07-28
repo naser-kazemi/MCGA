@@ -1,4 +1,4 @@
-from utils import np, vector_to_polar, vector_to_cartesian, random
+from .utils import np, vector_to_polar, vector_to_cartesian, random
 
 ID = 0.0
 

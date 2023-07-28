@@ -1,9 +1,9 @@
 import random
-from moop import MOOP
-from member import Member
-from population import Population
+from .moop import MOOP
+from .member import Member
+from .population import Population
 import matplotlib.pyplot as plt
-from utils import np
+from .utils import np
 
 
 class NSGA2:
@@ -243,15 +243,23 @@ class NSGA2:
         :param generation: The generation number
         :param filename: The name of the file to save the plot to
         """
+        dim = self.moop.num_objectives
+
         fig = plt.figure(figsize=(6, 6))
 
         objective_values = np.array([member.objective_values for member in self.population])
 
-        # plot the Pareto front
-        plt.scatter(self.moop.pareto_front[:, 0], self.moop.pareto_front[:, 1], color='red', s=10)
-
-        # plot the population
-        plt.scatter(objective_values[:, 0], objective_values[:, 1], color='blue', s=10, alpha=0.7)
+        if dim == 2:
+            plt.scatter(self.moop.pareto_front[:, 0], self.moop.pareto_front[:, 1], color='red', s=10)
+            plt.scatter(objective_values[:, 0], objective_values[:, 1], color='blue', s=10, alpha=0.7)
+        elif dim == 3:
+            ax = fig.add_subplot(111, projection='3d')
+            ax.scatter(self.moop.pareto_front[:, 0], self.moop.pareto_front[:, 1], self.moop.pareto_front[:, 2],
+                       color='red', s=10)
+            ax.scatter(objective_values[:, 0], objective_values[:, 1], objective_values[:, 2], color='blue', s=10,
+                       alpha=0.7)
+        else:
+            raise Exception('Cannot plot more than 3 dimensions')
 
         plt.xlabel('Objective 1')
         plt.ylabel('Objective 2')
