@@ -14,9 +14,14 @@ class MOOP:
         -upper_bounds: The upper bounds of the variables
     """
 
-    def __init__(self, num_variables: int, objectives: list[Callable], pareto_front: np.array,
-                 lower_bounds: list[float],
-                 upper_bounds: list[float]):
+    def __init__(
+        self,
+        num_variables: int,
+        objectives: list[Callable],
+        pareto_front: np.array,
+        lower_bounds: list[float],
+        upper_bounds: list[float],
+    ):
         self.num_variables = num_variables
         self.objectives = objectives
         self.num_objectives = len(self.objectives)
@@ -37,4 +42,7 @@ class MOOP:
         Generate a random chromosome
         :return: The random chromosome
         """
-        return [random.uniform(self.lower_bounds[i], self.upper_bounds[i]) for i in range(self.num_variables)]
+        return [
+            random.uniform(self.lower_bounds[i], self.upper_bounds[i])
+            for i in range(self.num_variables)
+        ]

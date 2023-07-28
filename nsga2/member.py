@@ -24,7 +24,7 @@ class Member(object):
         self.crowding_distance: float = 0.0
 
         global ID
-        self.id = ID * 1000 + random.randint(0, 1000) + 2 * ID + 0.5 * ID ** 2
+        self.id = ID * 1000 + random.randint(0, 1000) + 2 * ID + 0.5 * ID**2
         ID += 5.0
 
     def dominates(self, other):
@@ -83,12 +83,11 @@ class Member(object):
         """
 
         is_in_bounds = True
-        for start, end in sector:
+        for x, (start, end) in zip(self.polar_objective_values[1:], sector):
             if end <= 2 * np.pi:
-                in_this_sector = all([start <= x < end for x in self.polar_objective_values[1:]])
+                in_this_sector = start <= x < end
             else:
-                in_this_sector = all(
-                    [(start <= x < 2 * np.pi or 0 <= x < end - 2 * np.pi) for x in self.polar_objective_values[1:]])
+                in_this_sector = start <= x < 2 * np.pi or 0 <= x < end - 2 * np.pi
             is_in_bounds = is_in_bounds and in_this_sector
         return is_in_bounds
 
@@ -128,14 +127,22 @@ class Member(object):
     #     return self._rank == other.rank and self.crowding_distance == other.crowding_distance
 
     def __eq__(self, other):
-        return all([x == y for x, y in zip(self.front_frequency, other.front_frequency)])
+        return all(
+            [x == y for x, y in zip(self.front_frequency, other.front_frequency)]
+        )
 
     def __repr__(self):
-        return f"\nObjectives:{self.objective_values},\nChromosomes: {self.chromosome}," \
-               f"\nRank: {self._rank}, Crowding Distance: {self.crowding_distance}"
+        return (
+            f"\nObjectives:{self.objective_values},\nPolar Objectives: {self.polar_objective_values},\nChromosomes: {self.chromosome},"
+            f"\nRank: {self._rank}, Crowding Distance: {self.crowding_distance}"
+        )
 
     def __str__(self):
         return self.__repr__()
 
     def __hash__(self):
-        return hash(str(self.objective_values)) + hash(str(self.chromosome)) + hash(self.id)
+        return (
+            hash(str(self.objective_values))
+            + hash(str(self.chromosome))
+            + hash(self.id)
+        )

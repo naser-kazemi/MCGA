@@ -25,8 +25,16 @@ class NSGA2:
         - eta_mutation: The eta mutation
     """
 
-    def __init__(self, moop: MOOP, num_generation: int, population_size: int, crossover_probability: float = 0.9,
-                 tournament_size: int = 2, eta_crossover: float = 1.0, eta_mutation: float = 1.0):
+    def __init__(
+        self,
+        moop: MOOP,
+        num_generation: int,
+        population_size: int,
+        crossover_probability: float = 0.9,
+        tournament_size: int = 2,
+        eta_crossover: float = 1.0,
+        eta_mutation: float = 1.0,
+    ):
         self.moop = moop
         self.num_generation = num_generation
         self.population_size = population_size
@@ -112,12 +120,14 @@ class NSGA2:
         v_max = max(values)
         v_min = min(values)
         scale = v_max - v_min
-        if abs(scale) < 1e-10 or scale == float('inf'):
+        if abs(scale) < 1e-10 or scale == float("inf"):
             return [0 for _ in values]
         return [(v - v_min) / scale for v in values]
 
     @classmethod
-    def compute_crowding_distance(cls, front: list[Member], num_objectives: int) -> None:
+    def compute_crowding_distance(
+        cls, front: list[Member], num_objectives: int
+    ) -> None:
         """
         Compute the crowding distance for a front
         :param front: The front to compute the crowding distance for
@@ -134,9 +144,11 @@ class NSGA2:
 
         for m in range(num_objectives):
             front.sort(key=lambda x: x.objective_values[m])
-            front[0].crowding_distance = float('inf')
-            front[-1].crowding_distance = float('inf')
-            norm_values = cls.normalize_values([member.objective_values[m] for member in front])
+            front[0].crowding_distance = float("inf")
+            front[-1].crowding_distance = float("inf")
+            norm_values = cls.normalize_values(
+                [member.objective_values[m] for member in front]
+            )
             for i in range(1, n - 1):
                 front[i].crowding_distance += norm_values[i + 1] - norm_values[i - 1]
 
@@ -148,7 +160,9 @@ class NSGA2:
         """
         for i in range(self.moop.num_variables):
             if random.random() < self.mutation_probability:
-                member.chromosome[i] += random.uniform(-0.1 * self.eta_mutation, 0.1 * self.eta_mutation)
+                member.chromosome[i] += random.uniform(
+                    -0.1 * self.eta_mutation, 0.1 * self.eta_mutation
+                )
             if member.chromosome[i] < self.moop.lower_bounds[i]:
                 member.chromosome[i] = self.moop.lower_bounds[i]
             elif member.chromosome[i] > self.moop.upper_bounds[i]:
@@ -218,7 +232,7 @@ class NSGA2:
             if next_population.size + len(front) <= self.population_size:
                 next_population += front
             else:
-                next_population += front[:self.population_size - next_population.size]
+                next_population += front[: self.population_size - next_population.size]
             i += 1
 
         self.population = next_population
@@ -227,15 +241,15 @@ class NSGA2:
         """
         Run the algorithm for a given number of generations
         """
-        self.plot_population_frame(0, f'gif_images/generation_{0}.png')
+        self.plot_population_frame(0, f"gif_images/generation_{0}.png")
         fronts = self.fast_non_dominated_sort(self.population)
         for front in fronts:
             self.compute_crowding_distance(front, self.moop.num_objectives)
         for i in range(self.num_generation):
             self.run_generation()
-            print(f'Generation {i + 1} done')
+            print(f"Generation {i + 1} done")
             # create a gif of the evolution of the population
-            self.plot_population_frame(i + 1, f'gif_images/generation_{i + 1}.png')
+            self.plot_population_frame(i + 1, f"gif_images/generation_{i + 1}.png")
 
     def plot_population_frame(self, generation, filename: str) -> None:
         """
@@ -247,23 +261,47 @@ class NSGA2:
 
         fig = plt.figure(figsize=(6, 6))
 
-        objective_values = np.array([member.objective_values for member in self.population])
+        objective_values = np.array(
+            [member.objective_values for member in self.population]
+        )
 
         if dim == 2:
-            plt.scatter(self.moop.pareto_front[:, 0], self.moop.pareto_front[:, 1], color='red', s=10)
-            plt.scatter(objective_values[:, 0], objective_values[:, 1], color='blue', s=10, alpha=0.7)
+            plt.scatter(
+                self.moop.pareto_front[:, 0],
+                self.moop.pareto_front[:, 1],
+                color="red",
+                s=10,
+            )
+            plt.scatter(
+                objective_values[:, 0],
+                objective_values[:, 1],
+                color="blue",
+                s=10,
+                alpha=0.7,
+            )
         elif dim == 3:
-            ax = fig.add_subplot(111, projection='3d')
-            ax.scatter(self.moop.pareto_front[:, 0], self.moop.pareto_front[:, 1], self.moop.pareto_front[:, 2],
-                       color='red', s=10)
-            ax.scatter(objective_values[:, 0], objective_values[:, 1], objective_values[:, 2], color='blue', s=10,
-                       alpha=0.7)
+            ax = fig.add_subplot(111, projection="3d")
+            ax.scatter(
+                self.moop.pareto_front[:, 0],
+                self.moop.pareto_front[:, 1],
+                self.moop.pareto_front[:, 2],
+                color="red",
+                s=10,
+            )
+            ax.scatter(
+                objective_values[:, 0],
+                objective_values[:, 1],
+                objective_values[:, 2],
+                color="blue",
+                s=10,
+                alpha=0.7,
+            )
         else:
-            raise Exception('Cannot plot more than 3 dimensions')
+            raise Exception("Cannot plot more than 3 dimensions")
 
-        plt.xlabel('Objective 1')
-        plt.ylabel('Objective 2')
-        plt.title(f'Generation {generation}')
+        plt.xlabel("Objective 1")
+        plt.ylabel("Objective 2")
+        plt.title(f"Generation {generation}")
         plt.savefig(filename)
         plt.close(fig)
 
@@ -274,9 +312,15 @@ class NSGA2:
 
         # compute the distance of each solution to the closest solution in the Pareto front
         distances = np.zeros(self.population.size)
-        population_objective_values = np.array([member.objective_values for member in self.population])
+        population_objective_values = np.array(
+            [member.objective_values for member in self.population]
+        )
         for i in range(self.population.size):
-            distances[i] = np.min(np.linalg.norm(population_objective_values[i] - self.moop.pareto_front, axis=1))
+            distances[i] = np.min(
+                np.linalg.norm(
+                    population_objective_values[i] - self.moop.pareto_front, axis=1
+                )
+            )
 
         # return the average distance and the standard deviation
         return np.mean(distances), np.std(distances)
@@ -302,6 +346,7 @@ class NSGA2:
 
         # compute the diversity of the population
         diversity = (df + dl + np.sum(np.abs(distances - avg_distance))) / (
-                df + dl + (self.population_size - 1) * avg_distance)
+            df + dl + (self.population_size - 1) * avg_distance
+        )
 
         return diversity
