@@ -14,17 +14,17 @@ class MCGA(NSGA2):
     """
 
     def __init__(
-        self,
-        moop: MOOP,
-        num_generation: int,
-        population_size: int,
-        crossover_probability: float = 0.9,
-        tournament_size: int = 2,
-        eta_crossover: float = 1.0,
-        eta_mutation: float = 1.0,
-        polar_offset_limit: np.float64 = 2 * np.pi,
-        num_max_sectors: int = 10,
-        front_frequency_threshold: float = 0.1,
+            self,
+            moop: MOOP,
+            num_generation: int,
+            population_size: int,
+            crossover_probability: float = 0.9,
+            tournament_size: int = 2,
+            eta_crossover: float = 1.0,
+            eta_mutation: float = 1.0,
+            polar_offset_limit: np.float64 = 2 * np.pi,
+            num_max_sectors: int = 10,
+            front_frequency_threshold: float = 0.1,
     ):
         super().__init__(
             moop,
@@ -41,13 +41,21 @@ class MCGA(NSGA2):
         self.front_frequency_difference: float = np.inf
         self.front_frequency_threshold: float = front_frequency_threshold
 
-    def divide_planes(self):
+    def divide_planes(self, population: Population):
         """
         Create sectors in polar space,
         each sector is a tuple of (start, end) angles in n-dimensional polar space
         where n is the number of objectives
         :return: The sectors
         """
+
+        min_polar_objectives = np.min(
+            [member.polar_objective_values for member in population.population], axis=0
+        )[1:]
+
+        max_polar_objectives = np.max(
+            [member.polar_objective_values for member in population.population], axis=0
+        )[1:]
 
         # create a list of sectors
         sectors_points = []
@@ -57,7 +65,8 @@ class MCGA(NSGA2):
             num_sectors = random.randint(
                 2 * self.num_max_sectors // 3, self.num_max_sectors
             )
-            sector = [random.uniform(0, 2 * np.pi) for _ in range(num_sectors)]
+            sector = [random.uniform(max(0, min_polar_objectives[i] - EPSILON),
+                                     min(2 * np.pi, max_polar_objectives[i] + EPSILON)) for _ in range(num_sectors)]
             sector = sorted(sector)
             sector = np.array(sector)
             sectors_points.append(sector)
@@ -66,12 +75,12 @@ class MCGA(NSGA2):
         # now create the (start, end) tuples for each sector
         for i in range(self.moop.num_objectives - 1):
             sectors.append(
-                [(0, sectors_points[i][0])]
+                [(max(0, min_polar_objectives[i] - EPSILON), sectors_points[i][0])]
                 + [
                     (sectors_points[i][j], sectors_points[i][j + 1])
                     for j in range(len(sectors_points[i]) - 1)
                 ]
-                + [(sectors_points[i][-1], 2 * np.pi)]
+                + [(sectors_points[i][-1], min(2 * np.pi, max_polar_objectives[i] + EPSILON))]
             )
 
         # now rotate the sectors to create the offset
@@ -106,7 +115,7 @@ class MCGA(NSGA2):
         if population is None:
             population = self.population
 
-        plane_sectors = self.divide_planes()
+        plane_sectors = self.divide_planes(population)
 
         # create the sector in polar space
         sectors = self.create_sectors(plane_sectors)
@@ -153,7 +162,7 @@ class MCGA(NSGA2):
         self.mc_nds(sliced_population)
 
     def compute_front_frequency_difference(
-        self, population: Population = None, cached_population: Population = None
+            self, population: Population = None, cached_population: Population = None
     ) -> None:
         """
         Compute the difference between the front frequencies of the cached population and the current population

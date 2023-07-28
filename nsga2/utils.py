@@ -72,7 +72,7 @@ def cartesian_to_polar(x):
     x1 = x[:, 0]
     x2 = x[:, 1]
 
-    r = np.sqrt(x1**2 + x2**2)
+    r = np.sqrt(x1 ** 2 + x2 ** 2)
     theta = np.arctan2(x2, x1)
     # theta = np.arctan(x2 / x1)
 
@@ -89,7 +89,7 @@ def to_polar(_x):
     x = np.copy(_x)
 
     # compute the radius
-    r = np.sqrt(np.sum(x**2, axis=1))
+    r = np.sqrt(np.sum(x ** 2, axis=1))
 
     # compute the angles
     theta = np.zeros((x.shape[0], x.shape[1] - 1))
@@ -138,7 +138,7 @@ def vector_to_polar(_x):
     x = np.copy(_x)
 
     # compute the radius
-    r = np.sqrt(np.sum(x**2))
+    r = np.sqrt(np.sum(x ** 2))
 
     # compute the angles
     theta = np.zeros((len(x) - 1))
@@ -190,3 +190,6 @@ def generate_color():
     for i in range(6):
         color += random.choice("0123456789ABCDEF")
     return color
+
+
+EPSILON = 1e-2
