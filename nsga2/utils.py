@@ -10,15 +10,36 @@ def create_parser():
     Create the parser for the command line arguments to create a new NSGA2 instance
     """
     args = ap.ArgumentParser()
-    args.add_argument("--population-size", type=int, default=100, help="The size of the population")
-    args.add_argument("--num-variables", type=int, default=2, help="The number of variables")
-    args.add_argument("--num-objectives", type=int, default=2, help="The number of objectives")
-    args.add_argument("--num-generations", type=int, default=100, help="The number of generations")
-    args.add_argument("--tournament-size", type=int, default=2, help="The tournament size")
-    args.add_argument("--eta-crossover", type=float, default=1.0, help="The eta crossover")
-    args.add_argument("--eta-mutation", type=float, default=1.0, help="The eta mutation")
-    args.add_argument("--crossover-probability", type=float, default=0.9, help="The crossover probability")
-    args.add_argument("--output-dir", type=str, default="output", help="The output directory")
+    args.add_argument(
+        "--population-size", type=int, default=100, help="The size of the population"
+    )
+    args.add_argument(
+        "--num-variables", type=int, default=2, help="The number of variables"
+    )
+    args.add_argument(
+        "--num-objectives", type=int, default=2, help="The number of objectives"
+    )
+    args.add_argument(
+        "--num-generations", type=int, default=100, help="The number of generations"
+    )
+    args.add_argument(
+        "--tournament-size", type=int, default=2, help="The tournament size"
+    )
+    args.add_argument(
+        "--eta-crossover", type=float, default=1.0, help="The eta crossover"
+    )
+    args.add_argument(
+        "--eta-mutation", type=float, default=1.0, help="The eta mutation"
+    )
+    args.add_argument(
+        "--crossover-probability",
+        type=float,
+        default=0.9,
+        help="The crossover probability",
+    )
+    args.add_argument(
+        "--output-dir", type=str, default="output", help="The output directory"
+    )
     return args.parse_args()
 
 
@@ -123,10 +144,10 @@ def vector_to_polar(_x):
     theta = np.zeros((len(x) - 1))
 
     theta[0] = np.arctan2(x[1], x[0])
-    x[1] = x[1] / np.sin(theta[0])
+    x[1] = x[1] / np.sin(theta[0]) if np.sin(theta[0]) != 0 else 0
     for i in range(1, len(theta)):
         theta[i] = np.arctan2(x[i], x[i + 1])
-        x[i + 1] = x[i + 1] / np.cos(theta[i])
+        x[i + 1] = x[i + 1] / np.cos(theta[i]) if np.cos(theta[i]) != 0 else 0
 
     for i in range(len(theta)):
         if theta[i] < 0:
@@ -169,3 +190,6 @@ def generate_color():
     for i in range(6):
         color += random.choice("0123456789ABCDEF")
     return color
+
+
+EPSILON = 1e-2
