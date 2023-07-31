@@ -49,13 +49,15 @@ class MCGA(NSGA2):
         :return: The sectors
         """
 
-        min_polar_objectives = np.min(
-            [member.polar_objective_values for member in population.population], axis=0
-        )[1:]
+        population.to_polar()
 
-        max_polar_objectives = np.max(
-            [member.polar_objective_values for member in population.population], axis=0
-        )[1:]
+        # min_polar_objectives = np.min(
+        #     [member.polar_objective_values for member in population.population], axis=0
+        # )[1:]
+        #
+        # max_polar_objectives = np.max(
+        #     [member.polar_objective_values for member in population.population], axis=0
+        # )[1:]
 
         # create a list of sectors
         sectors_points = []
@@ -63,10 +65,11 @@ class MCGA(NSGA2):
         # divide the 2 * pi radians into num_sectors sectors randomly
         for i in range(self.moop.num_objectives - 1):
             num_sectors = random.randint(
-                2 * self.num_max_sectors // 3, self.num_max_sectors
+                3 * self.num_max_sectors // 4, self.num_max_sectors
             )
-            sector = [random.uniform(max(0, min_polar_objectives[i] - EPSILON),
-                                     min(2 * np.pi, max_polar_objectives[i] + EPSILON)) for _ in range(num_sectors)]
+            # sector = [random.uniform(max(0, min_polar_objectives[i] - EPSILON),
+            #                          min(2 * np.pi, max_polar_objectives[i] + EPSILON)) for _ in range(num_sectors)]
+            sector = [random.uniform(0, 2 * np.pi) for _ in range(num_sectors)]
             sector = sorted(sector)
             sector = np.array(sector)
             sectors_points.append(sector)
@@ -75,12 +78,14 @@ class MCGA(NSGA2):
         # now create the (start, end) tuples for each sector
         for i in range(self.moop.num_objectives - 1):
             sectors.append(
-                [(max(0, min_polar_objectives[i] - EPSILON), sectors_points[i][0])]
+                # [(max(0, min_polar_objectives[i] - EPSILON), sectors_points[i][0])]
+                [(0, sectors_points[i][0])]
                 + [
                     (sectors_points[i][j], sectors_points[i][j + 1])
                     for j in range(len(sectors_points[i]) - 1)
                 ]
-                + [(sectors_points[i][-1], min(2 * np.pi, max_polar_objectives[i] + EPSILON))]
+                # + [(sectors_points[i][-1], min(2 * np.pi, max_polar_objectives[i] + EPSILON))]
+                + [(sectors_points[i][-1], 2 * np.pi)]
             )
 
         # now rotate the sectors to create the offset
@@ -128,7 +133,7 @@ class MCGA(NSGA2):
                     sliced_population[i].append(member)
                     break
             else:
-                print(f"Error: Member {member} not in any sector")
+                print(f"Error: Member {member.polar_objective_values[1:]} not in any sector")
 
         return sliced_population
 

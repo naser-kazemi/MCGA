@@ -24,7 +24,7 @@ class Member(object):
         self.crowding_distance: float = 0.0
 
         global ID
-        self.id = ID * 1000 + random.randint(0, 1000) + 2 * ID + 0.5 * ID**2
+        self.id = ID * 1000 + random.randint(0, 1000) + 2 * ID + 0.5 * ID ** 2
         ID += 5.0
 
     def dominates(self, other):
@@ -89,6 +89,7 @@ class Member(object):
             else:
                 in_this_sector = start <= x < 2 * np.pi or 0 <= x < end - 2 * np.pi
             is_in_bounds = is_in_bounds and in_this_sector
+
         return is_in_bounds
 
     @property
@@ -142,7 +143,7 @@ class Member(object):
 
     def __hash__(self):
         return (
-            hash(str(self.objective_values))
-            + hash(str(self.chromosome))
-            + hash(self.id)
+                hash(str(self.objective_values))
+                + hash(str(self.chromosome))
+                + hash(self.id)
         )

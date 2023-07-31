@@ -30,6 +30,10 @@ class Population(object):
     def copy(self):
         return Population([member.copy() for member in self.population])
 
+    def to_polar(self):
+        for member in self.population:
+            member.to_polar()
+
     def to_cartesian(self):
         for member in self.population:
             member.to_cartesian()
