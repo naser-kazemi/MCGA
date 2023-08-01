@@ -48,9 +48,9 @@ The result after multiple runs of the Monte-Carlo method is shown in the followi
 population of 50 individuals and 120 generations, Monte-Carlo method gave better results, even without the crowding
 distance calculation.
 
-MCGA            |  NSGA-II
-:-------------------------:|:-------------------------:
-![MCGA](../images/zdt3_mcga.png)  |  ![NSGA-II](../images/zdt3_nsga.png)
+|               MCGA               |               NSGA-II               |
+|:--------------------------------:|:-----------------------------------:|
+| ![MCGA](../images/zdt3_mcga.png) | ![NSGA-II](../images/zdt3_nsga.png) |
 
 The implementation for this approach is available in branch `approach1.1` on teh github repository.
 
@@ -61,3 +61,17 @@ from the crowding distance used in the NSGA-II algorithm. The crowding distance 
 the points that are far from the other points in the pareto front. The crowding distance we use here, trys to populate
 the points with high rank and which are far from others.
 
+### Approach 2 (Relaxing the Elitism Conditions and Adding Crowding Distance)
+
+In this approach, we relax the elitism conditions and add the crowding distance calculation to the Monte-Carlo method.
+We consider the individuals with front frequencies having close value as equal. Then compute the crowding distance for
+these individuals and select the individuals with the highest crowding distance.
+
+We define the value of a front frequency as follows:
+
+$$
+v_i = \sum_j^N c_i \times f_{ij}
+$$
+
+Where $f_{ij}$ is the frequency of the front $j$ for individual $i$ and $c_i$ is a constant which is bigger for the
+first front, the second front, and so on.

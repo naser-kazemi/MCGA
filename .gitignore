@@ -402,5 +402,8 @@ tmp_member.py
 /gif_images
 test/plot_polar.py
 
+/images
+/gifs
+
 *_tmp.py
 

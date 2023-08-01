@@ -18,7 +18,7 @@ def main():
     f1 = lambda x: x[0]
     g = lambda x: 1 + 9 * sum(x[1:]) / (len(x) - 1)
     f2 = lambda x: g(x) * (
-        1 - math.sqrt(x[0] / g(x)) - (x[0] / g(x)) * math.sin(10 * math.pi * x[0])
+            1 - math.sqrt(x[0] / g(x)) - (x[0] / g(x)) * math.sin(10 * math.pi * x[0])
     )
     objectives = [f1, f2]
 
@@ -43,6 +43,7 @@ def main():
     print("Diversity metric: ", diversity)
 
     # plot the results and save the figure
+    fig = plt.figure(figsize=(10, 10))
     plt.scatter(
         problem.pareto_front()[:, 0],
         problem.pareto_front()[:, 1],
@@ -78,6 +79,7 @@ def main():
     print("Diversity metric: ", diversity)
 
     # plot the results and save the figure
+    fig = plt.figure(figsize=(10, 10))
     plt.scatter(
         problem.pareto_front()[:, 0],
         problem.pareto_front()[:, 1],

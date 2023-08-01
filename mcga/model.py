@@ -3,6 +3,8 @@ from nsga2.population import Population
 from nsga2.moop import MOOP
 from nsga2.utils import *
 from itertools import product
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d.axes3d as axes3d
 
 
 class MCGA(NSGA2):
@@ -40,6 +42,8 @@ class MCGA(NSGA2):
         self.cached_population: Population = Population()
         self.front_frequency_difference: float = np.inf
         self.front_frequency_threshold: float = front_frequency_threshold
+
+        self.fig = plt.figure(figsize=(10, 10))
 
     def divide_planes(self, population: Population):
         """
@@ -135,6 +139,11 @@ class MCGA(NSGA2):
             else:
                 print(f"Error: Member {member.polar_objective_values[1:]} not in any sector")
 
+        sectors = [sectors[i] for i in range(len(sectors)) if len(sliced_population[i]) > 0]
+        sliced_population = [slc for slc in sliced_population if len(slc) > 0]
+
+        # self.plot_monte_carlo(sliced_population, sectors)
+
         return sliced_population
 
     def mc_nds(self, sliced_population: list[Population]) -> None:
@@ -146,7 +155,41 @@ class MCGA(NSGA2):
 
         for population_slice in sliced_population:
             # print("Slice:", population_slice)
-            self.fast_non_dominated_sort(population_slice)
+            front = self.fast_non_dominated_sort(population_slice)
+
+    @classmethod
+    def crowding_distance(cls, population: Population, num_objectives: int) -> None:
+        """
+        Compute the crowding distance of the members in the population
+        :param population: The population
+        :param num_objectives: The number of objectives
+        """
+
+        # sort the population based on the front values
+
+        max_front_value = np.max([member.front_value for member in population.population])
+        min_front_value = np.min([member.front_value for member in population.population])
+
+        for member in population.population:
+            member.crowding_distance = 0.0
+
+        # divide the population into parts based on the front values
+        front_value_range = max_front_value - min_front_value
+        num_parts = 10
+        parts_intervals = [
+            min_front_value + i * front_value_range / num_parts
+            for i in range(num_parts + 1)
+        ]
+        parts = [[] for _ in range(num_parts)]
+        for member in population.population:
+            for i in range(num_parts):
+                if parts_intervals[i] <= member.front_value < parts_intervals[i + 1]:
+                    parts[i].append(member)
+                    break
+
+        # compute the crowding distance for each part
+        for part in parts:
+            cls.compute_crowding_distance(part, num_objectives)
 
     def run_monte_carlo_step(self, population: Population = None) -> None:
         """
@@ -214,6 +257,20 @@ class MCGA(NSGA2):
 
         return offsprings
 
+    def normalize_front_frequency(self, population: Population = None) -> None:
+        """
+        Normalize the front frequency of the population
+        :param population: The population
+        """
+
+        if population is None:
+            population = self.population
+
+        front_frequency = np.array([member.front_frequency for member in population])
+        front_frequency = front_frequency / np.linalg.norm(front_frequency, ord="fro")
+        for i in range(len(population)):
+            population.population[i].front_frequency = front_frequency[i]
+
     def run_generation(self) -> None:
         """
         Run a generation of the algorithm
@@ -232,6 +289,8 @@ class MCGA(NSGA2):
             self.compute_front_frequency_difference(R, cached_population)
 
         self.front_frequency_difference = np.inf
+        self.normalize_front_frequency(R)
+        self.crowding_distance(R, self.moop.num_objectives)
 
         sorted_R = sorted(R.population, reverse=True)
 
@@ -250,9 +309,58 @@ class MCGA(NSGA2):
             self.compute_front_frequency_difference()
 
         self.front_frequency_difference = np.inf
+        self.normalize_front_frequency()
+        self.crowding_distance(self.population, self.moop.num_objectives)
         self.population = Population(sorted(self.population.population, reverse=True))
 
         for i in range(self.num_generation):
             self.run_generation()
             print(f"Generation {i + 1} done")
             self.plot_population_frame(i + 1, f"gif_images/generation_{i + 1}.png")
+
+    def plot_monte_carlo(self, sliced_population: list[Population], sectors) -> None:
+
+        # plot the polar sector lines in the polar space
+
+        dim = self.moop.num_objectives
+        self.fig.clear()
+
+        if dim == 2:
+            ax = self.fig.add_subplot(projection="polar")
+            for sector in sectors:
+                for i in range(len(sector)):
+                    ax.plot(
+                        sector[0][0] * np.ones(300),
+                        np.arange(0, 3, 0.01),
+                        color="red",
+                        linewidth=0.5,
+                    )
+                    ax.plot(
+                        sector[0][1] * np.ones(300),
+                        np.arange(0, 3, 0.01),
+                        color="red",
+                        linewidth=0.5,
+                    )
+
+        else:
+            ax = self.fig.add_subplot(111, projection="3d")
+            for sector in sectors:
+                theta, phi = sector[1][0], sector[1][1]
+                r = np.arange(0, 100, 0.01)
+                X = r * np.sin(phi) * np.cos(theta)
+                Y = r * np.sin(phi) * np.sin(theta)
+                Z = r * np.cos(phi)
+                ax.plot(X, Y, Z, color="red", linewidth=0.5)
+
+        # print(len(sliced_population))
+
+        # for slice, sector in zip(sliced_population, sectors):
+        # print(sector)
+        # print(*[member.polar_objective_values[1:] for member in slice.population])
+
+        # print("\n###############################\n")
+
+        for population in sliced_population:
+            self.plot_population(ax, population)
+
+        plt.pause(0.01)

@@ -3,7 +3,7 @@ from .moop import MOOP
 from .member import Member
 from .population import Population
 import matplotlib.pyplot as plt
-from .utils import np
+from .utils import np, generate_color
 
 
 class NSGA2:
@@ -26,14 +26,14 @@ class NSGA2:
     """
 
     def __init__(
-        self,
-        moop: MOOP,
-        num_generation: int,
-        population_size: int,
-        crossover_probability: float = 0.9,
-        tournament_size: int = 2,
-        eta_crossover: float = 1.0,
-        eta_mutation: float = 1.0,
+            self,
+            moop: MOOP,
+            num_generation: int,
+            population_size: int,
+            crossover_probability: float = 0.9,
+            tournament_size: int = 2,
+            eta_crossover: float = 1.0,
+            eta_mutation: float = 1.0,
     ):
         self.moop = moop
         self.num_generation = num_generation
@@ -126,7 +126,7 @@ class NSGA2:
 
     @classmethod
     def compute_crowding_distance(
-        cls, front: list[Member], num_objectives: int
+            cls, front: list[Member], num_objectives: int
     ) -> None:
         """
         Compute the crowding distance for a front
@@ -346,7 +346,23 @@ class NSGA2:
 
         # compute the diversity of the population
         diversity = (df + dl + np.sum(np.abs(distances - avg_distance))) / (
-            df + dl + (self.population_size - 1) * avg_distance
+                df + dl + (self.population_size - 1) * avg_distance
         )
 
         return diversity
+
+    def plot_population(self, ax, population: Population = None) -> None:
+        if population is None:
+            population = self.population
+
+        dim = self.moop.num_objectives
+
+        objective_values = np.array([member.polar_objective_values for member in population])
+
+        if dim == 2:
+            ax.scatter(objective_values[:, 1], objective_values[:, 0], color=generate_color(), s=10, alpha=0.7)
+        elif dim == 3:
+            X = objective_values[:, 0] * np.sin(objective_values[:, 2]) * np.cos(objective_values[:, 1])
+            Y = objective_values[:, 0] * np.sin(objective_values[:, 2]) * np.sin(objective_values[:, 1])
+            Z = objective_values[:, 0] * np.cos(objective_values[:, 2])
+            ax.scatter(X, Y, Z, color=generate_color(), s=10, alpha=0.7)

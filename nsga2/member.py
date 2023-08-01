@@ -116,21 +116,45 @@ class Member(object):
     #         return self.crowding_distance > other.crowding_distance
     #     return False
 
+    # def __gt__(self, other):
+    #     for x, y in zip(self.front_frequency, other.front_frequency):
+    #         if x > y:
+    #             return True
+    #         if x < y:
+    #             return False
+    #     return False
+
+    @property
+    def front_value(self):
+        front_value = 0.0
+        c = 1.0
+        for i in range(len(self.front_frequency)):
+            front_value += self.front_frequency[i] * c
+            c *= 0.8
+        return front_value
+
     def __gt__(self, other):
-        for x, y in zip(self.front_frequency, other.front_frequency):
-            if x > y:
-                return True
-            if x < y:
-                return False
+
+        # print(self.front_value, self.front_value - other.front_value)
+        if (self.front_value - other.front_value) > 0.001:
+            # print("########################")
+            return True
+        # print("******************************")
+        if self.front_value == other.front_value:
+            return self.crowding_distance > other.crowding_distance
         return False
+
+    def __eq__(self, other):
+        return (self.front_value - other.front_value) < 0.001 \
+               and self.crowding_distance == other.crowding_distance
 
     # def __eq__(self, other):
     #     return self._rank == other.rank and self.crowding_distance == other.crowding_distance
 
-    def __eq__(self, other):
-        return all(
-            [x == y for x, y in zip(self.front_frequency, other.front_frequency)]
-        )
+    # def __eq__(self, other):
+    #     return all(
+    #         [x == y for x, y in zip(self.front_frequency, other.front_frequency)]
+    #     )
 
     def __repr__(self):
         return (
