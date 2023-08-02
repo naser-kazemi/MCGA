@@ -403,8 +403,8 @@ tmp_member.py
 /monte_carlo_gif_images
 test/plot_polar.py
 
-/images/*
-/gifs/*
+#/images/*
+#/gifs/*
 
 *_tmp.py
 
