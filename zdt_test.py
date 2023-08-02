@@ -26,7 +26,7 @@ def main():
         problem.n_var, objectives, problem.pareto_front(), lower_bound, upper_bound
     )
 
-    mcga = MCGA(moop, 20, 50, 0.9, 2, 1, 1, np.pi, 20, 0.01)
+    mcga = MCGA(moop, 120, 50, 0.9, 2, 1, 1, np.pi, 20, 0.01)
 
     # clearing the gif_images directory
     for image in os.listdir("gif_images"):

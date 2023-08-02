@@ -129,7 +129,7 @@ class MCGA(NSGA2):
         # ]
         sliced_population = [slc for slc in sliced_population if len(slc) > 0]
 
-        self.plot_monte_carlo(sliced_population, sectors)
+        # self.plot_monte_carlo(sliced_population, sectors)
 
         return sliced_population
 
