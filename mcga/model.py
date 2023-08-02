@@ -6,6 +6,9 @@ from itertools import product
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as axes3d
 
+generation = 0
+iteration = 0
+
 
 class MCGA(NSGA2):
     """
@@ -45,7 +48,7 @@ class MCGA(NSGA2):
 
         self.fig = plt.figure(figsize=(10, 10))
 
-    def divide_planes(self, population: Population):
+    def divide_planes(self):
         """
         Create sectors in polar space,
         each sector is a tuple of (start, end) angles in n-dimensional polar space
@@ -53,29 +56,12 @@ class MCGA(NSGA2):
         :return: The sectors
         """
 
-        population.to_polar()
-
-        # min_polar_objectives = np.min(
-        #     [member.polar_objective_values for member in population.population], axis=0
-        # )[1:]
-        #
-        # max_polar_objectives = np.max(
-        #     [member.polar_objective_values for member in population.population], axis=0
-        # )[1:]
-
         # create a list of sectors
         sectors_points = []
 
-        # divide the 2 * pi radians into num_sectors sectors randomly
+        # divide the 2 * pi radians into num_sectors sectors evenly
         for i in range(self.moop.num_objectives - 1):
-            num_sectors = random.randint(
-                3 * self.num_max_sectors // 4, self.num_max_sectors
-            )
-            # sector = [random.uniform(max(0, min_polar_objectives[i] - EPSILON),
-            #                          min(2 * np.pi, max_polar_objectives[i] + EPSILON)) for _ in range(num_sectors)]
-            sector = [random.uniform(0, 2 * np.pi) for _ in range(num_sectors)]
-            sector = sorted(sector)
-            sector = np.array(sector)
+            sector = np.linspace(0, 2 * np.pi, self.num_max_sectors + 1)
             sectors_points.append(sector)
 
         sectors = []
@@ -83,13 +69,10 @@ class MCGA(NSGA2):
         for i in range(self.moop.num_objectives - 1):
             sectors.append(
                 # [(max(0, min_polar_objectives[i] - EPSILON), sectors_points[i][0])]
-                [(0, sectors_points[i][0])]
-                + [
+                [
                     (sectors_points[i][j], sectors_points[i][j + 1])
                     for j in range(len(sectors_points[i]) - 1)
                 ]
-                # + [(sectors_points[i][-1], min(2 * np.pi, max_polar_objectives[i] + EPSILON))]
-                + [(sectors_points[i][-1], 2 * np.pi)]
             )
 
         # now rotate the sectors to create the offset
@@ -124,7 +107,7 @@ class MCGA(NSGA2):
         if population is None:
             population = self.population
 
-        plane_sectors = self.divide_planes(population)
+        plane_sectors = self.divide_planes()
 
         # create the sector in polar space
         sectors = self.create_sectors(plane_sectors)
@@ -137,12 +120,16 @@ class MCGA(NSGA2):
                     sliced_population[i].append(member)
                     break
             else:
-                print(f"Error: Member {member.polar_objective_values[1:]} not in any sector")
+                print(
+                    f"Error: Member {member.polar_objective_values[1:]} not in any sector"
+                )
 
-        sectors = [sectors[i] for i in range(len(sectors)) if len(sliced_population[i]) > 0]
+        # sectors = [
+        #     sectors[i] for i in range(len(sectors)) if len(sliced_population[i]) > 0
+        # ]
         sliced_population = [slc for slc in sliced_population if len(slc) > 0]
 
-        # self.plot_monte_carlo(sliced_population, sectors)
+        self.plot_monte_carlo(sliced_population, sectors)
 
         return sliced_population
 
@@ -167,8 +154,12 @@ class MCGA(NSGA2):
 
         # sort the population based on the front values
 
-        max_front_value = np.max([member.front_value for member in population.population])
-        min_front_value = np.min([member.front_value for member in population.population])
+        max_front_value = np.max(
+            [member.front_value for member in population.population]
+        )
+        min_front_value = np.min(
+            [member.front_value for member in population.population]
+        )
 
         for member in population.population:
             member.crowding_distance = 0.0
@@ -280,6 +271,10 @@ class MCGA(NSGA2):
         self.offsprings = self.make_new_population()
         self.evaluate_population(self.offsprings)
 
+        global generation
+        generation += 1
+        global iteration
+        iteration = 1
         R: Population = self.population + self.offsprings
         R.reset()
         self.run_monte_carlo_step(R)
@@ -287,6 +282,7 @@ class MCGA(NSGA2):
             cached_population = R.copy()
             self.run_monte_carlo_step(R)
             self.compute_front_frequency_difference(R, cached_population)
+            iteration += 1
 
         self.front_frequency_difference = np.inf
         self.normalize_front_frequency(R)
@@ -300,7 +296,8 @@ class MCGA(NSGA2):
         """
         Run the algorithm for the given number of generations
         """
-        self.plot_population_frame(0, f"gif_images/generation_{0}.png")
+        lim_ratio = 30
+        self.plot_population_frame(0, lim_ratio, f"gif_images/generation_{0}.png")
         self.run_monte_carlo_step()
         self.run_monte_carlo_step()
         while self.front_frequency_difference > self.front_frequency_threshold:
@@ -316,7 +313,9 @@ class MCGA(NSGA2):
         for i in range(self.num_generation):
             self.run_generation()
             print(f"Generation {i + 1} done")
-            self.plot_population_frame(i + 1, f"gif_images/generation_{i + 1}.png")
+            if i % 25 == 0:
+                lim_ratio *= 0.8
+            self.plot_population_frame(i + 1, lim_ratio, f"gif_images/generation_{i + 1}.png")
 
     def plot_monte_carlo(self, sliced_population: list[Population], sectors) -> None:
 
@@ -363,4 +362,6 @@ class MCGA(NSGA2):
         for population in sliced_population:
             self.plot_population(ax, population)
 
-        plt.pause(0.01)
+        plt.savefig(f"monte_carlo_gif_images/{generation}.{iteration}.png")
+
+        # plt.pause(0.001)

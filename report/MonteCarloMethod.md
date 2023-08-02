@@ -63,6 +63,8 @@ the points with high rank and which are far from others.
 
 ### Approach 2 (Relaxing the Elitism Conditions and Adding Crowding Distance)
 
+#### 2.1
+
 In this approach, we relax the elitism conditions and add the crowding distance calculation to the Monte-Carlo method.
 We consider the individuals with front frequencies having close value as equal. Then compute the crowding distance for
 these individuals and select the individuals with the highest crowding distance.
@@ -75,3 +77,8 @@ $$
 
 Where $f_{ij}$ is the frequency of the front $j$ for individual $i$ and $c_i$ is a constant which is bigger for the
 first front, the second front, and so on.
+
+#### 2.2
+
+Now I try another thing. Instead of slicing the polar space in random sectors, I uniformly slice the polar space and
+then rotate it with a random angle.

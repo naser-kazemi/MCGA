@@ -24,7 +24,7 @@ class Member(object):
         self.crowding_distance: float = 0.0
 
         global ID
-        self.id = ID * 1000 + random.randint(0, 1000) + 2 * ID + 0.5 * ID ** 2
+        self.id = ID * 1000 + random.randint(0, 1000) + 2 * ID + 0.5 * ID**2
         ID += 5.0
 
     def dominates(self, other):
@@ -145,8 +145,9 @@ class Member(object):
         return False
 
     def __eq__(self, other):
-        return (self.front_value - other.front_value) < 0.001 \
-               and self.crowding_distance == other.crowding_distance
+        return (
+            self.front_value - other.front_value
+        ) < 0.001 and self.crowding_distance == other.crowding_distance
 
     # def __eq__(self, other):
     #     return self._rank == other.rank and self.crowding_distance == other.crowding_distance
@@ -167,7 +168,7 @@ class Member(object):
 
     def __hash__(self):
         return (
-                hash(str(self.objective_values))
-                + hash(str(self.chromosome))
-                + hash(self.id)
+            hash(str(self.objective_values))
+            + hash(str(self.chromosome))
+            + hash(self.id)
         )

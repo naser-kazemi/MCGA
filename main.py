@@ -31,4 +31,17 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    # get the list of gif_images in the gif_images directory
+    images_directory = "monte_carlo_gif_images"
+    images_list = os.listdir(images_directory)
+    # sort the list of gif_images
+    images_list.sort()
+
+    frames = []
+    # read all gif_images in the gif_images directory and add them to the frames list
+    for image in images_list:
+        frames.append(imageio.v2.imread(os.path.join(images_directory, image)))
+
+    # create the GIF
+    imageio.mimsave("./gifs/zdt3_mcga_polar.gif", frames, duration=200)

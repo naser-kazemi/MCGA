@@ -241,7 +241,8 @@ class NSGA2:
         """
         Run the algorithm for a given number of generations
         """
-        self.plot_population_frame(0, f"gif_images/generation_{0}.png")
+        lim_ratio = 10
+        self.plot_population_frame(0, lim_ratio, f"gif_images/generation_{0}.png")
         fronts = self.fast_non_dominated_sort(self.population)
         for front in fronts:
             self.compute_crowding_distance(front, self.moop.num_objectives)
@@ -249,12 +250,15 @@ class NSGA2:
             self.run_generation()
             print(f"Generation {i + 1} done")
             # create a gif of the evolution of the population
-            self.plot_population_frame(i + 1, f"gif_images/generation_{i + 1}.png")
+            if i % 15 == 0 and i > (3 * self.num_generation / 5):
+                lim_ratio *= 0.6
+            self.plot_population_frame(i + 1, lim_ratio, f"gif_images/generation_{i + 1}.png")
 
-    def plot_population_frame(self, generation, filename: str) -> None:
+    def plot_population_frame(self, generation, lim_ratio, filename: str) -> None:
         """
         Plot the population and save the plot to a file as a frame for a gif
         :param generation: The generation number
+        :param lim_ratio: The ratio of the limits of the plot
         :param filename: The name of the file to save the plot to
         """
         dim = self.moop.num_objectives
@@ -264,6 +268,13 @@ class NSGA2:
         objective_values = np.array(
             [member.objective_values for member in self.population]
         )
+
+        lim_ratio = max(lim_ratio, 0.7)
+        max_pareto_objective_values = np.max(self.moop.pareto_front, axis=0) * lim_ratio
+        min_pareto_objective_values = np.min(self.moop.pareto_front, axis=0) * lim_ratio
+
+        xlim = (min_pareto_objective_values[0], max_pareto_objective_values[0])
+        ylim = (min_pareto_objective_values[1], max_pareto_objective_values[1])
 
         if dim == 2:
             plt.scatter(
@@ -279,7 +290,12 @@ class NSGA2:
                 s=10,
                 alpha=0.7,
             )
+            if generation > (4 * self.num_generation / 5):
+                plt.xlim(xlim)
+                plt.ylim(ylim)
+
         elif dim == 3:
+            zlim = (min_pareto_objective_values[2], max_pareto_objective_values[2])
             ax = fig.add_subplot(111, projection="3d")
             ax.scatter(
                 self.moop.pareto_front[:, 0],
@@ -296,6 +312,10 @@ class NSGA2:
                 s=10,
                 alpha=0.7,
             )
+            if generation > (4 * self.num_generation / 5):
+                plt.xlim(xlim)
+                plt.ylim(ylim)
+                ax.set_zlim(zlim)
         else:
             raise Exception("Cannot plot more than 3 dimensions")
 
@@ -357,12 +377,29 @@ class NSGA2:
 
         dim = self.moop.num_objectives
 
-        objective_values = np.array([member.polar_objective_values for member in population])
+        objective_values = np.array(
+            [member.polar_objective_values for member in population]
+        )
 
         if dim == 2:
-            ax.scatter(objective_values[:, 1], objective_values[:, 0], color=generate_color(), s=10, alpha=0.7)
+            ax.scatter(
+                objective_values[:, 1],
+                objective_values[:, 0],
+                color=generate_color(),
+                s=10,
+                alpha=0.7,
+            )
+
         elif dim == 3:
-            X = objective_values[:, 0] * np.sin(objective_values[:, 2]) * np.cos(objective_values[:, 1])
-            Y = objective_values[:, 0] * np.sin(objective_values[:, 2]) * np.sin(objective_values[:, 1])
+            X = (
+                    objective_values[:, 0]
+                    * np.sin(objective_values[:, 2])
+                    * np.cos(objective_values[:, 1])
+            )
+            Y = (
+                    objective_values[:, 0]
+                    * np.sin(objective_values[:, 2])
+                    * np.sin(objective_values[:, 1])
+            )
             Z = objective_values[:, 0] * np.cos(objective_values[:, 2])
             ax.scatter(X, Y, Z, color=generate_color(), s=10, alpha=0.7)

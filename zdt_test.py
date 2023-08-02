@@ -26,11 +26,13 @@ def main():
         problem.n_var, objectives, problem.pareto_front(), lower_bound, upper_bound
     )
 
-    mcga = MCGA(moop, 120, 50, 0.9, 2, 1, 1, np.pi / 4, 20, 0.01)
+    mcga = MCGA(moop, 20, 50, 0.9, 2, 1, 1, np.pi, 20, 0.01)
 
     # clearing the gif_images directory
     for image in os.listdir("gif_images"):
         os.remove(os.path.join("gif_images", image))
+    # for image in os.listdir("monte_carlo_gif_images"):
+    #     os.remove(os.path.join("monte_carlo_gif_images", image))
 
     # run the algorithm
     mcga.run()
@@ -61,6 +63,7 @@ def main():
 
     # create a GIF from the gif_images in the gif_images directory
     create_gif("gif_images", "gifs/zdt3_mcga.gif")
+    # create_gif("monte_carlo_gif_images", f"./gifs/zdt3_mcga_polar.gif")
 
     nsga2 = NSGA2(moop, 120, 50, 0.9, 20, 20)
 
