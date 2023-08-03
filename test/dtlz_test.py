@@ -34,10 +34,10 @@ def main():
     mcga = MCGA(moop, 300, 100, 0.9, 2, 1, 1, np.pi, 20, 0.01)
 
     # clearing the gif_images directory
-    for image in os.listdir("gif_images"):
-        os.remove(os.path.join("gif_images", image))
-    for image in os.listdir("monte_carlo_gif_images"):
-        os.remove(os.path.join("monte_carlo_gif_images", image))
+    for image in os.listdir("../gif_images"):
+        os.remove(os.path.join("../gif_images", image))
+    for image in os.listdir("../monte_carlo_gif_images"):
+        os.remove(os.path.join("../monte_carlo_gif_images", image))
 
     # run the algorithm
     mcga.run()
@@ -79,10 +79,10 @@ def main():
     nsga2 = NSGA2(moop, 300, 100, 0.9, 20, 20)
 
     # clearing the gif_images directory
-    for image in os.listdir("gif_images"):
-        os.remove(os.path.join("gif_images", image))
-    for image in os.listdir("monte_carlo_gif_images"):
-        os.remove(os.path.join("monte_carlo_gif_images", image))
+    for image in os.listdir("../gif_images"):
+        os.remove(os.path.join("../gif_images", image))
+    for image in os.listdir("../monte_carlo_gif_images"):
+        os.remove(os.path.join("../monte_carlo_gif_images", image))
 
     # run the algorithm
     nsga2.run()

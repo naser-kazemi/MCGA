@@ -8,7 +8,7 @@ from mcga.model import MCGA
 import math
 
 
-def main():
+def run():
     problem = get_problem("zdt3")
     lower_bound = problem.xl
     upper_bound = problem.xu
@@ -29,8 +29,8 @@ def main():
     mcga = MCGA(moop, 120, 50, 0.9, 2, 1, 1, np.pi, 20, 0.01)
 
     # clearing the gif_images directory
-    for image in os.listdir("gif_images"):
-        os.remove(os.path.join("gif_images", image))
+    for image in os.listdir("../gif_images"):
+        os.remove(os.path.join("../gif_images", image))
     # for image in os.listdir("monte_carlo_gif_images"):
     #     os.remove(os.path.join("monte_carlo_gif_images", image))
 
@@ -62,14 +62,14 @@ def main():
     plt.close()
 
     # create a GIF from the gif_images in the gif_images directory
-    create_gif("gif_images", "gifs/zdt3_mcga.gif")
+    create_gif("gif_images", "../gifs/zdt3_mcga.gif")
     # create_gif("monte_carlo_gif_images", f"./gifs/zdt3_mcga_polar.gif")
 
     nsga2 = NSGA2(moop, 120, 50, 0.9, 20, 20)
 
     # clearing the gif_images directory
-    for image in os.listdir("gif_images"):
-        os.remove(os.path.join("gif_images", image))
+    for image in os.listdir("../gif_images"):
+        os.remove(os.path.join("../gif_images", image))
 
     # run the algorithm
     nsga2.run()
@@ -98,8 +98,8 @@ def main():
     plt.savefig("images/zdt3_nsga.png")
     plt.close()
 
-    create_gif("gif_images", "gifs/zdt3_nsga.gif")
+    create_gif("gif_images", "../gifs/zdt3_nsga.gif")
 
 
 if __name__ == "__main__":
-    main()
+    run()
