@@ -1,4 +1,5 @@
-from .utils import np, vector_to_polar, vector_to_cartesian, random
+from emoa.utils import np, vector_to_polar, vector_to_cartesian, random
+from nsga3 import ReferencePoint
 
 ID = 0.0
 
@@ -16,15 +17,18 @@ class Member(object):
 
     def __init__(self, chromosome: list[float], objective_values: list[float]):
         self.chromosome = chromosome
-        self.objective_values = objective_values
+        self.objective_values = objective_values.copy()
+        self.normalized_objective_values = objective_values.copy()
         self.polar_objective_values = [0 for _ in range(len(objective_values))]
         self.dominated_by_count: int = 0
         self._rank: int = 0
         self.front_frequency = []
         self.crowding_distance: float = 0.0
+        self.reference_point: ReferencePoint = ReferencePoint()
+        self.reference_point_distance: int = 0
 
         global ID
-        self.id = ID * 1000 + random.randint(0, 1000) + 2 * ID + 0.5 * ID**2
+        self.id = ID * 1000 + random.randint(0, 1000) + 2 * ID + 0.5 * ID ** 2
         ID += 5.0
 
     def dominates(self, other):
@@ -146,8 +150,8 @@ class Member(object):
 
     def __eq__(self, other):
         return (
-            self.front_value - other.front_value
-        ) < 0.001 and self.crowding_distance == other.crowding_distance
+                       self.front_value - other.front_value
+               ) < 0.001 and self.crowding_distance == other.crowding_distance
 
     # def __eq__(self, other):
     #     return self._rank == other.rank and self.crowding_distance == other.crowding_distance
@@ -168,7 +172,7 @@ class Member(object):
 
     def __hash__(self):
         return (
-            hash(str(self.objective_values))
-            + hash(str(self.chromosome))
-            + hash(self.id)
+                hash(str(self.objective_values))
+                + hash(str(self.chromosome))
+                + hash(self.id)
         )

@@ -1,8 +1,8 @@
 from pymoo.problems import get_problem
-from nsga2.moop import MOOP
+from emoa.moop import MOOP
 
 import matplotlib.pyplot as plt
-from nsga2.utils import *
+from emoa.utils import *
 from nsga2.model import NSGA2
 from mcga.model import MCGA
 import math

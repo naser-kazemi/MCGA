@@ -1,4 +1,4 @@
-from .member import Member
+from emoa.member import Member
 
 
 class Population(object):

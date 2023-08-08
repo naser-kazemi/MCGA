@@ -72,7 +72,7 @@ def cartesian_to_polar(x):
     x1 = x[:, 0]
     x2 = x[:, 1]
 
-    r = np.sqrt(x1**2 + x2**2)
+    r = np.sqrt(x1 ** 2 + x2 ** 2)
     theta = np.arctan2(x2, x1)
     # theta = np.arctan(x2 / x1)
 
@@ -89,7 +89,7 @@ def to_polar(_x):
     x = np.copy(_x)
 
     # compute the radius
-    r = np.sqrt(np.sum(x**2, axis=1))
+    r = np.sqrt(np.sum(x ** 2, axis=1))
 
     # compute the angles
     theta = np.zeros((x.shape[0], x.shape[1] - 1))
@@ -138,7 +138,7 @@ def vector_to_polar(_x):
     x = np.copy(_x)
 
     # compute the radius
-    r = np.sqrt(np.sum(x**2))
+    r = np.sqrt(np.sum(x ** 2))
 
     # compute the angles
     theta = np.zeros((len(x) - 1))
@@ -193,3 +193,17 @@ def generate_color():
 
 
 EPSILON = 1e-2
+
+
+def has_duplicate_member(population):
+    """
+    Check if the population has a duplicate member
+    :param population: the population
+    :return: True if the population has a duplicate member, False otherwise
+    """
+
+    for i in range(len(population)):
+        for j in range(i + 1, len(population)):
+            if np.all(np.abs(population[i] - population[j]) < 1e-5):
+                return True
+    return False

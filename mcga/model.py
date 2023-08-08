@@ -1,10 +1,9 @@
 from nsga2.model import NSGA2
-from nsga2.population import Population
-from nsga2.moop import MOOP
-from nsga2.utils import *
+from emoa.population import Population
+from emoa.moop import MOOP
+from emoa.utils import *
 from itertools import product
 import matplotlib.pyplot as plt
-import mpl_toolkits.mplot3d.axes3d as axes3d
 
 generation = 0
 iteration = 0

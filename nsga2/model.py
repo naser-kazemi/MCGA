@@ -1,12 +1,10 @@
 import random
-from .moop import MOOP
-from .member import Member
-from .population import Population
+from emoa import MOOP, Member, Population, GAModule
 import matplotlib.pyplot as plt
-from .utils import np, generate_color
+from emoa.utils import np, generate_color
 
 
-class NSGA2:
+class NSGA2(GAModule):
     """
     NSGA-II algorithm implementation
     The algorithm is based on the paper:
@@ -35,12 +33,9 @@ class NSGA2:
             eta_crossover: float = 1.0,
             eta_mutation: float = 1.0,
     ):
-        self.moop = moop
-        self.num_generation = num_generation
-        self.population_size = population_size
+        super().__init__(moop, num_generation, population_size, crossover_probability)
         self.population = self.init_population()
         self.offsprings: Population = Population()
-        self.crossover_probability = crossover_probability
         self.mutation_probability = 1 / (moop.num_objectives + 5)
         self.tournament_size = tournament_size
         self.eta_crossover = eta_crossover
@@ -81,7 +76,7 @@ class NSGA2:
         return population
 
     @classmethod
-    def fast_non_dominated_sort(cls, population: Population) -> list[list]:
+    def fast_non_dominated_sort(cls, population: Population) -> list[Population]:
         """
         Fast Non-Dominated Sorting
         :param population: The population to sort
@@ -89,7 +84,7 @@ class NSGA2:
         """
 
         dominated_members = {member: [] for member in population}
-        fronts = [[]]
+        fronts = [Population()]
         for p in population:
             for q in population:
                 if p.dominates(q):
@@ -103,7 +98,7 @@ class NSGA2:
 
         i = 1
         while fronts[-1]:
-            next_front = []
+            next_front = Population()
             for p in fronts[-1]:
                 for q in dominated_members[p]:
                     q.dominated_by_count -= 1
