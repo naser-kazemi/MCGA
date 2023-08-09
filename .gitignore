@@ -409,3 +409,4 @@ test/plot_polar.py
 *_tmp.py
 
 tmp/*
+tmp

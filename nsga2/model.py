@@ -121,7 +121,7 @@ class NSGA2(GAModule):
 
     @classmethod
     def compute_crowding_distance(
-            cls, front: list[Member], num_objectives: int
+            cls, front: Population, num_objectives: int
     ) -> None:
         """
         Compute the crowding distance for a front
@@ -138,7 +138,7 @@ class NSGA2(GAModule):
             member.crowding_distance = 0
 
         for m in range(num_objectives):
-            front.sort(key=lambda x: x.objective_values[m])
+            front.population.sort(key=lambda x: x.objective_values[m])
             front[0].crowding_distance = float("inf")
             front[-1].crowding_distance = float("inf")
             norm_values = cls.normalize_values(

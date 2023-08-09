@@ -3,6 +3,24 @@ from emoa import MOOP, Member, Population
 from nsga2 import NSGA2
 from .reference_point import ReferencePoint
 
+"""
+Division of axis when need to create reference points each axis divided on n parts.
+Keys are number of objectives.
+Values are p parameter in the original algorithm.
+"""
+DIVISIONS_AXIS = {
+    2: (4,),
+    3: (10,),
+    4: (8,),
+    5: (6,),
+    6: (5,),
+    7: (4,),
+    8: (2, 3),
+    9: (2, 3),
+    10: (2, 3),
+    11: (1, 2)
+}
+
 
 class NSGA3(NSGA2):
     """
@@ -20,9 +38,9 @@ class NSGA3(NSGA2):
         super().__init__(moop, num_generation, population_size, crossover_probability, tournament_size,
                          eta_crossover, eta_mutation)
         self.num_divisions_per_obj = num_divisions_per_obj
-        self.reference_points = self.generate_reference_points()
+        self.reference_points: list[ReferencePoint] = []
 
-    def generate_reference_points(self):
+    def generate_reference_points(self) -> list[ReferencePoint]:
         """
         Generate the reference points.
         :return: The reference points
@@ -46,18 +64,16 @@ class NSGA3(NSGA2):
         return gen_refs_recursive([0] * num_objs, num_objs, num_objs * num_divisions_per_obj,
                                   num_objs * num_divisions_per_obj, 0)
 
-    def find_ideal_point(self, population: Population = None) -> list[float]:
+    def find_ideal_point(self, population: Population) -> list[float]:
         """
         Find the ideal point of the population
         :param population: The population
         :return: The ideal point
         """
-        if population is None:
-            population = self.population
 
-        current_ideal_point = [float("inf")] * len(population[0].objectives)
+        current_ideal_point = [float("inf")] * len(population[0].objective_values)
         for member in population:
-            current_ideal_point = np.minimum(current_ideal_point, member.objectives)
+            current_ideal_point = np.minimum(current_ideal_point, member.objective_values)
         return current_ideal_point
 
     def find_extreme_points(self, population: Population = None) -> list[list[float]]:
@@ -70,23 +86,21 @@ class NSGA3(NSGA2):
         if population is None:
             population = self.population
 
-        num_objs = len(population[0].objectives)
+        num_objs = len(population[0].objective_values)
         extreme_points = [[0] * num_objs for _ in range(num_objs)]
         for member in population:
             for i in range(num_objs):
-                if member.objectives[i] > extreme_points[i][i]:
-                    extreme_points[i] = member.objectives.copy()
+                if member.objective_values[i] > extreme_points[i][i]:
+                    extreme_points[i] = member.objective_values.copy()
         return extreme_points
 
-    def construct_hyperplane(self, extreme_points: list[list[float]], population: Population = None) -> list[float]:
+    def construct_hyperplane(self, population: Population, extreme_points: list[list[float]]) -> list[float]:
         """
         calculate the intercepts of the hyperplane constructed by the extreme points
         :param extreme_points: The extreme points
         :param population: The population
         :return: The constructed hyperplane
         """
-        if population is None:
-            population = self.population
 
         num_objs = self.moop.num_objectives
 
@@ -100,8 +114,7 @@ class NSGA3(NSGA2):
             intercepts = intercepts.tolist()
         return intercepts
 
-    def normalize_objectives(self, intercepts: list[float], ideal_point: list[float],
-                             population: Population = None) -> None:
+    def normalize_objectives(self, population: Population, intercepts: list[float], ideal_point: list[float]) -> None:
         """
         Normalize the objectives of the population with the given intercepts and ideal point
         :param intercepts: The intercepts
@@ -109,8 +122,6 @@ class NSGA3(NSGA2):
         :param population: The population
         :return: None
         """
-        if population is None:
-            population = self.population
 
         num_objs = self.moop.num_objectives
 
@@ -119,7 +130,7 @@ class NSGA3(NSGA2):
             Normalize the objective of a member
             """
             if abs(intercepts[m] - ideal_point[m]) > epsilon:
-                member.normalized_objective_values[m] = (member.objectives[m] - ideal_point[m]) / (
+                member.normalized_objective_values[m] = (member.objective_values[m] - ideal_point[m]) / (
                         intercepts[m] - ideal_point[m])
             else:
                 member.normalized_objective_values[m] = member.objective_values[m] / epsilon
@@ -128,17 +139,12 @@ class NSGA3(NSGA2):
             for m in range(num_objs):
                 normalize_objective(member, m)
 
-    def associate(self, reference_points: list[ReferencePoint], population: Population = None) -> None:
+    def associate(self, population: Population, reference_points: list[ReferencePoint]) -> None:
         """
         Associate each member with a reference point
         :param reference_points: The reference points
         :param population: The population
         """
-        if population is None:
-            population = self.population
-
-        fronts = self.fast_non_dominated_sort(population)
-        num_objs = self.moop.num_objectives
 
         for member in population:
             rp_dists = [(rp, rp.perpendicular_distance(member.normalized_objective_values)) for rp in reference_points]
@@ -148,7 +154,7 @@ class NSGA3(NSGA2):
             best_rp.associations_count += 1
             best_rp.associations.append(member)
 
-    def niche_select(self, k, population: Population = None) -> Population:
+    def niche_select(self, population: Population, k: int) -> Population:
         """
         Select the k nearest neighbors of a member
         :param population: The population
@@ -156,20 +162,16 @@ class NSGA3(NSGA2):
         :return: The selected neighbors
         """
 
-        if population is None:
-            population = self.population
-
         if len(population) == k:
             return population
 
         ideal_point = self.find_ideal_point(population)
         extreme_points = self.find_extreme_points(population)
-        intercepts = self.construct_hyperplane(extreme_points, population)
-        self.normalize_objectives(intercepts, ideal_point, population)
+        intercepts = self.construct_hyperplane(population, extreme_points)
+        self.normalize_objectives(population, intercepts, ideal_point)
 
         reference_points = self.generate_reference_points()
-
-        self.associate(reference_points, population)
+        self.associate(population, reference_points)
 
         res = Population()
         while len(res) < k:
@@ -179,7 +181,7 @@ class NSGA3(NSGA2):
 
             associated_members = chosen_rp.associations
 
-            if len(associated_members) > 0:
+            if associated_members:
                 if chosen_rp.associations_count == 0:
                     sel = min(associated_members, key=lambda x: x.reference_point_distance)
                 else:
@@ -193,28 +195,27 @@ class NSGA3(NSGA2):
 
         return res
 
-    def select(self, population: Population, k: int):
+    def select(self, population: Population):
         """
         The selection operator of the algorithm
         :param population: The population
-        :param k: The number of members to select
         """
-        assert len(population) >= k
+        assert len(population) >= self.population_size
 
-        if len(population) == k:
+        if len(population) == self.population_size:
             return population
 
         fronts = self.fast_non_dominated_sort(population)
 
-        last_front = 0
         selection = Population()
-        for f, front in enumerate(fronts):
-            if last_front + len(front) > k:
+        front = fronts[0]
+        for f in fronts:
+            if len(selection) + len(f) > self.population_size:
+                front = f
                 break
-            last_front += len(front)
-            selection.extend(front)
+            selection.extend(f)
 
-        selection.extend(self.niche_select(k - len(selection), fronts[last_front]))
+        selection.extend(self.niche_select(front, self.population_size - len(selection)))
         return selection
 
     def run_generation(self):
@@ -222,3 +223,10 @@ class NSGA3(NSGA2):
         Run a generation of the algorithm
         :return: None
         """
+        self.offsprings = self.make_new_population()
+        self.evaluate_population(self.offsprings)
+
+        r = self.population + self.offsprings
+        next_population = self.select(r)
+
+        self.population = next_population

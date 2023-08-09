@@ -204,6 +204,6 @@ def has_duplicate_member(population):
 
     for i in range(len(population)):
         for j in range(i + 1, len(population)):
-            if np.all(np.abs(population[i] - population[j]) < 1e-5):
+            if np.all(np.abs(np.subtract(population[i].objective_values, population[j].objective_values)) < 1e-5):
                 return True
     return False

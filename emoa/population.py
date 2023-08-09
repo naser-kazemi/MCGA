@@ -49,6 +49,15 @@ class Population(object):
             return Population(self.population + other.population)
         return Population(self.population + other)
 
+    def remove(self, member: Member):
+        self.population.remove(member)
+
+    def sort(self, key=None, reverse=False):
+        self.population.sort(key=key, reverse=reverse)
+
+    def pop(self, index=-1):
+        return self.population.pop(index)
+
     def __repr__(self):
         representation = "*****\n"
         for member in self.population:

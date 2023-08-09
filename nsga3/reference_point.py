@@ -1,5 +1,4 @@
 from emoa.utils import *
-from emoa import Member, Population
 
 
 class ReferencePoint(list):
@@ -10,9 +9,9 @@ class ReferencePoint(list):
     def __init__(self, *args):
         super().__init__(*args)
         self.associations_count: int = 0
-        self.associations: list[Member] = []
+        self.associations: list = []
 
-    def perpendicular_distance(self, direction):
+    def perpendicular_distance(self, direction) -> float:
         """
         Calculate the perpendicular distance of the member to the reference point
         :param direction: The direction of the perpendicular distance
@@ -23,3 +22,5 @@ class ReferencePoint(list):
 
         k = np.dot(self, direction) / np.dot(direction, direction)
         d = np.linalg.norm(np.subtract(self, np.multiply(k, direction)))
+
+        return d

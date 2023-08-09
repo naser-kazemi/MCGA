@@ -1,5 +1,4 @@
 from emoa.utils import np, vector_to_polar, vector_to_cartesian, random
-from nsga3 import ReferencePoint
 
 ID = 0.0
 
@@ -24,7 +23,7 @@ class Member(object):
         self._rank: int = 0
         self.front_frequency = []
         self.crowding_distance: float = 0.0
-        self.reference_point: ReferencePoint = ReferencePoint()
+        self.reference_point = None
         self.reference_point_distance: int = 0
 
         global ID
