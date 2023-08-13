@@ -15,12 +15,12 @@ class MOOP:
     """
 
     def __init__(
-            self,
-            num_variables: int,
-            objectives: list[Callable],
-            pareto_front: np.array,
-            lower_bounds: list[float],
-            upper_bounds: list[float],
+        self,
+        num_variables: int,
+        objectives: list[Callable],
+        pareto_front: np.array,
+        lower_bounds: list[float],
+        upper_bounds: list[float],
     ):
         self.num_variables = num_variables
         self.objectives = objectives

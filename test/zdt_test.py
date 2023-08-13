@@ -18,7 +18,7 @@ def run():
     f1 = lambda x: x[0]
     g = lambda x: 1 + 9 * sum(x[1:]) / (len(x) - 1)
     f2 = lambda x: g(x) * (
-            1 - math.sqrt(x[0] / g(x)) - (x[0] / g(x)) * math.sin(10 * math.pi * x[0])
+        1 - math.sqrt(x[0] / g(x)) - (x[0] / g(x)) * math.sin(10 * math.pi * x[0])
     )
     objectives = [f1, f2]
 

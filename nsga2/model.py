@@ -24,14 +24,14 @@ class NSGA2(GAModule):
     """
 
     def __init__(
-            self,
-            moop: MOOP,
-            num_generation: int,
-            population_size: int,
-            crossover_probability: float = 0.9,
-            tournament_size: int = 2,
-            eta_crossover: float = 1.0,
-            eta_mutation: float = 1.0,
+        self,
+        moop: MOOP,
+        num_generation: int,
+        population_size: int,
+        crossover_probability: float = 0.9,
+        tournament_size: int = 2,
+        eta_crossover: float = 1.0,
+        eta_mutation: float = 1.0,
     ):
         super().__init__(moop, num_generation, population_size, crossover_probability)
         self.population = self.init_population()
@@ -120,9 +120,7 @@ class NSGA2(GAModule):
         return [(v - v_min) / scale for v in values]
 
     @classmethod
-    def compute_crowding_distance(
-            cls, front: Population, num_objectives: int
-    ) -> None:
+    def compute_crowding_distance(cls, front: Population, num_objectives: int) -> None:
         """
         Compute the crowding distance for a front
         :param front: The front to compute the crowding distance for
@@ -247,7 +245,9 @@ class NSGA2(GAModule):
             # create a gif of the evolution of the population
             if i % 15 == 0 and i > (3 * self.num_generation / 5):
                 lim_ratio *= 0.6
-            self.plot_population_frame(i + 1, lim_ratio, f"gif_images/generation_{i + 1}.png")
+            self.plot_population_frame(
+                i + 1, lim_ratio, f"gif_images/generation_{i + 1}.png"
+            )
 
     def plot_population_frame(self, generation, lim_ratio, filename: str) -> None:
         """
@@ -361,7 +361,7 @@ class NSGA2(GAModule):
 
         # compute the diversity of the population
         diversity = (df + dl + np.sum(np.abs(distances - avg_distance))) / (
-                df + dl + (self.population_size - 1) * avg_distance
+            df + dl + (self.population_size - 1) * avg_distance
         )
 
         return diversity
@@ -387,14 +387,14 @@ class NSGA2(GAModule):
 
         elif dim == 3:
             X = (
-                    objective_values[:, 0]
-                    * np.sin(objective_values[:, 2])
-                    * np.cos(objective_values[:, 1])
+                objective_values[:, 0]
+                * np.sin(objective_values[:, 2])
+                * np.cos(objective_values[:, 1])
             )
             Y = (
-                    objective_values[:, 0]
-                    * np.sin(objective_values[:, 2])
-                    * np.sin(objective_values[:, 1])
+                objective_values[:, 0]
+                * np.sin(objective_values[:, 2])
+                * np.sin(objective_values[:, 1])
             )
             Z = objective_values[:, 0] * np.cos(objective_values[:, 2])
             ax.scatter(X, Y, Z, color=generate_color(), s=10, alpha=0.7)

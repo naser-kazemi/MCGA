@@ -1,26 +1,23 @@
-from emoa.utils import *
-
-
 class ReferencePoint(list):
-    """
-    Reference Point class to represent a reference point.
-    """
-
     def __init__(self, *args):
         super().__init__(*args)
-        self.associations_count: int = 0
-        self.associations: list = []
+        self.niche_count = 0
+        self.associated_individuals = []
 
-    def perpendicular_distance(self, direction) -> float:
-        """
-        Calculate the perpendicular distance of the member to the reference point
-        :param direction: The direction of the perpendicular distance
-        :return: The perpendicular distance
-        """
+    def associate_individual(self, individual):
+        self.associated_individuals.append(individual)
+        self.niche_count += 1
 
-        direction = np.array(direction) / np.linalg.norm(direction)
+    def remove_associated_individual(self, individual):
+        self.associated_individuals.remove(individual)
+        self.niche_count += 1
 
-        k = np.dot(self, direction) / np.dot(direction, direction)
-        d = np.linalg.norm(np.subtract(self, np.multiply(k, direction)))
+    def __repr__(self) -> str:
+        return (
+            f"ReferencePoint({super().__repr__()}), "
+            f"niche_count={self.niche_count}, "
+            f"associated_members={self.associated_individuals}"
+        )
 
-        return d
+    def __str__(self) -> str:
+        return self.__repr__()

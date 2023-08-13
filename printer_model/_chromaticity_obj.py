@@ -1,4 +1,3 @@
-
 """
 @Author Sebastian Cucerca
 @Created 20/01/2023
@@ -10,17 +9,17 @@ import numpy.typing as npt
 
 
 def _chromaticity_obj(ab_star_values: npt.NDArray) -> npt.NDArray:
-	"""
-	TODO Write explanation
-	:param ab_star_values:
-	:return:
-	"""
+    """
+    TODO Write explanation
+    :param ab_star_values:
+    :return:
+    """
 
-	# Compute chromaticity
-	chromaticities = np.linalg.norm(ab_star_values, axis=1)
+    # Compute chromaticity
+    chromaticities = np.linalg.norm(ab_star_values, axis=1)
 
-	#
-	return chromaticities
+    #
+    return chromaticities
 
 
 """

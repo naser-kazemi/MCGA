@@ -1,232 +1,340 @@
-from emoa.utils import *
-from emoa import MOOP, Member, Population
-from nsga2 import NSGA2
+import numpy as np
+
 from .reference_point import ReferencePoint
-
-"""
-Division of axis when need to create reference points each axis divided on n parts.
-Keys are number of objectives.
-Values are p parameter in the original algorithm.
-"""
-DIVISIONS_AXIS = {
-    2: (4,),
-    3: (10,),
-    4: (8,),
-    5: (6,),
-    6: (5,),
-    7: (4,),
-    8: (2, 3),
-    9: (2, 3),
-    10: (2, 3),
-    11: (1, 2)
-}
+from deap import base, tools, algorithms, creator
+from deap.tools._hypervolume import hv
+from emoa.utils import *
+import array
+import copy
 
 
-class NSGA3(NSGA2):
-    """
-    NSGA3 algorithm implementation.
-    """
+class NSGA3:
+    def __init__(
+        self,
+        problem,
+        num_variables,
+        num_objectives,
+        num_generations,
+        population_size,
+        lower_bound,
+        upper_bound,
+        num_divisions,
+        crossover_probability=0.9,
+        eta_crossover=20.0,
+        eta_mutation=20.0,
+    ):
+        self.num_objectives = num_objectives
+        self.num_generations = num_generations
+        self.num_divisions = num_divisions
+        self.population_size = population_size
+        self.toolbox = self.init_toolbox(
+            problem,
+            num_variables,
+            lower_bound,
+            upper_bound,
+            crossover_probability,
+            eta_crossover,
+            eta_mutation,
+        )
+        self.population = self.toolbox.population(n=population_size)
+        self.current_generation = 1
 
-    def __init__(self,
-                 moop: MOOP,
-                 num_generation: int,
-                 population_size: int,
-                 crossover_probability: float = 0.9,
-                 tournament_size: int = 2,
-                 eta_crossover: float = 1.0,
-                 eta_mutation: float = 1.0, num_divisions_per_obj: int = 12):
-        super().__init__(moop, num_generation, population_size, crossover_probability, tournament_size,
-                         eta_crossover, eta_mutation)
-        self.num_divisions_per_obj = num_divisions_per_obj
-        self.reference_points: list[ReferencePoint] = []
+        self.stats = tools.Statistics()
+        self.stats.register("pop", copy.deepcopy)
+        self.result_pop = None
+        self.logbook = None
 
-    def generate_reference_points(self) -> list[ReferencePoint]:
+    def init_toolbox(
+        self,
+        problem,
+        num_variables,
+        lower_bound,
+        upper_bound,
+        crossover_probability,
+        eta_crossover,
+        eta_mutation,
+    ) -> base.Toolbox:
+
+        creator.create("FitnessMin3", base.Fitness, weights=(-1.0,) * 3)
+        creator.create(
+            "Individual3", array.array, typecode="d", fitness=creator.FitnessMin3
+        )
+
+        toolbox = base.Toolbox()
+
+        toolbox.register("evaluate", problem)
+        # toolbox.register("select", self.select)
+        toolbox.register("select", self.select)
+
+        toolbox.register("attr_float", uniform, lower_bound, upper_bound, num_variables)
+        toolbox.register(
+            "individual", tools.initIterate, creator.Individual3, toolbox.attr_float
+        )
+        toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
+        toolbox.register(
+            "mate",
+            tools.cxSimulatedBinaryBounded,
+            low=lower_bound,
+            up=upper_bound,
+            eta=eta_crossover,
+        )
+        toolbox.register(
+            "mutate",
+            tools.mutPolynomialBounded,
+            low=lower_bound,
+            up=upper_bound,
+            eta=eta_mutation,
+            indpb=1.0 / num_variables,
+        )
+
+        toolbox.pop_size = self.population_size
+        toolbox.max_gen = self.num_generations
+        toolbox.mut_prob = 1 / num_variables
+        toolbox.cross_prob = crossover_probability
+
+        return toolbox
+
+    def generate_reference_points(self):
         """
-        Generate the reference points.
-        :return: The reference points
+        Generate the reference points
         """
 
-        num_objs = self.moop.num_objectives
-        num_divisions_per_obj = self.num_divisions_per_obj
-
-        def gen_refs_recursive(work_point, num_objs, left, total, depth) -> list[ReferencePoint]:
-            if depth == num_objs - 1:
+        def gen_ref_points_util(work_point, left, total, depth):
+            if depth == self.num_objectives - 1:
                 work_point[depth] = left / total
-                ref = ReferencePoint(work_point.copy())
-                return [ref]
-            else:
-                res = []
-                for i in range(left):
-                    work_point[depth] = i / total
-                    res.extend(gen_refs_recursive(work_point, num_objs, left - i, total, depth + 1))
-                return res
+                ref_point = ReferencePoint(work_point.copy())
+                return [ref_point]
 
-        return gen_refs_recursive([0] * num_objs, num_objs, num_objs * num_divisions_per_obj,
-                                  num_objs * num_divisions_per_obj, 0)
+            ref_points = []
+            for i in range(left + 1):
+                work_point[depth] = i / total
+                ref_points += gen_ref_points_util(
+                    work_point, left - i, total, depth + 1
+                )
+            return ref_points
 
-    def find_ideal_point(self, population: Population) -> list[float]:
+        return gen_ref_points_util(
+            [0] * self.num_objectives,
+            self.num_divisions * self.num_objectives,
+            self.num_divisions * self.num_objectives,
+            0,
+        )
+
+    def find_ideal_points(self, individuals):
         """
-        Find the ideal point of the population
-        :param population: The population
-        :return: The ideal point
-        """
-
-        current_ideal_point = [float("inf")] * len(population[0].objective_values)
-        for member in population:
-            current_ideal_point = np.minimum(current_ideal_point, member.objective_values)
-        return current_ideal_point
-
-    def find_extreme_points(self, population: Population = None) -> list[list[float]]:
-        """
-        Find the extreme points of the population
-        :param population: The population
-        :return: The extreme points
+        Find the ideal point
+        :param individuals: List of individuals
+        :return: Ideal point
         """
 
-        if population is None:
-            population = self.population
+        current_ideal = [np.Inf] * self.num_objectives
+        for ind in individuals:
+            current_ideal = np.minimum(
+                current_ideal, np.multiply(ind.fitness.wvalues, -1)
+            )
 
-        num_objs = len(population[0].objective_values)
-        extreme_points = [[0] * num_objs for _ in range(num_objs)]
-        for member in population:
-            for i in range(num_objs):
-                if member.objective_values[i] > extreme_points[i][i]:
-                    extreme_points[i] = member.objective_values.copy()
-        return extreme_points
+        return current_ideal
 
-    def construct_hyperplane(self, population: Population, extreme_points: list[list[float]]) -> list[float]:
+    def find_extreme_points(self, individuals):
         """
-        calculate the intercepts of the hyperplane constructed by the extreme points
-        :param extreme_points: The extreme points
-        :param population: The population
-        :return: The constructed hyperplane
+        Find the extreme points
+        :param individuals: List of individuals
+        :return: List of extreme points
         """
 
-        num_objs = self.moop.num_objectives
+        return [
+            sorted(individuals, key=lambda ind: ind.fitness.wvalues[o] * -1)[-1]
+            for o in range(self.num_objectives)
+        ]
 
-        if has_duplicate_member(population):
-            intercepts = [extreme_points[i][i] for i in range(num_objs)]
+    def find_intercepts(self, individuals, extreme_points):
+        """
+        Find the intercepts of the hyperplane formed by the extreme points and the axes
+        :param individuals: List of individuals
+        :param extreme_points: List of extreme points
+        :return: List of intercepts
+        """
+
+        if has_duplicate_individuals(individuals):
+            intercepts = [
+                extreme_points[m].fitness.values[m] for m in range(self.num_objectives)
+            ]
         else:
-            b = np.ones(num_objs)
-            A = np.array(extreme_points)
+            b = np.ones(self.num_objectives)
+            A = [point.fitness.fitness for point in extreme_points]
             x = np.linalg.solve(A, b)
             intercepts = 1 / x
-            intercepts = intercepts.tolist()
+
         return intercepts
 
-    def normalize_objectives(self, population: Population, intercepts: list[float], ideal_point: list[float]) -> None:
+    @staticmethod
+    def normalize_objective(individual, m, intercepts, ideal_point, epsilon=1e-20):
         """
-        Normalize the objectives of the population with the given intercepts and ideal point
-        :param intercepts: The intercepts
-        :param ideal_point: The ideal point
-        :param population: The population
-        :return: None
+        Normalize the objective value of an individual
+        :param individual: Individual
+        :param m: Index of the objective
+        :param intercepts: List of intercepts
+        :param ideal_point: Ideal point
+        :param epsilon: Difference threshold
         """
+        if np.abs(intercepts[m] - ideal_point[m]) < epsilon:
+            return individual.fitness.values[m] / epsilon
+        else:
+            return individual.fitness.values[m] / (intercepts[m] - ideal_point[m])
 
-        num_objs = self.moop.num_objectives
-
-        def normalize_objective(member, m, epsilon=1e-10):
-            """
-            Normalize the objective of a member
-            """
-            if abs(intercepts[m] - ideal_point[m]) > epsilon:
-                member.normalized_objective_values[m] = (member.objective_values[m] - ideal_point[m]) / (
-                        intercepts[m] - ideal_point[m])
-            else:
-                member.normalized_objective_values[m] = member.objective_values[m] / epsilon
-
-        for member in population:
-            for m in range(num_objs):
-                normalize_objective(member, m)
-
-    def associate(self, population: Population, reference_points: list[ReferencePoint]) -> None:
+    def normalize_objectives(self, individuals, intercepts, ideal_point):
         """
-        Associate each member with a reference point
-        :param reference_points: The reference points
-        :param population: The population
+        Normalize the objectives of each individual
+        :param individuals: List of individuals
+        :param intercepts: List of intercepts
+        :param ideal_point: Ideal point
         """
+        for ind in individuals:
+            ind.fitness.normalized_values = [
+                NSGA3.normalize_objective(ind, m, intercepts, ideal_point)
+                for m in range(self.num_objectives)
+            ]
 
-        for member in population:
-            rp_dists = [(rp, rp.perpendicular_distance(member.normalized_objective_values)) for rp in reference_points]
-            best_rp, best_dist = min(rp_dists, key=lambda x: x[1])
-            member.reference_point = best_rp
-            member.reference_point_distance = best_dist
-            best_rp.associations_count += 1
-            best_rp.associations.append(member)
+    @staticmethod
+    def calculate_distance(direction, point):
+        k = np.dot(point, direction) / np.dot(direction, direction)
+        d = np.linalg.norm(
+            np.subtract(np.multiply(direction, [k] * len(direction)), point)
+        )
+        return d
 
-    def niche_select(self, population: Population, k: int) -> Population:
+    @staticmethod
+    def associate(individuals, reference_points):
         """
-        Select the k nearest neighbors of a member
-        :param population: The population
-        :param k: The number of neighbors to select
-        :return: The selected neighbors
+        Associate each individual to a reference point
+        :param individuals: List of individuals
+        :param reference_points: List of reference points
         """
 
-        if len(population) == k:
-            return population
+        for ind in individuals:
+            rp_distances = [
+                (rp, NSGA3.calculate_distance(ind.fitness.normalized_values, rp))
+                for rp in reference_points
+            ]
+            min_distance_rp, min_distance = min(rp_distances, key=lambda x: x[1])
+            ind.reference_point = min_distance_rp
+            ind.ref_point_distance = min_distance
+            min_distance_rp.associate_individual(ind)
 
-        ideal_point = self.find_ideal_point(population)
-        extreme_points = self.find_extreme_points(population)
-        intercepts = self.construct_hyperplane(population, extreme_points)
-        self.normalize_objectives(population, intercepts, ideal_point)
+    def niche_select(self, individuals, k):
+        """
+        Select k individuals from the individuals list based on the niche count
+        :param individuals: List of individuals
+        :param k: Number of individuals to select
+        """
+
+        if len(individuals) <= k:
+            return individuals
+
+        ideal_points = self.find_ideal_points(individuals)
+        extreme_points = self.find_extreme_points(individuals)
+        intercepts = self.find_intercepts(individuals, extreme_points)
+        self.normalize_objectives(individuals, ideal_points, intercepts)
 
         reference_points = self.generate_reference_points()
-        self.associate(population, reference_points)
 
-        res = Population()
+        self.associate(individuals, reference_points)
+
+        res = []
         while len(res) < k:
-            min_assoc_rp = min(reference_points, key=lambda x: x.associations_count)
-            min_assoc_rps = [rp for rp in reference_points if rp.associations_count == min_assoc_rp.associations_count]
-            chosen_rp = random.choice(min_assoc_rps)
+            min_niche_count_rp = min(reference_points, key=lambda x: x.niche_count)
+            min_niche_count_rps = [
+                rp
+                for rp in reference_points
+                if rp.niche_count == min_niche_count_rp.niche_count
+            ]
+            chosen_rp = random.choice(min_niche_count_rps)
 
-            associated_members = chosen_rp.associations
+            associated_individuals = chosen_rp.associated_individuals
 
-            if associated_members:
-                if chosen_rp.associations_count == 0:
-                    sel = min(associated_members, key=lambda x: x.reference_point_distance)
+            if associated_individuals:
+                if chosen_rp.niche_count == 0:
+                    sel = min(
+                        chosen_rp.associated_individuals,
+                        key=lambda x: x.ref_point_distance,
+                    )
                 else:
-                    sel = random.choice(associated_members)
+                    sel = random.choice(chosen_rp.associated_individuals)
 
                 res.append(sel)
-                chosen_rp.associations.remove(sel)
-                chosen_rp.associations_count += 1
+                chosen_rp.remove_associated_individual(sel)
+                individuals.remove(sel)
             else:
                 reference_points.remove(chosen_rp)
-
         return res
 
-    def select(self, population: Population):
-        """
-        The selection operator of the algorithm
-        :param population: The population
-        """
-        assert len(population) >= self.population_size
+    def select(self, individuals, k):
+        assert (
+            len(individuals) >= k
+        ), "Number of individuals must be greater than or equal to k"
 
-        if len(population) == self.population_size:
-            return population
+        if k == len(individuals):
+            return individuals
 
-        fronts = self.fast_non_dominated_sort(population)
+        fronts = tools.sortLogNondominated(individuals, len(individuals))
 
-        selection = Population()
-        front = fronts[0]
-        for f in fronts:
-            if len(selection) + len(f) > self.population_size:
-                front = f
+        limit = 0
+        last_front = -1
+        selection = []
+        for f, front in enumerate(fronts):
+            if limit + len(front) <= k:
+                selection.extend(front)
+                limit += len(front)
+                last_front = f
+            else:
                 break
-            selection.extend(f)
 
-        selection.extend(self.niche_select(front, self.population_size - len(selection)))
+        selection += self.niche_select(fronts[last_front + 1], k - limit)
+
+        print(f"Generation {self.current_generation} done.")
+        self.current_generation += 1
+
         return selection
 
-    def run_generation(self):
-        """
-        Run a generation of the algorithm
-        :return: None
-        """
-        self.offsprings = self.make_new_population()
-        self.evaluate_population(self.offsprings)
+    def run(self, verbose=False):
+        toolbox = self.toolbox
+        population = toolbox.population(n=toolbox.pop_size)
+        stats = self.stats
+        self.result_pop, self.logbook = algorithms.eaMuPlusLambda(
+            population,
+            toolbox,
+            mu=toolbox.pop_size,
+            lambda_=toolbox.pop_size,
+            cxpb=toolbox.cross_prob,
+            mutpb=toolbox.mut_prob,
+            ngen=toolbox.max_gen,
+            stats=stats,
+            verbose=verbose,
+        )
 
-        r = self.population + self.offsprings
-        next_population = self.select(r)
+    def metric(self, metric="hypervolume", log=False):
+        if metric == "hypervolume":
+            return self.hypervolume(self.result_pop, [11.0, 11.0], log=log)
+        else:
+            raise ValueError("Metric not supported")
 
-        self.population = next_population
+    def hypervolume(self, population=None, ref=None, log=False):
+        def hypervolume_util(population, ref=None):
+            front = tools.sortLogNondominated(
+                population, len(population), first_front_only=True
+            )
+            wobjs = np.array([ind.fitness.wvalues for ind in front]) * -1
+            if ref is None:
+                ref = np.max(wobjs, axis=0) + 1
+            return hv.hypervolume(wobjs, ref)
+
+        if log:
+            pops = self.logbook.select("pop")
+            pops_obj = [
+                np.array([ind.fitness.wvalues for ind in pop]) * -1 for pop in pops
+            ]
+            ref = np.max([np.max(wobjs, axis=0) for wobjs in pops_obj], axis=0) + 1
+            return [hypervolume_util(pop, ref) for pop in pops]
+        else:
+            return hypervolume_util(population, ref)

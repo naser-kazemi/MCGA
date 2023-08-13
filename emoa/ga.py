@@ -9,10 +9,13 @@ class GAModule(object):
     Genetic Algorithm module to perform the genetic operations.
     """
 
-    def __init__(self, moop: MOOP,
-                 num_generation: int,
-                 population_size: int,
-                 crossover_probability: float = 0.9):
+    def __init__(
+        self,
+        moop: MOOP,
+        num_generation: int,
+        population_size: int,
+        crossover_probability: float = 0.9,
+    ):
         self.moop = moop
         self.num_generation = num_generation
         self.population_size = population_size

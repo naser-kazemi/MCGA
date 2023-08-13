@@ -17,10 +17,10 @@ def run():
     # create a new NSGA2 instance
     # create three objectives for the DTLZ1 problem
     g = lambda x: 100 * (
-            (len(x) - 2)
-            + sum(
-        [(x_i - 0.5) ** 2 - math.cos(20 * math.pi * (x_i - 0.5)) for x_i in x[2:]]
-    )
+        (len(x) - 2)
+        + sum(
+            [(x_i - 0.5) ** 2 - math.cos(20 * math.pi * (x_i - 0.5)) for x_i in x[2:]]
+        )
     )
     f1 = lambda x: 0.5 * x[0] * x[1] * (1 + g(x))
     f2 = lambda x: 0.5 * x[0] * (1 - x[1]) * (1 + g(x))
@@ -76,7 +76,7 @@ def run():
     # # create a GIF from the gif_images in the gif_images directory
     # create_gif("gif_images", f"./gifs/{problem_name}_mcga.gif")
 
-    nsga2 = NSGA2(moop, 500, 200, 0.9, 20, 20)
+    nsga2 = NSGA2(moop, 700, 250, 0.9, 20, 20)
 
     # clearing the gif_images directory
     for image in os.listdir("./gif_images"):
