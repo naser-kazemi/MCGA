@@ -1,6 +1,7 @@
+from itertools import chain
+
 import numpy as np
 
-from .reference_point import ReferencePoint
 from deap import base, tools, algorithms, creator
 from deap.tools._hypervolume import hv
 from emoa.utils import *
@@ -10,23 +11,29 @@ import copy
 
 class NSGA3:
     def __init__(
-        self,
-        problem,
-        num_variables,
-        num_objectives,
-        num_generations,
-        population_size,
-        lower_bound,
-        upper_bound,
-        num_divisions,
-        crossover_probability=0.9,
-        eta_crossover=20.0,
-        eta_mutation=20.0,
+            self,
+            problem,
+            num_variables,
+            num_objectives,
+            num_generations,
+            population_size,
+            lower_bound,
+            upper_bound,
+            num_divisions,
+            crossover_probability=0.9,
+            eta_crossover=20.0,
+            eta_mutation=20.0,
+            log=None,
+            nd="log",
+            verbose=False,
     ):
         self.num_objectives = num_objectives
         self.num_generations = num_generations
         self.num_divisions = num_divisions
         self.population_size = population_size
+
+        self.nd_sort = self.init_ndsort(nd)
+
         self.toolbox = self.init_toolbox(
             problem,
             num_variables,
@@ -39,36 +46,49 @@ class NSGA3:
         self.population = self.toolbox.population(n=population_size)
         self.current_generation = 1
 
-        self.stats = tools.Statistics()
-        self.stats.register("pop", copy.deepcopy)
+        self.log = log if log is not None else []
+        self.verbose = verbose
+        self.stats = self.init_stats()
         self.result_pop = None
         self.logbook = None
 
+    def init_ndsort(self, nd):
+        if nd == "standard":
+            return tools.sortNondominated
+        elif nd == "log":
+            return tools.sortLogNondominated
+        else:
+            raise Exception(
+                "The choice of non-dominated sorting "
+                "method '{0}' is invalid.".format(nd)
+            )
+
     def init_toolbox(
-        self,
-        problem,
-        num_variables,
-        lower_bound,
-        upper_bound,
-        crossover_probability,
-        eta_crossover,
-        eta_mutation,
+            self,
+            problem,
+            num_variables,
+            lower_bound,
+            upper_bound,
+            crossover_probability,
+            eta_crossover,
+            eta_mutation,
     ) -> base.Toolbox:
 
-        creator.create("FitnessMin3", base.Fitness, weights=(-1.0,) * 3)
         creator.create(
-            "Individual3", array.array, typecode="d", fitness=creator.FitnessMin3
+            "FitnessMin", base.Fitness, weights=(-1.0,) * self.num_objectives
+        )
+        creator.create(
+            "Individual", array.array, typecode="d", fitness=creator.FitnessMin
         )
 
         toolbox = base.Toolbox()
 
         toolbox.register("evaluate", problem)
-        # toolbox.register("select", self.select)
         toolbox.register("select", self.select)
 
         toolbox.register("attr_float", uniform, lower_bound, upper_bound, num_variables)
         toolbox.register(
-            "individual", tools.initIterate, creator.Individual3, toolbox.attr_float
+            "individual", tools.initIterate, creator.Individual, toolbox.attr_float
         )
         toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
@@ -95,209 +115,234 @@ class NSGA3:
 
         return toolbox
 
-    def generate_reference_points(self):
+    def init_stats(self):
+        stats = tools.Statistics()
+        stats.register("pop", copy.deepcopy)
+        if "fit" in self.log:
+            stats.register("fit", copy.deepcopy)
+        if "ndf" in self.log:
+            stats.register("ndf", copy.deepcopy)
+        if "ref_points" in self.log:
+            stats.register("ref_points", copy.deepcopy)
+        if "min" in self.log:
+            stats.register("min", np.min, axis=0)
+        if "max" in self.log:
+            stats.register("max", np.max, axis=0)
+        if "avg" in self.log:
+            stats.register("avg", np.mean, axis=0)
+        if "std" in self.log:
+            stats.register("std", np.std, axis=0)
+        return stats
+
+    def generate_reference_points(self, scaling=None):
         """
-        Generate the reference points
-        """
-
-        def gen_ref_points_util(work_point, left, total, depth):
-            if depth == self.num_objectives - 1:
-                work_point[depth] = left / total
-                ref_point = ReferencePoint(work_point.copy())
-                return [ref_point]
-
-            ref_points = []
-            for i in range(left + 1):
-                work_point[depth] = i / total
-                ref_points += gen_ref_points_util(
-                    work_point, left - i, total, depth + 1
-                )
-            return ref_points
-
-        return gen_ref_points_util(
-            [0] * self.num_objectives,
-            self.num_divisions * self.num_objectives,
-            self.num_divisions * self.num_objectives,
-            0,
-        )
-
-    def find_ideal_points(self, individuals):
-        """
-        Find the ideal point
-        :param individuals: List of individuals
-        :return: Ideal point
+        Generate reference points uniformly on the hyperplane intersecting
+        each axis at 1. The scaling factor is used to combine multiple layers of
+        reference points.
+        :param scaling: The scaling factor.
         """
 
-        current_ideal = [np.Inf] * self.num_objectives
-        for ind in individuals:
-            current_ideal = np.minimum(
-                current_ideal, np.multiply(ind.fitness.wvalues, -1)
-            )
+        nobj = self.num_objectives
+        p = self.num_divisions
 
-        return current_ideal
+        def gen_refs_recursive(ref, nobj, left, total, depth):
+            points = []
+            if depth == nobj - 1:
+                ref[depth] = left / total
+                points.append(ref)
+            else:
+                for i in range(left + 1):
+                    ref[depth] = i / total
+                    points.extend(
+                        gen_refs_recursive(ref.copy(), nobj, left - i, total, depth + 1)
+                    )
+            return points
 
-    def find_extreme_points(self, individuals):
+        ref_points = np.array(gen_refs_recursive(np.zeros(nobj), nobj, p, p, 0))
+        if scaling is not None:
+            ref_points *= scaling
+            ref_points += (1 - scaling) / nobj
+
+        return ref_points
+
+    @staticmethod
+    def find_extreme_points(fitnesses, best_point):
         """
-        Find the extreme points
-        :param individuals: List of individuals
-        :return: List of extreme points
+        Finds the individuals with extreme values for each objective function.
+        :param fitnesses: The fitnesses of the population.
+        :param best_point: The best point of the population.
+        :return: The extreme points.
         """
 
-        return [
-            sorted(individuals, key=lambda ind: ind.fitness.wvalues[o] * -1)[-1]
-            for o in range(self.num_objectives)
-        ]
+        # Translate objectives
+        ft = fitnesses - best_point
 
-    def find_intercepts(self, individuals, extreme_points):
+        # Find achievement scalarizing function (asf)
+        asf = np.eye(best_point.shape[0])
+        asf[asf == 0] = 1e6
+        asf = np.max(ft * asf[:, np.newaxis, :], axis=2)
+
+        # Extreme point are the fitnesses with minimal asf
+        min_asf_idx = np.argmin(asf, axis=1)
+        return fitnesses[min_asf_idx, :]
+
+    @staticmethod
+    def find_intercepts(extreme_points, best_point, current_worst, front_worst):
         """
-        Find the intercepts of the hyperplane formed by the extreme points and the axes
-        :param individuals: List of individuals
-        :param extreme_points: List of extreme points
-        :return: List of intercepts
+        Find intercepts between the hyperplane and each axis with
+        the ideal point as origin.
         """
 
-        if has_duplicate_individuals(individuals):
-            intercepts = [
-                extreme_points[m].fitness.values[m] for m in range(self.num_objectives)
-            ]
-        else:
-            b = np.ones(self.num_objectives)
-            A = [point.fitness.fitness for point in extreme_points]
+        b = np.ones(extreme_points.shape[1])
+        A = extreme_points - best_point
+        try:
             x = np.linalg.solve(A, b)
-            intercepts = 1 / x
+        except np.linalg.LinAlgError:
+            intercepts = current_worst
+        else:
+            if np.count_nonzero(x) != len(x):
+                intercepts = front_worst
+            else:
+                intercepts = 1 / x
+
+                if (
+                        not np.allclose(np.dot(A, x), b)
+                        or np.any(intercepts <= 1e-6)
+                        or np.any((intercepts + best_point) > current_worst)
+                ):
+                    intercepts = front_worst
 
         return intercepts
 
     @staticmethod
-    def normalize_objective(individual, m, intercepts, ideal_point, epsilon=1e-20):
+    def associate(fitnesses, reference_points, best_point, intercepts):
         """
-        Normalize the objective value of an individual
-        :param individual: Individual
-        :param m: Index of the objective
-        :param intercepts: List of intercepts
-        :param ideal_point: Ideal point
-        :param epsilon: Difference threshold
+        Associates individuals to reference points and calculates niche number.
+        Corresponds to Algorithm 3.
         """
-        if np.abs(intercepts[m] - ideal_point[m]) < epsilon:
-            return individual.fitness.values[m] / epsilon
-        else:
-            return individual.fitness.values[m] / (intercepts[m] - ideal_point[m])
+        fn = (fitnesses - best_point) / (intercepts - best_point + np.finfo(float).eps)
 
-    def normalize_objectives(self, individuals, intercepts, ideal_point):
-        """
-        Normalize the objectives of each individual
-        :param individuals: List of individuals
-        :param intercepts: List of intercepts
-        :param ideal_point: Ideal point
-        """
-        for ind in individuals:
-            ind.fitness.normalized_values = [
-                NSGA3.normalize_objective(ind, m, intercepts, ideal_point)
-                for m in range(self.num_objectives)
-            ]
+        # Create distance matrix
+        fn = np.repeat(np.expand_dims(fn, axis=1), len(reference_points), axis=1)
+        norm = np.linalg.norm(reference_points, axis=1)
 
-    @staticmethod
-    def calculate_distance(direction, point):
-        k = np.dot(point, direction) / np.dot(direction, direction)
-        d = np.linalg.norm(
-            np.subtract(np.multiply(direction, [k] * len(direction)), point)
+        distances = np.sum(fn * reference_points, axis=2) / norm.reshape(1, -1)
+        distances = (
+                distances[:, :, np.newaxis]
+                * reference_points[np.newaxis, :, :]
+                / norm[np.newaxis, :, np.newaxis]
         )
-        return d
+        distances = np.linalg.norm(distances - fn, axis=2)
+
+        # Retrieve min distance niche index
+        niches = np.argmin(distances, axis=1)
+        distances = distances[list(range(niches.shape[0])), niches]
+        return niches, distances
 
     @staticmethod
-    def associate(individuals, reference_points):
-        """
-        Associate each individual to a reference point
-        :param individuals: List of individuals
-        :param reference_points: List of reference points
-        """
+    def niching(individuals, k, niches, distances, niche_counts):
+        selected = []
+        available = np.ones(len(individuals), dtype=bool)
+        while len(selected) < k:
+            # Maximum number of individuals (niches) to select in that round
+            n = k - len(selected)
 
-        for ind in individuals:
-            rp_distances = [
-                (rp, NSGA3.calculate_distance(ind.fitness.normalized_values, rp))
-                for rp in reference_points
-            ]
-            min_distance_rp, min_distance = min(rp_distances, key=lambda x: x[1])
-            ind.reference_point = min_distance_rp
-            ind.ref_point_distance = min_distance
-            min_distance_rp.associate_individual(ind)
+            # Find the available niches and the minimum niche count in them
+            available_niches = np.zeros(len(niche_counts), dtype=bool)
+            available_niches[np.unique(niches[available])] = True
+            min_count = np.min(niche_counts[available_niches])
 
-    def niche_select(self, individuals, k):
-        """
-        Select k individuals from the individuals list based on the niche count
-        :param individuals: List of individuals
-        :param k: Number of individuals to select
-        """
+            # Select at most n niches with the minimum count
+            selected_niches = np.flatnonzero(
+                np.logical_and(available_niches, niche_counts == min_count)
+            )
+            np.random.shuffle(selected_niches)
+            selected_niches = selected_niches[:n]
 
-        if len(individuals) <= k:
-            return individuals
+            for niche in selected_niches:
+                # Select from available individuals in niche
+                niche_individuals = np.flatnonzero(
+                    np.logical_and(niches == niche, available)
+                )
+                np.random.shuffle(niche_individuals)
 
-        ideal_points = self.find_ideal_points(individuals)
-        extreme_points = self.find_extreme_points(individuals)
-        intercepts = self.find_intercepts(individuals, extreme_points)
-        self.normalize_objectives(individuals, ideal_points, intercepts)
-
-        reference_points = self.generate_reference_points()
-
-        self.associate(individuals, reference_points)
-
-        res = []
-        while len(res) < k:
-            min_niche_count_rp = min(reference_points, key=lambda x: x.niche_count)
-            min_niche_count_rps = [
-                rp
-                for rp in reference_points
-                if rp.niche_count == min_niche_count_rp.niche_count
-            ]
-            chosen_rp = random.choice(min_niche_count_rps)
-
-            associated_individuals = chosen_rp.associated_individuals
-
-            if associated_individuals:
-                if chosen_rp.niche_count == 0:
-                    sel = min(
-                        chosen_rp.associated_individuals,
-                        key=lambda x: x.ref_point_distance,
-                    )
+                # If no individual in that niche, select the closest to reference
+                # Else select randomly
+                if niche_counts[niche] == 0:
+                    sel_index = niche_individuals[
+                        np.argmin(distances[niche_individuals])
+                    ]
                 else:
-                    sel = random.choice(chosen_rp.associated_individuals)
+                    sel_index = niche_individuals[0]
 
-                res.append(sel)
-                chosen_rp.remove_associated_individual(sel)
-                individuals.remove(sel)
-            else:
-                reference_points.remove(chosen_rp)
-        return res
+                # Update availability, counts and selection
+                available[sel_index] = False
+                niche_counts[niche] += 1
+                selected.append(individuals[sel_index])
+
+        return selected
 
     def select(self, individuals, k):
-        assert (
-            len(individuals) >= k
-        ), "Number of individuals must be greater than or equal to k"
 
-        if k == len(individuals):
-            return individuals
+        ref_points = self.generate_reference_points()
 
-        fronts = tools.sortLogNondominated(individuals, len(individuals))
+        pareto_fronts = self.nd_sort(individuals, k, first_front_only=False)
 
-        limit = 0
-        last_front = -1
-        selection = []
-        for f, front in enumerate(fronts):
-            if limit + len(front) <= k:
-                selection.extend(front)
-                limit += len(front)
-                last_front = f
-            else:
-                break
+        fitnesses = np.array([ind.fitness.wvalues for f in pareto_fronts for ind in f])
+        fitnesses *= -1
 
-        selection += self.niche_select(fronts[last_front + 1], k - limit)
+        # Get best and worst point of population, contrary to pymoo
+        # we don't use memory
+        best_point = np.min(fitnesses, axis=0)
+        worst_point = np.max(fitnesses, axis=0)
 
-        print(f"Generation {self.current_generation} done.")
+        extreme_points = self.find_extreme_points(fitnesses, best_point)
+        front_worst = np.max(fitnesses[: sum(len(f) for f in pareto_fronts), :], axis=0)
+        intercepts = self.find_intercepts(
+            extreme_points, best_point, worst_point, front_worst
+        )
+        niches, dist = self.associate(fitnesses, ref_points, best_point, intercepts)
+
+        # Get counts per niche for individuals in all front but the last
+        niche_counts = np.zeros(len(ref_points), dtype=np.int64)
+        index, counts = np.unique(niches[: -len(pareto_fronts[-1])], return_counts=True)
+        niche_counts[index] = counts
+
+        # Choose individuals from all fronts but the last
+        chosen = list(chain(*pareto_fronts[:-1]))
+
+        # Use niching to select the remaining individuals
+        sel_count = len(chosen)
+        n = k - sel_count
+        selected = self.niching(
+            pareto_fronts[-1], n, niches[sel_count:], dist[sel_count:], niche_counts
+        )
+        chosen.extend(selected)
+
+        self.print_stats(chosen=chosen)
+
+        return chosen
+
+    def print_stats(self, chosen=None):
+        print("\n" + "=" * 80)
+        print(f"Generation {self.current_generation}")
         self.current_generation += 1
 
-        return selection
+        if not self.verbose:
+            return
 
-    def run(self, verbose=False):
+        if "hv" in self.log:
+            print(f"HyperVolume: {self.hypervolume(chosen)}", end="\t")
+
+        logbook = self.stats.compile(chosen)
+
+        for key in self.log:
+            if key in logbook:
+                print(f"{key}: {logbook[key]}", end="\t")
+
+        print("\n" + "=" * 80 + "\n")
+
+    def run(self):
         toolbox = self.toolbox
         population = toolbox.population(n=toolbox.pop_size)
         stats = self.stats
@@ -310,26 +355,28 @@ class NSGA3:
             mutpb=toolbox.mut_prob,
             ngen=toolbox.max_gen,
             stats=stats,
-            verbose=verbose,
+            verbose=False,
         )
 
-    def metric(self, metric="hypervolume", log=False):
+    def metric(self, metric="hypervolume", **kwargs):
         if metric == "hypervolume":
-            return self.hypervolume(self.result_pop, [11.0, 11.0], log=log)
+            return self.hypervolume(
+                kwargs.get("population", self.result_pop),
+                kwargs.get("ref", None),
+                kwargs.get("all_gens", False),
+            )
         else:
             raise ValueError("Metric not supported")
 
-    def hypervolume(self, population=None, ref=None, log=False):
+    def hypervolume(self, population, ref=None, all_gens=False):
         def hypervolume_util(population, ref=None):
-            front = tools.sortLogNondominated(
-                population, len(population), first_front_only=True
-            )
+            front = self.nd_sort(population, len(population), first_front_only=True)
             wobjs = np.array([ind.fitness.wvalues for ind in front]) * -1
             if ref is None:
                 ref = np.max(wobjs, axis=0) + 1
             return hv.hypervolume(wobjs, ref)
 
-        if log:
+        if all_gens:
             pops = self.logbook.select("pop")
             pops_obj = [
                 np.array([ind.fitness.wvalues for ind in pop]) * -1 for pop in pops

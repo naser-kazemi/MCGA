@@ -8,3 +8,5 @@ if __name__ == "__main__":
     # dtlz_test.run()
     # nsag3_test.run()
     cpft_test.run()
+    # cpft_test.main()
+    # cpft_test.deap_nsga3()

@@ -16,22 +16,33 @@ A = np.array(
 )
 
 
-def gamma(xi):
+def gamma2(xi):
+    return 0.5 * (2 * xi[0] - 1) * np.power(2 * xi[1] - 1, 2)
+
+
+def cpft2(ind):
+    xi = ind[:]
+    a = np.array([xi[0], xi[0], -((2 * xi[0] - 1) ** 3)])
+    b = np.array([2 * xi[1] - 1, gamma2(xi), 0])
+    return a + A @ b
+
+
+def gamma3(xi):
     return np.power(np.abs(2 * xi[1] - 1), xi[0] + 0.5)
 
 
 def cpft3(ind):
     xi = ind[:]
-    a = np.array([xi[0], xi[1], -(2 * xi[0] - 1) ** 3])
-    b = np.array([2 * xi[1] - 1, gamma(xi), 0])
+    a = np.array([xi[0], xi[0], -((2 * xi[0] - 1) ** 3)])
+    b = np.array([2 * xi[1] - 1, gamma3(xi), 0])
     return a + A @ b
 
 
 def run():
-    population_size = 500
+    population_size = 600
     num_variables = 7
     num_objectives = 3
-    num_generations = 700
+    num_generations = 300
     eta_crossover = 20
     eta_mutation = 20
     crossover_probability = 0.6
@@ -50,9 +61,11 @@ def run():
         lower_bound=lower_bound,
         upper_bound=upper_bound,
         num_divisions=5,
+        log=["hv"],
+        verbose=True,
     )
 
-    model.run(verbose=False)
+    model.run()
 
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_subplot(111, projection="3d")
@@ -82,8 +95,9 @@ def run():
     # ax.view_init(30, 40)
     plt.autoscale(tight=True)
     plt.savefig("images/cpft3_nsga3.png", dpi=300)
+    plt.show()
 
-    hypervolumes = model.hypervolume(log=True)
+    hypervolumes = model.metric("hypervolume", all_gens=True)
     fig = plt.figure(figsize=(7, 7))
     plt.plot(hypervolumes)
     plt.xlabel("Iterations (t)")
@@ -92,5 +106,25 @@ def run():
     plt.savefig("images/cpft3_nsga3_hypervolume.png", dpi=300)
 
 
+def main():
+    fig = plt.figure(figsize=(7, 7))
+    ax = fig.add_subplot(111, projection="3d")
+
+    x = np.linspace(0, 1, 100)
+    y = np.linspace(0, 1, 100)
+    X, Y = np.meshgrid(x, y)
+    Z = np.zeros((100, 100))
+    for i in range(100):
+        for j in range(100):
+            Z[i, j] = cpft3([X[i, j], Y[i, j]])[2]
+
+    ax.plot_surface(X, Y, Z, cmap="viridis")
+    ax.set_xlabel("$x_1$", fontsize=15)
+    ax.set_ylabel("$x_2$", fontsize=15)
+    ax.set_zlabel("$f_3(x_1, x_2)$", fontsize=15)
+    plt.show()
+
+
 if __name__ == "__main__":
-    ...
+    run()
+    # main()
