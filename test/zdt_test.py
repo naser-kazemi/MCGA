@@ -4,7 +4,7 @@ from emoa.moop import MOOP
 import matplotlib.pyplot as plt
 from emoa.utils import *
 from nsga2.model import NSGA2
-from mcga.model import MCGA
+from mcga.mc_nsga2 import MCGA
 import math
 
 

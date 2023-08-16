@@ -18,17 +18,18 @@ class MCGA(NSGA2):
     """
 
     def __init__(
-        self,
-        moop: MOOP,
-        num_generation: int,
-        population_size: int,
-        crossover_probability: float = 0.9,
-        tournament_size: int = 2,
-        eta_crossover: float = 1.0,
-        eta_mutation: float = 1.0,
-        polar_offset_limit: np.float64 = 2 * np.pi,
-        num_max_sectors: int = 10,
-        front_frequency_threshold: float = 0.1,
+            self,
+            moop: MOOP,
+            num_generation: int,
+            population_size: int,
+            crossover_probability: float = 0.9,
+            tournament_size: int = 2,
+            eta_crossover: float = 1.0,
+            eta_mutation: float = 1.0,
+            polar_offset_limit: np.float64 = 2 * np.pi,
+            num_max_sectors: int = 10,
+            front_frequency_threshold: float = 0.1,
+            niche_ratio: float = 0.1,
     ):
         super().__init__(
             moop,
@@ -123,12 +124,7 @@ class MCGA(NSGA2):
                     f"Error: Member {member.polar_objective_values[1:]} not in any sector"
                 )
 
-        # sectors = [
-        #     sectors[i] for i in range(len(sectors)) if len(sliced_population[i]) > 0
-        # ]
         sliced_population = [slc for slc in sliced_population if len(slc) > 0]
-
-        # self.plot_monte_carlo(sliced_population, sectors)
 
         return sliced_population
 
@@ -200,7 +196,7 @@ class MCGA(NSGA2):
         self.mc_nds(sliced_population)
 
     def compute_front_frequency_difference(
-        self, population: Population = None, cached_population: Population = None
+            self, population: Population = None, cached_population: Population = None
     ) -> None:
         """
         Compute the difference between the front frequencies of the cached population and the current population

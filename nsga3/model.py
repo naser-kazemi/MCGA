@@ -63,6 +63,14 @@ class NSGA3:
                 "method '{0}' is invalid.".format(nd)
             )
 
+    def create_individual_class(self):
+        creator.create(
+            "FitnessMin", base.Fitness, weights=(-1.0,) * self.num_objectives
+        )
+        creator.create(
+            "Individual", array.array, typecode="d", fitness=creator.FitnessMin
+        )
+
     def init_toolbox(
             self,
             problem,
@@ -74,12 +82,7 @@ class NSGA3:
             eta_mutation,
     ) -> base.Toolbox:
 
-        creator.create(
-            "FitnessMin", base.Fitness, weights=(-1.0,) * self.num_objectives
-        )
-        creator.create(
-            "Individual", array.array, typecode="d", fitness=creator.FitnessMin
-        )
+        self.create_individual_class()
 
         toolbox = base.Toolbox()
 
@@ -325,14 +328,14 @@ class NSGA3:
 
     def print_stats(self, chosen=None):
         print("\n" + "=" * 80)
-        print(f"Generation {self.current_generation}")
+        print(f"Generation {self.current_generation}, population size: {len(chosen)}")
         self.current_generation += 1
 
         if not self.verbose:
             return
 
         if "hv" in self.log:
-            print(f"HyperVolume: {self.hypervolume(chosen)}", end="\t")
+            print(f"HyperVolume: {self.hyper_volume(chosen)}", end="\t")
 
         logbook = self.stats.compile(chosen)
 
@@ -360,7 +363,7 @@ class NSGA3:
 
     def metric(self, metric="hypervolume", **kwargs):
         if metric == "hypervolume":
-            return self.hypervolume(
+            return self.hyper_volume(
                 kwargs.get("population", self.result_pop),
                 kwargs.get("ref", None),
                 kwargs.get("all_gens", False),
@@ -368,8 +371,8 @@ class NSGA3:
         else:
             raise ValueError("Metric not supported")
 
-    def hypervolume(self, population, ref=None, all_gens=False):
-        def hypervolume_util(population, ref=None):
+    def hyper_volume(self, population, ref=None, all_gens=False):
+        def hyper_volume_util(population, ref=None):
             front = self.nd_sort(population, len(population), first_front_only=True)
             wobjs = np.array([ind.fitness.wvalues for ind in front]) * -1
             if ref is None:
@@ -382,6 +385,6 @@ class NSGA3:
                 np.array([ind.fitness.wvalues for ind in pop]) * -1 for pop in pops
             ]
             ref = np.max([np.max(wobjs, axis=0) for wobjs in pops_obj], axis=0) + 1
-            return [hypervolume_util(pop, ref) for pop in pops]
+            return [hyper_volume_util(pop, ref) for pop in pops]
         else:
-            return hypervolume_util(population, ref)
+            return hyper_volume_util(population, ref)
