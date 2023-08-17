@@ -4,8 +4,8 @@ import oraclase.color_processing as color_processing
 import oraclase.visualization as visualization
 import oraclase.genetic_algorithm as genetic_algorithm
 import oraclase.sorting as sorting
-from oraclase.sorting._diversity_mult_obj import _diversity_mult_obj
-from oraclase.sorting._chromaticity_obj import _chromaticity_obj
+from _diversity_mult_obj import _diversity_mult_obj
+from ._chromaticity_obj import _chromaticity_obj
 import numpy as np
 import scipy
 from skimage import color
@@ -15,15 +15,14 @@ import matplotlib.pyplot as plt
 
 
 def predict_printer_colors(
-    ink_area_coverages: npt.NDArray,
-    ng_primary_reflectances: npt.NDArray,
-    white_reference: npt.NDArray,
-    d65_illuminant: npt.NDArray,
-    xbar: npt.NDArray,
-    ybar: npt.NDArray,
-    zbar: npt.NDArray,
+        ink_area_coverages: npt.NDArray,
+        ng_primary_reflectances: npt.NDArray,
+        white_reference: npt.NDArray,
+        d65_illuminant: npt.NDArray,
+        xbar: npt.NDArray,
+        ybar: npt.NDArray,
+        zbar: npt.NDArray,
 ):
-
     #
     colorant_area_coverages = compute_demichel(ink_area_coverages)
 
@@ -55,7 +54,6 @@ def predict_printer_colors(
 
 
 def compute_demichel(ink_area_coverage: npt.NDArray) -> npt.NDArray:
-
     c = ink_area_coverage[:, 0]
     m = ink_area_coverage[:, 1]
     y = ink_area_coverage[:, 2]
@@ -75,16 +73,14 @@ def compute_demichel(ink_area_coverage: npt.NDArray) -> npt.NDArray:
 
 
 def compute_neugebauer(
-    colorant_area_coverage: npt.NDArray, ng_primary_reflectances: npt.NDArray
+        colorant_area_coverage: npt.NDArray, ng_primary_reflectances: npt.NDArray
 ) -> npt.NDArray:
-
     predicted_spectras = np.matmul(colorant_area_coverage, ng_primary_reflectances)
 
     return predicted_spectras
 
 
 def compute_area(xyz_colors) -> float:
-
     xy_colors = xyz_colors[:, :2]
 
     area = scipy.spatial.ConvexHull(xy_colors).volume
@@ -184,7 +180,6 @@ if __name__ == "__main__":
 
     # Run exploration
     for i in range(exploration_params.iterations):
-
         #
         obj1 = _chromaticity_obj(points_ps_pi[:, 1:3])
         obj2 = _diversity_mult_obj(
