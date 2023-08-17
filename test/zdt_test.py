@@ -89,7 +89,7 @@ def run():
         color="red",
         label="Pareto Front",
     )
-    plt.scatter(front[:, 0], front[:, 1], color="blue", label="NSGA-II")
+    plt.scatter(front[:, 0], front[:, 1], color="blue", label="MCGA")
 
     plt.xlabel("$f_1(x)$")
     plt.ylabel("$f_2(x)$")

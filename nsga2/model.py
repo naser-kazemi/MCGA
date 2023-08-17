@@ -6,9 +6,9 @@ from emoa.utils import np, generate_color
 
 class NSGA2(GAModule):
     """
-    NSGA-II algorithm implementation
+    MCGA algorithm implementation
     The algorithm is based on the paper:
-    A fast and elitist multiobjective genetic algorithm: NSGA-II
+    A fast and elitist multiobjective genetic algorithm: MCGA
     by Kalyanmoy Deb, Samir Agrawal, Amrit Pratap, and T Meyarivan
     It will contain the following attributes:
         - moop: The multi-objective optimization problem
