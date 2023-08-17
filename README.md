@@ -1,3 +1,4 @@
-# NSGA-II
+# MCGA
 
-A Python implementation of the NSGA-II model represented in paper [A fast and elitist multiobjective genetic algorithm: NSGA-II](https://ieeexplore.ieee.org/document/996017)
+A Python implementation of the MCGA algorithm to enhance the diversity of the solutions in a multi-objective
+optimization problem.
