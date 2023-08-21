@@ -15,13 +15,13 @@ import matplotlib.pyplot as plt
 
 
 def predict_printer_colors(
-        ink_area_coverages: npt.NDArray,
-        ng_primary_reflectances: npt.NDArray,
-        white_reference: npt.NDArray,
-        d65_illuminant: npt.NDArray,
-        xbar: npt.NDArray,
-        ybar: npt.NDArray,
-        zbar: npt.NDArray,
+    ink_area_coverages: npt.NDArray,
+    ng_primary_reflectances: npt.NDArray,
+    white_reference: npt.NDArray,
+    d65_illuminant: npt.NDArray,
+    xbar: npt.NDArray,
+    ybar: npt.NDArray,
+    zbar: npt.NDArray,
 ):
     #
     colorant_area_coverages = compute_demichel(ink_area_coverages)
@@ -73,7 +73,7 @@ def compute_demichel(ink_area_coverage: npt.NDArray) -> npt.NDArray:
 
 
 def compute_neugebauer(
-        colorant_area_coverage: npt.NDArray, ng_primary_reflectances: npt.NDArray
+    colorant_area_coverage: npt.NDArray, ng_primary_reflectances: npt.NDArray
 ) -> npt.NDArray:
     predicted_spectras = np.matmul(colorant_area_coverage, ng_primary_reflectances)
 

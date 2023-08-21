@@ -10,26 +10,26 @@ from deap import base, creator, tools, algorithms
 
 class MCNSGA3(NSGA3):
     def __init__(
-            self,
-            problem,
-            num_variables,
-            num_objectives,
-            num_generations,
-            population_size,
-            lower_bound,
-            upper_bound,
-            num_divisions,
-            crossover_probability=0.9,
-            eta_crossover=20.0,
-            eta_mutation=20.0,
-            log=None,
-            nd="log",
-            verbose=False,
-            polar_offset_limit: np.float64 = 2 * np.pi,
-            num_max_sectors: int = 10,
-            front_frequency_threshold: float = 0.1,
-            niche_ratio: float = 0.1,
-            monte_carlo_frequency: int = 5,
+        self,
+        problem,
+        num_variables,
+        num_objectives,
+        num_generations,
+        population_size,
+        lower_bound,
+        upper_bound,
+        num_divisions,
+        crossover_probability=0.9,
+        eta_crossover=20.0,
+        eta_mutation=20.0,
+        log=None,
+        nd="log",
+        verbose=False,
+        polar_offset_limit: np.float64 = 2 * np.pi,
+        num_max_sectors: int = 10,
+        front_frequency_threshold: float = 0.1,
+        niche_ratio: float = 0.1,
+        monte_carlo_frequency: int = 5,
     ):
         super().__init__(
             problem=problem,
@@ -57,9 +57,11 @@ class MCNSGA3(NSGA3):
 
     def create_individual_class(self):
         creator.create(
-            "FitnessMin", base.Fitness, weights=(-1.0,) * self.num_objectives,
+            "FitnessMin",
+            base.Fitness,
+            weights=(-1.0,) * self.num_objectives,
             polar_coords=np.zeros(self.num_objectives, dtype=np.float64),
-            front_freq=np.zeros(self.population_size * 2, dtype=np.float64)
+            front_freq=np.zeros(self.population_size * 2, dtype=np.float64),
         )
         creator.create(
             "Individual", array.array, typecode="d", fitness=creator.FitnessMin
@@ -152,9 +154,7 @@ class MCNSGA3(NSGA3):
                     sliced_population[i].append(ind)
                     break
             else:
-                print(
-                    f"Error: Member {ind.fitness.polar_coords[1:]} not in any sector"
-                )
+                print(f"Error: Member {ind.fitness.polar_coords[1:]} not in any sector")
 
         sliced_population = [slc for slc in sliced_population if len(slc) > 0]
 
@@ -203,14 +203,17 @@ class MCNSGA3(NSGA3):
         #     c *= 0.8
         # return value
 
-        return ' '.join([str(x) for x in individual.fitness.front_freq])
+        return " ".join([str(x) for x in individual.fitness.front_freq])
 
     def mc_select(self, individuals):
         self.convert_to_polar(individuals)
         cached_individuals = copy.deepcopy(individuals)
         self.monte_carlo_step(individuals)
 
-        while self.compute_front_frequency_diff(individuals, cached_individuals) > self.front_frequency_threshold:
+        while (
+            self.compute_front_frequency_diff(individuals, cached_individuals)
+            > self.front_frequency_threshold
+        ):
             cached_individuals = copy.deepcopy(individuals)
             self.monte_carlo_step(individuals)
 
@@ -231,7 +234,9 @@ class MCNSGA3(NSGA3):
 
             pareto_fronts = self.nd_sort(individuals, k, first_front_only=False)
 
-            fitnesses = np.array([ind.fitness.wvalues for f in pareto_fronts for ind in f])
+            fitnesses = np.array(
+                [ind.fitness.wvalues for f in pareto_fronts for ind in f]
+            )
             fitnesses *= -1
 
             # Get best and worst point of population, contrary to pymoo
@@ -240,7 +245,9 @@ class MCNSGA3(NSGA3):
             worst_point = np.max(fitnesses, axis=0)
 
             extreme_points = self.find_extreme_points(fitnesses, best_point)
-            front_worst = np.max(fitnesses[: sum(len(f) for f in pareto_fronts), :], axis=0)
+            front_worst = np.max(
+                fitnesses[: sum(len(f) for f in pareto_fronts), :], axis=0
+            )
             intercepts = self.find_intercepts(
                 extreme_points, best_point, worst_point, front_worst
             )
@@ -248,7 +255,9 @@ class MCNSGA3(NSGA3):
 
             # Get counts per niche for individuals in all front but the last
             niche_counts = np.zeros(len(ref_points), dtype=np.int64)
-            index, counts = np.unique(niches[: -len(pareto_fronts[-1])], return_counts=True)
+            index, counts = np.unique(
+                niches[: -len(pareto_fronts[-1])], return_counts=True
+            )
             niche_counts[index] = counts
 
             # Choose individuals from all fronts but the last
@@ -268,7 +277,7 @@ class MCNSGA3(NSGA3):
             ind.fitness.values = tuple([x * self.scale for x in ind.fitness.values])
 
         mc_sorted = self.mc_select(individuals)
-        chosen = mc_sorted[:self.population_size]
+        chosen = mc_sorted[: self.population_size]
 
         for ind in individuals:
             ind.fitness.values = tuple([x / self.scale for x in ind.fitness.values])

@@ -1,4 +1,3 @@
-
 """
 @Author Sebastian Cucerca
 @Created 08/03/2023
@@ -21,13 +20,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def get_random_parameters(limits: list,
-                          prec_facs: npt.NDArray,
-                          cont_ds: npt.NDArray,
-                          samp_cnt: int,
-                          min_ppl: int = None,
-                          max_t: float = None,
-                          hyp_lt: float = None) -> npt.NDArray:
+def get_random_parameters(
+    limits: list,
+    prec_facs: npt.NDArray,
+    cont_ds: npt.NDArray,
+    samp_cnt: int,
+    min_ppl: int = None,
+    max_t: float = None,
+    hyp_lt: float = None,
+) -> npt.NDArray:
     """
     TODO fill
     :param limits:
@@ -88,24 +89,26 @@ def get_random_parameters(limits: list,
         samp_parameters = np.vstack((samp_parameters, pot_samp_parameters))
 
     #
-    logger.info('Generated random starting population')
+    logger.info("Generated random starting population")
 
     #
     return samp_parameters
 
 
-def generate_offsprings(pot_par_ds: npt.NDArray,
-                        new_pop_sz: int,
-                        cross_prob: float,
-                        mut_prob: float,
-                        scores: npt.NDArray,
-                        bits_per_param: npt.NDArray,
-                        prec_facs: npt.NDArray,
-                        limits: List[npt.NDArray],
-                        min_ppl: int = None,
-                        max_t: float = None,
-                        hyp_lt: float = None,
-                        divs: npt.NDArray = np.array([1000, 1, 1, 1, 1, 1, 1])) -> npt.NDArray:
+def generate_offsprings(
+    pot_par_ds: npt.NDArray,
+    new_pop_sz: int,
+    cross_prob: float,
+    mut_prob: float,
+    scores: npt.NDArray,
+    bits_per_param: npt.NDArray,
+    prec_facs: npt.NDArray,
+    limits: List[npt.NDArray],
+    min_ppl: int = None,
+    max_t: float = None,
+    hyp_lt: float = None,
+    divs: npt.NDArray = np.array([1000, 1, 1, 1, 1, 1, 1]),
+) -> npt.NDArray:
     """
     TODO fill
     :param pot_par_ds:
@@ -187,7 +190,7 @@ def generate_offsprings(pot_par_ds: npt.NDArray,
         off_ds = np.concatenate((off_ds, pot_off_ds))
 
     #
-    logger.info('Generated offspring generation [Size=%i]' % new_pop_sz)
+    logger.info("Generated offspring generation [Size=%i]" % new_pop_sz)
 
     #
     return off_ds

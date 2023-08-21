@@ -1,4 +1,3 @@
-
 """
 @Author Sebastian Cucerca
 @Created 20/01/2023
@@ -53,8 +52,12 @@ def sort_nd(points_ps, start_angle_range, cone_count_range, obj_scores):
         ora = np.random.rand()
 
         #
-        start_angle = start_angle_range[0] + ora * (start_angle_range[1]-start_angle_range[0])
-        cone_count = cone_count_range[0] + round(cr * (cone_count_range[1]-cone_count_range[0]))
+        start_angle = start_angle_range[0] + ora * (
+            start_angle_range[1] - start_angle_range[0]
+        )
+        cone_count = cone_count_range[0] + round(
+            cr * (cone_count_range[1] - cone_count_range[0])
+        )
         rad_per_cone = 2 * pi / cone_count
 
         # iterate over cones and construct fronts
@@ -62,7 +65,7 @@ def sort_nd(points_ps, start_angle_range, cone_count_range, obj_scores):
 
             # extract points within current cone
             clx, cly = _pol_to_cart(start_angle + (c_idx) * rad_per_cone, cone_len)
-            crx, cry = _pol_to_cart(start_angle + (c_idx+1) * rad_per_cone, cone_len)
+            crx, cry = _pol_to_cart(start_angle + (c_idx + 1) * rad_per_cone, cone_len)
             poly = np.array([[0, 0], [clx, cly], [crx, cry], [0, 0]])
 
             point = np.column_stack([points_ps[:, 1], points_ps[:, 2]])
@@ -91,17 +94,24 @@ def sort_nd(points_ps, start_angle_range, cone_count_range, obj_scores):
         mc_samps = mc_samps + 1
 
     # sort points according to
-    print('Computed fronts (#%i hue wheel samplings, %.5f)' % (mc_samps, avg_diff))
+    print("Computed fronts (#%i hue wheel samplings, %.5f)" % (mc_samps, avg_diff))
     # we want to sort in descending order while lexsort sorts in ascending
     # we know that pointfronts is positive, so we can negate it to
     # get the desired behavior
     sort_ids = np.lexsort(-point_fronts.T[::-1])
     # compute ranks for points
-    ranks = np.zeros((len(points_ps,)), dtype=np.int32)
+    ranks = np.zeros(
+        (
+            len(
+                points_ps,
+            )
+        ),
+        dtype=np.int32,
+    )
     ranks[sort_ids] = np.arange(len(points_ps))
 
     # # compute scores for points
-    scores = (points_ps.shape[0] - ranks)/points_ps.shape[0]
+    scores = (points_ps.shape[0] - ranks) / points_ps.shape[0]
 
     # # compute array with sorted ids according to ranks
     sorted_ids = ranks.argsort()
@@ -110,17 +120,19 @@ def sort_nd(points_ps, start_angle_range, cone_count_range, obj_scores):
     scores = scores / np.sum(scores)
 
     #
-    logger.info('Sorted population')
+    logger.info("Sorted population")
 
     return ranks, scores, sorted_ids, point_fronts
 
 
-def compute_score(points_ds: npt.NDArray,
-                  points_ps: npt.NDArray,
-                  obj: npt.NDArray,
-                  k_n: int,
-                  limits_ds: List[npt.NDArray],
-                  limits_ps: List[npt.NDArray]):
+def compute_score(
+    points_ds: npt.NDArray,
+    points_ps: npt.NDArray,
+    obj: npt.NDArray,
+    k_n: int,
+    limits_ds: List[npt.NDArray],
+    limits_ps: List[npt.NDArray],
+):
     """
     TODO Fill
     :param points_ds:
@@ -133,10 +145,10 @@ def compute_score(points_ds: npt.NDArray,
     """
 
     #
-    assert(len(obj) == 5)
+    assert len(obj) == 5
 
     #
-    assert(np.sum(obj) >= 1)
+    assert np.sum(obj) >= 1
     if len(points_ds.shape) == 1:
         points_ds = points_ds[None, :]
     if len(points_ps.shape) == 1:
@@ -167,7 +179,7 @@ def compute_score(points_ds: npt.NDArray,
     scores = scores[:, obj != 0]
 
     #
-    logger.info('Computed scores of population')
+    logger.info("Computed scores of population")
 
     #
     return scores

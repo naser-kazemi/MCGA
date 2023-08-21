@@ -11,21 +11,21 @@ import copy
 
 class NSGA3:
     def __init__(
-            self,
-            problem,
-            num_variables,
-            num_objectives,
-            num_generations,
-            population_size,
-            lower_bound,
-            upper_bound,
-            num_divisions,
-            crossover_probability=0.9,
-            eta_crossover=20.0,
-            eta_mutation=20.0,
-            log=None,
-            nd="log",
-            verbose=False,
+        self,
+        problem,
+        num_variables,
+        num_objectives,
+        num_generations,
+        population_size,
+        lower_bound,
+        upper_bound,
+        num_divisions,
+        crossover_probability=0.9,
+        eta_crossover=20.0,
+        eta_mutation=20.0,
+        log=None,
+        nd="log",
+        verbose=False,
     ):
         self.num_objectives = num_objectives
         self.num_generations = num_generations
@@ -72,14 +72,14 @@ class NSGA3:
         )
 
     def init_toolbox(
-            self,
-            problem,
-            num_variables,
-            lower_bound,
-            upper_bound,
-            crossover_probability,
-            eta_crossover,
-            eta_mutation,
+        self,
+        problem,
+        num_variables,
+        lower_bound,
+        upper_bound,
+        crossover_probability,
+        eta_crossover,
+        eta_mutation,
     ) -> base.Toolbox:
 
         self.create_individual_class()
@@ -209,9 +209,9 @@ class NSGA3:
                 intercepts = 1 / x
 
                 if (
-                        not np.allclose(np.dot(A, x), b)
-                        or np.any(intercepts <= 1e-6)
-                        or np.any((intercepts + best_point) > current_worst)
+                    not np.allclose(np.dot(A, x), b)
+                    or np.any(intercepts <= 1e-6)
+                    or np.any((intercepts + best_point) > current_worst)
                 ):
                     intercepts = front_worst
 
@@ -231,9 +231,9 @@ class NSGA3:
 
         distances = np.sum(fn * reference_points, axis=2) / norm.reshape(1, -1)
         distances = (
-                distances[:, :, np.newaxis]
-                * reference_points[np.newaxis, :, :]
-                / norm[np.newaxis, :, np.newaxis]
+            distances[:, :, np.newaxis]
+            * reference_points[np.newaxis, :, :]
+            / norm[np.newaxis, :, np.newaxis]
         )
         distances = np.linalg.norm(distances - fn, axis=2)
 

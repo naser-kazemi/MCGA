@@ -50,42 +50,48 @@ def cpft4(ind):
     return a + A @ b
 
 
-def run():
-    population_size = 1000
-    num_variables = 7
-    num_objectives = 3
-    num_generations = 300
-    eta_crossover = 20
-    eta_mutation = 20
-    crossover_probability = 0.6
-    lower_bound = 0.0
-    upper_bound = 1.0
-    num_divisions = 8
-    polar_offset_limit = np.pi
-    num_max_sectors = 30
-    front_frequency_threshold = 0.01
-    niche_ratio = 0.05
-    monte_carlo_frequency = 4
-    problem = "cpft4"
+population_size = 1000
+num_variables = 7
+num_objectives = 3
+num_generations = 300
+eta_crossover = 20
+eta_mutation = 20
+crossover_probability = 0.6
+lower_bound = 0.0
+upper_bound = 1.0
+num_divisions = 8
+polar_offset_limit = np.pi
+num_max_sectors = 30
+front_frequency_threshold = 0.01
+niche_ratio = 0.05
+monte_carlo_frequency = 4
+verbose = True
+log = ["hv"]
+problem = cpft4
+problem_name = "cpft4"
 
-    # model = NSGA3(
-    #     problem=cpft4,
-    #     population_size=population_size,
-    #     num_variables=num_variables,
-    #     num_objectives=num_objectives,
-    #     num_generations=num_generations,
-    #     eta_crossover=eta_crossover,
-    #     eta_mutation=eta_mutation,
-    #     crossover_probability=crossover_probability,
-    #     lower_bound=lower_bound,
-    #     upper_bound=upper_bound,
-    #     num_divisions=5,
-    #     log=["hv"],
-    #     verbose=True,
-    # )
 
-    model = MCNSGA3(
-        problem=cpft4,
+def nsga3_model():
+    return NSGA3(
+        problem=problem,
+        population_size=population_size,
+        num_variables=num_variables,
+        num_objectives=num_objectives,
+        num_generations=num_generations,
+        eta_crossover=eta_crossover,
+        eta_mutation=eta_mutation,
+        crossover_probability=crossover_probability,
+        lower_bound=lower_bound,
+        upper_bound=upper_bound,
+        num_divisions=5,
+        log=log,
+        verbose=verbose,
+    )
+
+
+def mcnsga3_model():
+    return MCNSGA3(
+        problem=problem,
         population_size=population_size,
         num_variables=num_variables,
         num_objectives=num_objectives,
@@ -101,23 +107,33 @@ def run():
         front_frequency_threshold=front_frequency_threshold,
         niche_ratio=niche_ratio,
         monte_carlo_frequency=monte_carlo_frequency,
-        log=["hv"],
-        verbose=True,
+        log=log,
+        verbose=verbose,
     )
+
+
+def run():
+    # model = nsga3_model()
+    model = mcnsga3_model()
 
     model.run()
 
+    individuals = model.result_pop
+    individuals = np.array([ind.fitness.values for ind in individuals])
+
+    # plot using seaborn
+    sns.set_theme(style="darkgrid")
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_subplot(111, projection="3d")
-
-    for ind in model.result_pop:
-        ax.scatter(
-            ind.fitness.values[0],
-            ind.fitness.values[1],
-            ind.fitness.values[2],
-            marker="o",
-            color="blue",
-        )
+    ax.scatter(
+        individuals[:, 0],
+        individuals[:, 1],
+        individuals[:, 2],
+        color="blue",
+        alpha=0.5,
+        label="NSGA3",
+        # label="NSGA3",
+    )
 
     # plot true pareto front
     # ax.scatter(
@@ -129,13 +145,13 @@ def run():
     #     label="Pareto Front",
     # )
 
-    ax.set_xlabel("$f_1()$", fontsize=15)
-    ax.set_ylabel("$f_2()$", fontsize=15)
-    ax.set_zlabel("$f_3()$", fontsize=15)
+    ax.set_xlabel("$f_1$", fontsize=15)
+    ax.set_ylabel("$f_2$", fontsize=15)
+    ax.set_zlabel("$f_3$", fontsize=15)
     # ax.view_init(30, 40)
     plt.autoscale(tight=True)
-    plt.savefig(f"images/{problem}_mc_nsga3.png", dpi=300)
-    # plt.savefig(f"images/{problem}_nsga3.png", dpi=300)
+    plt.savefig(f"images/{problem_name}_mc_nsga3.png", dpi=300)
+    # plt.savefig(f"images/{problem_name}_nsga3.png", dpi=300)
     plt.show()
 
     hypervolumes = model.metric("hypervolume", all_gens=True)
@@ -144,8 +160,8 @@ def run():
     plt.xlabel("Iterations (t)")
     plt.ylabel("Hypervolume")
     plt.title("Hypervolume over time")
-    plt.savefig(f"images/{problem}_mc_nsga3_hypervolume.png", dpi=300)
-    # plt.savefig(f"images/{problem}_nsga3_hypervolume.png", dpi=300)
+    plt.savefig(f"images/{problem_name}_mc_nsga3_hypervolume.png", dpi=300)
+    # plt.savefig(f"images/{problem_name}_nsga3_hypervolume.png", dpi=300)
 
 
 if __name__ == "__main__":
