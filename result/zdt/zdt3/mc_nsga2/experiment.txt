@@ -1,0 +1,15 @@
+problem: zdt3
+population_size: 50
+num_variables: 30
+num_objectives: 2
+num_generations: 1000
+eta_crossover: 20
+eta_mutation: 20
+crossover_probability: 0.8
+lower_bound: 0.0
+upper_bound: 1.0
+hv_ref_point: [ 0.         -0.77336901]
+polar_offset_limit: 3.141592653589793
+num_max_sectors: 30
+front_frequency_threshold: 0.01
+monte_carlo_frequency: 2

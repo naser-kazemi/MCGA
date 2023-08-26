@@ -1,52 +1,73 @@
-from nsga2.model import NSGA2
-from emoa.population import Population
-from emoa.moop import MOOP
-from emoa.utils import *
-from itertools import product
-import matplotlib.pyplot as plt
+import array
+import copy
+from itertools import product, chain
+from operator import attrgetter
 
-generation = 0
-iteration = 0
+from deap.tools.emo import assignCrowdingDist
+
+from emoa.utils import np, random, vector_to_polar
+from nsga2 import NSGA2
+
+from deap import base, creator, tools, algorithms
 
 
-class MCGA(NSGA2):
-    """
-    Monte Carlo Genetic Algorithm
-    This class inherits from the NSGA2 class. It will contain the following additional attributes:
-        - polar_offset_limit: The limit of the polar offset
-        - num_max_sectors: The maximum number of sectors to divide the polar space into
-    """
-
+class MCNSGA2(NSGA2):
     def __init__(
-        self,
-        moop: MOOP,
-        num_generation: int,
-        population_size: int,
-        crossover_probability: float = 0.9,
-        tournament_size: int = 2,
-        eta_crossover: float = 1.0,
-        eta_mutation: float = 1.0,
-        polar_offset_limit: np.float64 = 2 * np.pi,
-        num_max_sectors: int = 10,
-        front_frequency_threshold: float = 0.1,
-        niche_ratio: float = 0.1,
+            self,
+            problem,
+            num_variables,
+            num_objectives,
+            num_generations,
+            population_size,
+            lower_bound,
+            upper_bound,
+            crossover_probability=0.9,
+            eta_crossover=20.0,
+            eta_mutation=20.0,
+            log=None,
+            nd="log",
+            verbose=False,
+            polar_offset_limit: np.float64 = 2 * np.pi,
+            num_max_sectors: int = 10,
+            front_frequency_threshold: float = 0.1,
+            niche_ratio: float = 0.1,
+            monte_carlo_frequency: int = 5,
+            polar_scale: float = 1000.0,
     ):
         super().__init__(
-            moop,
-            num_generation,
-            population_size,
-            crossover_probability,
-            tournament_size,
-            eta_crossover,
-            eta_mutation,
+            problem=problem,
+            num_variables=num_variables,
+            num_objectives=num_objectives,
+            num_generations=num_generations,
+            population_size=population_size,
+            lower_bound=lower_bound,
+            upper_bound=upper_bound,
+            crossover_probability=crossover_probability,
+            eta_crossover=eta_crossover,
+            eta_mutation=eta_mutation,
+            log=log,
+            nd=nd,
+            verbose=verbose,
         )
+
         self.polar_offset_limit = polar_offset_limit
         self.num_max_sectors = num_max_sectors
-        self.cached_population: Population = Population()
-        self.front_frequency_difference: float = np.inf
-        self.front_frequency_threshold: float = front_frequency_threshold
+        self.front_frequency_threshold = front_frequency_threshold
+        self.niche_ratio = niche_ratio
+        self.monte_carlo_frequency = monte_carlo_frequency
+        self.scale = polar_scale
 
-        self.fig = plt.figure(figsize=(10, 10))
+    def create_individual_class(self):
+        creator.create(
+            "FitnessMin",
+            base.Fitness,
+            weights=(-1.0,) * self.num_objectives,
+            polar_coords=np.zeros(self.num_objectives, dtype=np.float64),
+            front_freq=np.zeros(self.population_size * 2, dtype=np.float64),
+        )
+        creator.create(
+            "Individual", array.array, typecode="d", fitness=creator.FitnessMin
+        )
 
     def divide_planes(self):
         """
@@ -60,15 +81,14 @@ class MCGA(NSGA2):
         sectors_points = []
 
         # divide the 2 * pi radians into num_sectors sectors evenly
-        for i in range(self.moop.num_objectives - 1):
+        for i in range(self.num_objectives - 1):
             sector = np.linspace(0, 2 * np.pi, self.num_max_sectors + 1)
             sectors_points.append(sector)
 
         sectors = []
         # now create the (start, end) tuples for each sector
-        for i in range(self.moop.num_objectives - 1):
+        for i in range(self.num_objectives - 1):
             sectors.append(
-                # [(max(0, min_polar_objectives[i] - EPSILON), sectors_points[i][0])]
                 [
                     (sectors_points[i][j], sectors_points[i][j + 1])
                     for j in range(len(sectors_points[i]) - 1)
@@ -77,7 +97,7 @@ class MCGA(NSGA2):
 
         # now rotate the sectors to create the offset
         offset = random.uniform(0, self.polar_offset_limit)
-        for i in range(self.moop.num_objectives - 1):
+        for i in range(self.num_objectives - 1):
             sectors[i] = [(x + offset, y + offset) for x, y in sectors[i]]
 
         return sectors
@@ -93,272 +113,154 @@ class MCGA(NSGA2):
         """
 
         # create the cartesian product of the plane sectors
-        sectors = list(product(*plane_sectors))
+        sectors = np.array(list(product(*plane_sectors)))
 
         return sectors
 
-    def slice_polar_space(self, population: Population = None) -> list[Population]:
+    @staticmethod
+    def convert_to_polar(individuals):
+        """
+        Convert the individuals in the population to polar coordinates
+        :return: None
+        """
+        for ind in individuals:
+            ind.fitness.polar_coords = vector_to_polar(ind.fitness.values)[1]
+
+    @staticmethod
+    def is_in_sector(sector, individual):
+        is_in_bounds = True
+        for x, (start, end) in zip(individual.fitness.polar_coords[1:], sector):
+            if end <= 2 * np.pi:
+                in_this_sector = start <= x < end
+            else:
+                in_this_sector = start <= x < 2 * np.pi or 0 <= x < end - 2 * np.pi
+            is_in_bounds = is_in_bounds and in_this_sector
+
+        return is_in_bounds
+
+    def slice_polar_space(self, individuals):
         """
         Slice the polar space into sectors and assign each member of the population to a sector
-        :param population: The population to slice
+        :param individuals: The population to slice
         :return: The sliced population in polar space
         """
 
-        if population is None:
-            population = self.population
-
         plane_sectors = self.divide_planes()
-
-        # create the sector in polar space
         sectors = self.create_sectors(plane_sectors)
 
-        sliced_population = [Population() for _ in range(len(sectors))]
+        sliced_population = [[] for _ in range(len(sectors))]
         # divide the population into sectors
-        for member in population.population:
+        for ind in individuals:
             for i in range(len(sectors)):
-                if member.is_in_sectors(sectors[i]):
-                    sliced_population[i].append(member)
+                if self.is_in_sector(sectors[i], ind):
+                    sliced_population[i].append(ind)
                     break
             else:
-                print(
-                    f"Error: Member {member.polar_objective_values[1:]} not in any sector"
-                )
+                print(f"Error: Member {ind.fitness.polar_coords[1:]} not in any sector")
 
         sliced_population = [slc for slc in sliced_population if len(slc) > 0]
 
         return sliced_population
 
-    def mc_nds(self, sliced_population: list[Population]) -> None:
+    def mc_nds(self, sliced_population) -> None:
         """
         Monte Carlo Non-Dominated Sorting
         Apply non-dominated sorting on the sliced population and assign ranks to the members
         :param sliced_population: The sliced population
         """
 
-        for population_slice in sliced_population:
-            # print("Slice:", population_slice)
-            front = self.fast_non_dominated_sort(population_slice)
+        for population in sliced_population:
+            fronts = self.nd_sort(population, len(population))
+            for i, front in enumerate(fronts):
+                for ind in front:
+                    ind.fitness.front_freq[i] += 1
 
-    @classmethod
-    def crowding_distance(cls, population: Population, num_objectives: int) -> None:
-        """
-        Compute the crowding distance of the members in the population
-        :param population: The population
-        :param num_objectives: The number of objectives
-        """
+    def monte_carlo_step(self, individuals):
 
-        # sort the population based on the front values
-
-        max_front_value = np.max(
-            [member.front_value for member in population.population]
-        )
-        min_front_value = np.min(
-            [member.front_value for member in population.population]
-        )
-
-        for member in population.population:
-            member.crowding_distance = 0.0
-
-        # divide the population into parts based on the front values
-        front_value_range = max_front_value - min_front_value
-        num_parts = 10
-        parts_intervals = [
-            min_front_value + i * front_value_range / num_parts
-            for i in range(num_parts + 1)
-        ]
-        parts = [[] for _ in range(num_parts)]
-        for member in population.population:
-            for i in range(num_parts):
-                if parts_intervals[i] <= member.front_value < parts_intervals[i + 1]:
-                    parts[i].append(member)
-                    break
-
-        # compute the crowding distance for each part
-        for part in parts:
-            cls.compute_crowding_distance(part, num_objectives)
-
-    def run_monte_carlo_step(self, population: Population = None) -> None:
-        """
-        Run a Monte Carlo step
-        :param population: The population to run the step on
-        :return: The new population
-        """
-
-        if population is None:
-            population = self.population
-
-        # slice the population into sectors
-        sliced_population = self.slice_polar_space(population)
-
-        sliced_population = [slc for slc in sliced_population if len(slc) > 0]
-
-        # run non-dominated sorting on the sliced population
+        sliced_population = self.slice_polar_space(individuals)
         self.mc_nds(sliced_population)
 
-    def compute_front_frequency_difference(
-        self, population: Population = None, cached_population: Population = None
-    ) -> None:
+    @staticmethod
+    def compute_front_frequency_diff(individuals, cached_individuals):
         """
-        Compute the difference between the front frequencies of the cached population and the current population
-        :param population: The current population
-        :param cached_population: The cached population
-        """
-
-        if population is None:
-            population = self.population
-
-        if cached_population is None:
-            cached_population = self.cached_population
-
-        A = np.array([member.front_frequency for member in population])
-        B = np.array([member.front_frequency for member in cached_population])
-
-        # normalize the front frequencies
-        A = A / np.linalg.norm(A, ord="fro")
-        B = B / np.linalg.norm(B, ord="fro")
-
-        self.front_frequency_difference = np.linalg.norm(A - B, ord="fro")
-
-    def make_new_population(self) -> Population:
-        """
-        Make a new population from the current population
-        :return: The offsprings
+        Compute the difference between the front frequencies of the individuals
+        :param individuals: The individuals to compare
+        :param cached_individuals: The cached individuals to compare
         """
 
-        # assign probabilities to each member of the population based on their place in the sorted population
-        probabilities = np.array([i + 1 for i in range(len(self.population))][::-1])
-        probabilities = probabilities / np.sum(probabilities)
+        a = np.array([ind.fitness.front_freq for ind in individuals])
+        b = np.array([ind.fitness.front_freq for ind in cached_individuals])
 
-        offsprings = Population()
-        while offsprings.size < self.population_size:
-            # select two members from the population based on the probabilities
-            selected_members = np.random.choice(
-                self.population.population, size=2, p=probabilities
-            )
-            parent1, parent2 = selected_members[0], selected_members[1]
-            child1, child2 = self.crossover(parent1, parent2)
-            child1 = self.mutate(child1)
-            child2 = self.mutate(child2)
-            offsprings += [child1, child2]
+        a = a / np.linalg.norm(a, ord="fro")
+        b = b / np.linalg.norm(b, ord="fro")
 
-        return offsprings
+        return np.linalg.norm(a - b, ord="fro")
 
-    def normalize_front_frequency(self, population: Population = None) -> None:
+    @staticmethod
+    def front_value(individual):
+        # value = 0.0
+        # c = 1.0
+        # for ff in individual.fitness.front_freq:
+        #     value += ff * c
+        #     c *= 0.8
+        # return value
+
+        return " ".join([str(x) for x in individual.fitness.front_freq])
+
+    def mc_select(self, individuals):
+        self.convert_to_polar(individuals)
+        cached_individuals = copy.deepcopy(individuals)
+        self.monte_carlo_step(individuals)
+
+        while (
+                self.compute_front_frequency_diff(individuals, cached_individuals)
+                > self.front_frequency_threshold
+        ):
+            cached_individuals = copy.deepcopy(individuals)
+            self.monte_carlo_step(individuals)
+
+        sorted_individuals = sorted(individuals, key=self.front_value, reverse=True)
+
+        return sorted_individuals
+
+    def select(self, individuals, k):
         """
-        Normalize the front frequency of the population
-        :param population: The population
+        Select the individuals to survive to the next generation
+        :param individuals: The individuals to select from
+        :param k: The number of individuals to select
+        :return: The selected individuals
         """
 
-        if population is None:
-            population = self.population
+        if (self.current_generation % self.monte_carlo_frequency) != 1 and (
+                self.current_generation < self.num_generations):
+            pareto_fronts = self.nd_sort(individuals, k)
 
-        front_frequency = np.array([member.front_frequency for member in population])
-        front_frequency = front_frequency / np.linalg.norm(front_frequency, ord="fro")
-        for i in range(len(population)):
-            population.population[i].front_frequency = front_frequency[i]
+            for front in pareto_fronts:
+                assignCrowdingDist(front)
 
-    def run_generation(self) -> None:
-        """
-        Run a generation of the algorithm
-        :return: None
-        """
+            chosen = list(chain(*pareto_fronts[:-1]))
+            k = k - len(chosen)
+            if k > 0:
+                sorted_front = sorted(
+                    pareto_fronts[-1],
+                    key=attrgetter("fitness.crowding_dist"),
+                    reverse=True,
+                )
+                chosen.extend(sorted_front[:k])
 
-        self.offsprings = self.make_new_population()
-        self.evaluate_population(self.offsprings)
+            self.print_stats(chosen=chosen)
 
-        global generation
-        generation += 1
-        global iteration
-        iteration = 1
-        R: Population = self.population + self.offsprings
-        R.reset()
-        self.run_monte_carlo_step(R)
-        while self.front_frequency_difference > self.front_frequency_threshold:
-            cached_population = R.copy()
-            self.run_monte_carlo_step(R)
-            self.compute_front_frequency_difference(R, cached_population)
-            iteration += 1
+            return chosen
 
-        self.front_frequency_difference = np.inf
-        self.normalize_front_frequency(R)
-        self.crowding_distance(R, self.moop.num_objectives)
+        for ind in individuals:
+            ind.fitness.values = tuple([x * self.scale for x in ind.fitness.values])
 
-        sorted_R = sorted(R.population, reverse=True)
+        mc_sorted = self.mc_select(individuals)
+        chosen = mc_sorted[: self.population_size]
 
-        self.population = Population(sorted_R[: self.population_size])
+        for ind in individuals:
+            ind.fitness.values = tuple([x / self.scale for x in ind.fitness.values])
 
-    def run(self) -> None:
-        """
-        Run the algorithm for the given number of generations
-        """
-        lim_ratio = 30
-        self.plot_population_frame(0, lim_ratio, f"gif_images/generation_{0}.png")
-        self.run_monte_carlo_step()
-        self.run_monte_carlo_step()
-        while self.front_frequency_difference > self.front_frequency_threshold:
-            self.cached_population = self.population.copy()
-            self.run_monte_carlo_step()
-            self.compute_front_frequency_difference()
+        self.print_stats(chosen=chosen)
 
-        self.front_frequency_difference = np.inf
-        self.normalize_front_frequency()
-        self.crowding_distance(self.population, self.moop.num_objectives)
-        self.population = Population(sorted(self.population.population, reverse=True))
-
-        for i in range(self.num_generation):
-            self.run_generation()
-            print(f"Generation {i + 1} done")
-            if i % 25 == 0:
-                lim_ratio *= 0.8
-            self.plot_population_frame(
-                i + 1, lim_ratio, f"gif_images/generation_{i + 1}.png"
-            )
-
-    def plot_monte_carlo(self, sliced_population: list[Population], sectors) -> None:
-
-        # plot the polar sector lines in the polar space
-
-        dim = self.moop.num_objectives
-        self.fig.clear()
-
-        if dim == 2:
-            ax = self.fig.add_subplot(projection="polar")
-            for sector in sectors:
-                for i in range(len(sector)):
-                    ax.plot(
-                        sector[0][0] * np.ones(300),
-                        np.arange(0, 3, 0.01),
-                        color="red",
-                        linewidth=0.5,
-                    )
-                    ax.plot(
-                        sector[0][1] * np.ones(300),
-                        np.arange(0, 3, 0.01),
-                        color="red",
-                        linewidth=0.5,
-                    )
-
-        else:
-            ax = self.fig.add_subplot(111, projection="3d")
-            for sector in sectors:
-                theta, phi = sector[1][0], sector[1][1]
-                r = np.arange(0, 100, 0.01)
-                X = r * np.sin(phi) * np.cos(theta)
-                Y = r * np.sin(phi) * np.sin(theta)
-                Z = r * np.cos(phi)
-                ax.plot(X, Y, Z, color="red", linewidth=0.5)
-
-        # print(len(sliced_population))
-
-        # for slice, sector in zip(sliced_population, sectors):
-        # print(sector)
-        # print(*[member.polar_objective_values[1:] for member in slice.population])
-
-        # print("\n###############################\n")
-
-        for population in sliced_population:
-            self.plot_population(ax, population)
-
-        plt.savefig(f"monte_carlo_gif_images/{generation}.{iteration}.png")
-
-        # plt.pause(0.001)
+        return chosen
