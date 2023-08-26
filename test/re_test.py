@@ -233,11 +233,21 @@ def mcnsga3_model():
     )
 
 
-def run_nsga():
-    # model = nsga2_model()
-    # model = mcnsga2_model()
-    # model = nsga3_model()
-    model = mcnsga3_model()
+def run_nsga(selected_model=None):
+    if selected_model is not None:
+        if selected_model == "nsga3":
+            model = nsga3_model()
+        elif selected_model == "mc_nsga3":
+            model = mcnsga3_model()
+        elif selected_model == "nsga2":
+            model = nsga2_model()
+        else:
+            model = mcnsga2_model()
+    else:
+        # model = nsga2_model()
+        # model = mcnsga2_model()
+        # model = nsga3_model()
+        model = mcnsga3_model()
 
     model.run()
 
@@ -397,7 +407,11 @@ def run_moead():
 
 
 def run():
-    run_nsga()
+    for i in range(1, 5 + 1):
+        global expr
+        expr = i
+        run_nsga("nsga3")
+        run_nsga("mc_nsga3")
     # run_moead()
 
 
