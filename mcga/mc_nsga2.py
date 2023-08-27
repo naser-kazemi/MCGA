@@ -57,6 +57,19 @@ class MCNSGA2(NSGA2):
         self.monte_carlo_frequency = monte_carlo_frequency
         self.scale = polar_scale
 
+        self.nd_sort = self.init_ndsort(nd)
+
+    def init_ndsort(self, nd):
+        if nd == "standard":
+            return tools.sortNondominated
+        elif nd == "log":
+            return tools.sortLogNondominated
+        else:
+            raise Exception(
+                "The choice of non-dominated sorting "
+                "method '{0}' is invalid.".format(nd)
+            )
+
     def create_individual_class(self):
         creator.create(
             "FitnessMin",
