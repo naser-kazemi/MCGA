@@ -121,7 +121,7 @@ def re5(x):
     return np.array([f1, f2, f3])
 
 
-population_size = 2000
+population_size = 1000
 num_variables = 4
 num_objectives = 3
 num_generations = 300
@@ -329,8 +329,8 @@ def run_nsga(selected_model=None):
     with open(path + f"/hypervolume{expr}.json", "w") as f:
         json.dump(hypervolumes, f)
 
-    history = np.array(model.logbook.select("pop"))
-    make_gif_from_history(history, path + f"/generations{expr}.gif")
+    # history = np.array(model.logbook.select("pop"))
+    # make_gif_from_history(history, path + f"/generations{expr}.gif")
 
 
 def run_moead():

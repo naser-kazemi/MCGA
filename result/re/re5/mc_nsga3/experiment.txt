@@ -1,5 +1,5 @@
 problem: re5
-population_size: 2000
+population_size: 1000
 num_variables: 4
 num_objectives: 3
 num_generations: 300

@@ -86,7 +86,7 @@ log = ["hv"]
 problem = cpft3
 problem_name = "cpft3"
 model_name = ""
-expr = 2
+expr = 1
 
 
 def nsga3_model():
@@ -134,9 +134,15 @@ def mcnsga3_model():
     )
 
 
-def run():
-    model = nsga3_model()
-    # model = mcnsga3_model()
+def run_nsga(selected_model=None):
+    if selected_model is not None:
+        if selected_model == "nsga3":
+            model = nsga3_model()
+        else:
+            model = mcnsga3_model()
+    else:
+        model = nsga3_model()
+        # model = mcnsga3_model()
 
     model.run()
 
@@ -205,6 +211,21 @@ def run():
     # save hypervolume data
     with open(path + f"/hypervolume{expr}.json", "w") as f:
         json.dump(hypervolumes, f)
+
+
+def run():
+    problem_names = ["cpft2", "cpft3", "cpft4"]
+    problems = [cpft2, cpft3, cpft3]
+    global problem_name
+    global problem
+    global expr
+    for (pn, p) in zip(problem_names, problems):
+        problem_name = pn
+        problem = p
+        for i in range(1, 5 + 1):
+            expr = i
+            run_nsga("nsga3")
+            run_nsga("mc_nsga3")
 
 
 if __name__ == "__main__":

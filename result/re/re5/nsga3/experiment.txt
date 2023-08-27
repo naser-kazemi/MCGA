@@ -2,7 +2,7 @@ problem: re5
 population_size: 1000
 num_variables: 4
 num_objectives: 3
-num_generations: 200
+num_generations: 300
 eta_crossover: 20
 eta_mutation: 20
 crossover_probability: 0.6
