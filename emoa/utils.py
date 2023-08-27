@@ -80,7 +80,7 @@ def cartesian_to_polar(x):
     x1 = x[:, 0]
     x2 = x[:, 1]
 
-    r = np.sqrt(x1 ** 2 + x2 ** 2)
+    r = np.sqrt(x1**2 + x2**2)
     theta = np.arctan2(x2, x1)
     # theta = np.arctan(x2 / x1)
 
@@ -97,7 +97,7 @@ def to_polar(_x):
     x = np.copy(_x)
 
     # compute the radius
-    r = np.sqrt(np.sum(x ** 2, axis=1))
+    r = np.sqrt(np.sum(x**2, axis=1))
 
     # compute the angles
     theta = np.zeros((x.shape[0], x.shape[1] - 1))
@@ -146,7 +146,7 @@ def vector_to_polar(_x):
     x = np.copy(_x)
 
     # compute the radius
-    r = np.sqrt(np.sum(x ** 2))
+    r = np.sqrt(np.sum(x**2))
 
     # compute the angles
     theta = np.zeros((len(x) - 1))
@@ -213,12 +213,12 @@ def has_duplicate_member(population):
     for i in range(len(population)):
         for j in range(i + 1, len(population)):
             if np.all(
-                    np.abs(
-                        np.subtract(
-                            population[i].objective_values, population[j].objective_values
-                        )
+                np.abs(
+                    np.subtract(
+                        population[i].objective_values, population[j].objective_values
                     )
-                    < 1e-5
+                )
+                < 1e-5
             ):
                 return True
     return False
@@ -233,11 +233,11 @@ def has_duplicate_individuals(individuals):
 
 
 def _generate_coeff_convex_hull_recursive(
-        amount_in_lin_comb: int,
-        count_unique_values: int,
-        level: int = 1,
-        prev_m: tuple[int] = None,
-        prev_coeff: tuple[float] = None,
+    amount_in_lin_comb: int,
+    count_unique_values: int,
+    level: int = 1,
+    prev_m: tuple[int] = None,
+    prev_coeff: tuple[float] = None,
 ) -> list[tuple[float]]:
     """The recursive procedure generates coefficients for the convex hull.
 
@@ -286,7 +286,7 @@ def _generate_coeff_convex_hull_recursive(
 
 
 def generate_coeff_convex_hull(
-        amount_in_lin_comb: int, amount_unique_values: int
+    amount_in_lin_comb: int, amount_unique_values: int
 ) -> list[tuple[float]]:
     """The procedure generates coefficients for the convex hull.
 

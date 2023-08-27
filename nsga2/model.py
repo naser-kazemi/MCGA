@@ -14,57 +14,46 @@ import copy
 
 class NSGA2:
     def __init__(
-            self,
-            problem,
-            num_variables,
-            num_objectives,
-            num_generations,
-            population_size,
-            lower_bound,
-            upper_bound,
-            crossover_probability=0.9,
-            eta_crossover=20.0,
-            eta_mutation=20.0,
-            log=None,
-            nd="log",
-            verbose=False,
+        self,
+        problem,
+        num_variables,
+        num_objectives,
+        num_generations,
+        population_size,
+        lower_bound,
+        upper_bound,
+        crossover_probability=0.9,
+        eta_crossover=20.0,
+        eta_mutation=20.0,
+        log=None,
+        nd="log",
+        verbose=False,
     ):
         self.num_variables = num_variables
         self.num_objectives = num_objectives
         self.num_generations = num_generations
         self.population_size = population_size
-        self.cross_prob = crossover_probability
+        self.crossover_probability = crossover_probability
+        self.nd = nd
 
-        self.nd_sort = self.init_ndsort(nd)
+        self.current_generation = 1
+        self.log = log if log is not None else []
+        self.verbose = verbose
 
-        self.toolbox = self.init_toolbox(
+        self.stats = None
+        self.toolbox = None
+        self.result_pop = None
+        self.logbook = None
+        self.create_model(
             problem,
             num_variables,
+            population_size,
             lower_bound,
             upper_bound,
             crossover_probability,
             eta_crossover,
             eta_mutation,
         )
-        self.population = self.toolbox.population(n=population_size)
-        self.current_generation = 1
-
-        self.log = log if log is not None else []
-        self.verbose = verbose
-        self.stats = self.init_stats()
-        self.result_pop = None
-        self.logbook = None
-
-    def init_ndsort(self, nd):
-        if nd == "standard":
-            return tools.sortNondominated
-        elif nd == "log":
-            return tools.sortLogNondominated
-        else:
-            raise Exception(
-                "The choice of non-dominated sorting "
-                "method '{0}' is invalid.".format(nd)
-            )
 
     def create_individual_class(self):
         creator.create(
@@ -77,67 +66,66 @@ class NSGA2:
             "Individual", array.array, typecode="d", fitness=creator.FitnessMin
         )
 
-    def init_toolbox(
-            self,
-            problem,
-            num_variables,
-            lower_bound,
-            upper_bound,
-            crossover_probability,
-            eta_crossover,
-            eta_mutation,
-    ) -> base.Toolbox:
-
+    def create_model(
+        self,
+        problem,
+        num_variables,
+        population_size,
+        lower_bound,
+        upper_bound,
+        crossover_probability,
+        eta_crossover,
+        eta_mutation,
+    ):
         self.create_individual_class()
 
         toolbox = base.Toolbox()
-
         toolbox.register("attr_float", uniform, lower_bound, upper_bound, num_variables)
         toolbox.register(
             "individual", tools.initIterate, creator.Individual, toolbox.attr_float
         )
         toolbox.register("population", tools.initRepeat, list, toolbox.individual)
         toolbox.register("evaluate", problem)
-        toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=lower_bound, up=upper_bound, eta=eta_crossover)
-        toolbox.register("mutate", tools.mutPolynomialBounded, low=lower_bound, up=upper_bound, eta=eta_mutation,
-                         indpb=1.0 / num_variables)
+        toolbox.register(
+            "mate",
+            tools.cxSimulatedBinaryBounded,
+            low=lower_bound,
+            up=upper_bound,
+            eta=eta_crossover,
+        )
+        toolbox.register(
+            "mutate",
+            tools.mutPolynomialBounded,
+            low=lower_bound,
+            up=upper_bound,
+            eta=eta_mutation,
+            indpb=1.0 / num_variables,
+        )
         toolbox.register("select", self.select)
 
-        return toolbox
+        self.toolbox = toolbox
 
-    def init_stats(self):
-        stats = tools.Statistics()
-        # stats = tools.Statistics(lambda ind: ind.fitness.values)
-        stats.register("pop", copy.deepcopy)
-        if "fit" in self.log:
-            stats.register("fit", copy.deepcopy)
-        if "min" in self.log:
-            stats.register("min", np.min, axis=0)
-        if "max" in self.log:
-            stats.register("max", np.max, axis=0)
-        if "avg" in self.log:
-            stats.register("avg", np.mean, axis=0)
-        if "std" in self.log:
-            stats.register("std", np.std, axis=0)
-        return stats
+        self.stats = tools.Statistics(lambda ind: ind.fitness.values)
+        self.stats.register("pop", copy.deepcopy)
 
     def select(self, individuals, k):
-        pareto_fronts = self.nd_sort(individuals, k)
-
-        for front in pareto_fronts:
-            assignCrowdingDist(front)
-
-        chosen = list(chain(*pareto_fronts[:-1]))
-        k = k - len(chosen)
-        if k > 0:
-            sorted_front = sorted(
-                pareto_fronts[-1], key=attrgetter("fitness.crowding_dist"), reverse=True
-            )
-            chosen.extend(sorted_front[:k])
-
+        chosen = tools.selNSGA2(individuals, k, nd=self.nd)
         self.print_stats(chosen=chosen)
-
         return chosen
+
+    def run(self):
+        pop = self.toolbox.population(n=self.population_size)
+        self.result_pop, self.logbook = algorithms.eaMuPlusLambda(
+            pop,
+            self.toolbox,
+            mu=self.population_size,
+            lambda_=self.population_size,
+            cxpb=self.crossover_probability,
+            mutpb=1.0 / self.num_variables,
+            ngen=self.num_generations,
+            stats=self.stats,
+            verbose=False,
+        )
 
     def print_stats(self, chosen=None):
         print("\n" + "=" * 80)
@@ -145,34 +133,21 @@ class NSGA2:
         self.current_generation += 1
 
         if not self.verbose:
+            print("\n" + "=" * 80 + "\n")
             return
 
-        if "hv" in self.log:
-            print(f"HyperVolume: {self.hyper_volume(chosen)}", end="\t")
+        # print(f"Population: {chosen}", end="\t")
 
-        logbook = self.stats.compile(chosen)
+        # if "hv" in self.log:
+        #     print(f"HyperVolume: {self.hyper_volume(chosen)}", end="\t")
 
-        for key in self.log:
-            if key in logbook:
-                print(f"{key}: {logbook[key]}", end="\t")
+        # logbook = self.stats.compile(chosen)
+
+        # for key in self.log:
+        #     if key in logbook:
+        #         print(f"{key}: {logbook[key]}", end="\t")
 
         print("\n" + "=" * 80 + "\n")
-
-    def run(self):
-        toolbox = self.toolbox
-        population = toolbox.population(n=self.population_size)
-        stats = self.stats
-        self.result_pop, self.logbook = algorithms.eaMuPlusLambda(
-            population,
-            toolbox,
-            mu=self.population_size,
-            lambda_=self.population_size,
-            cxpb=self.cross_prob,
-            mutpb=1.0 / self.num_variables,
-            ngen=self.num_generations,
-            stats=stats,
-            verbose=False,
-        )
 
     def metric(self, metric="hypervolume", **kwargs):
         if metric == "hypervolume":

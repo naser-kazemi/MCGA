@@ -37,7 +37,18 @@ def plot_hypevolumes(test_suite, test, model_names):
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_subplot(111)
 
-    colors = ["blue", "red", "orange", "green", "purple", "brown", "pink", "gray", "olive", "cyan"]
+    colors = [
+        "blue",
+        "red",
+        "orange",
+        "green",
+        "purple",
+        "brown",
+        "pink",
+        "gray",
+        "olive",
+        "cyan",
+    ]
 
     for i, model_name in enumerate(model_names):
         plot_hypervolume_util(test_suite, test, model_name, ax, colors[i])

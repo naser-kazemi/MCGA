@@ -13,26 +13,26 @@ from deap import base, creator, tools, algorithms
 
 class MCNSGA2(NSGA2):
     def __init__(
-            self,
-            problem,
-            num_variables,
-            num_objectives,
-            num_generations,
-            population_size,
-            lower_bound,
-            upper_bound,
-            crossover_probability=0.9,
-            eta_crossover=20.0,
-            eta_mutation=20.0,
-            log=None,
-            nd="log",
-            verbose=False,
-            polar_offset_limit: np.float64 = 2 * np.pi,
-            num_max_sectors: int = 10,
-            front_frequency_threshold: float = 0.1,
-            niche_ratio: float = 0.1,
-            monte_carlo_frequency: int = 5,
-            polar_scale: float = 1000.0,
+        self,
+        problem,
+        num_variables,
+        num_objectives,
+        num_generations,
+        population_size,
+        lower_bound,
+        upper_bound,
+        crossover_probability=0.9,
+        eta_crossover=20.0,
+        eta_mutation=20.0,
+        log=None,
+        nd="log",
+        verbose=False,
+        polar_offset_limit: np.float64 = 2 * np.pi,
+        num_max_sectors: int = 10,
+        front_frequency_threshold: float = 0.1,
+        niche_ratio: float = 0.1,
+        monte_carlo_frequency: int = 5,
+        polar_scale: float = 1000.0,
     ):
         super().__init__(
             problem=problem,
@@ -213,8 +213,8 @@ class MCNSGA2(NSGA2):
         self.monte_carlo_step(individuals)
 
         while (
-                self.compute_front_frequency_diff(individuals, cached_individuals)
-                > self.front_frequency_threshold
+            self.compute_front_frequency_diff(individuals, cached_individuals)
+            > self.front_frequency_threshold
         ):
             cached_individuals = copy.deepcopy(individuals)
             self.monte_carlo_step(individuals)
@@ -232,34 +232,18 @@ class MCNSGA2(NSGA2):
         """
 
         if (self.current_generation % self.monte_carlo_frequency) != 1 and (
-                self.current_generation < self.num_generations):
-            pareto_fronts = self.nd_sort(individuals, k)
+            self.current_generation < self.num_generations
+        ):
+            chosen = tools.selNSGA2(individuals, k, nd=self.nd)
+        else:
+            for ind in individuals:
+                ind.fitness.values = tuple([x * self.scale for x in ind.fitness.values])
 
-            for front in pareto_fronts:
-                assignCrowdingDist(front)
+            mc_sorted = self.mc_select(individuals)
+            chosen = mc_sorted[: self.population_size]
 
-            chosen = list(chain(*pareto_fronts[:-1]))
-            k = k - len(chosen)
-            if k > 0:
-                sorted_front = sorted(
-                    pareto_fronts[-1],
-                    key=attrgetter("fitness.crowding_dist"),
-                    reverse=True,
-                )
-                chosen.extend(sorted_front[:k])
-
-            self.print_stats(chosen=chosen)
-
-            return chosen
-
-        for ind in individuals:
-            ind.fitness.values = tuple([x * self.scale for x in ind.fitness.values])
-
-        mc_sorted = self.mc_select(individuals)
-        chosen = mc_sorted[: self.population_size]
-
-        for ind in individuals:
-            ind.fitness.values = tuple([x / self.scale for x in ind.fitness.values])
+            for ind in individuals:
+                ind.fitness.values = tuple([x / self.scale for x in ind.fitness.values])
 
         self.print_stats(chosen=chosen)
 

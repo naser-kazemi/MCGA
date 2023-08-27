@@ -20,14 +20,14 @@ from emoa.utils import *
 
 
 def calc_pareto_front(name):
-    file_path = f'data/RE/ParetoFront/{name}.npy'
+    file_path = f"data/RE/ParetoFront/{name}.npy"
     return np.load(file_path)
 
 
 def div(x1, x2):
-    '''
+    """
     Divide x1 / x2, return 0 where x2 == 0
-    '''
+    """
     return np.divide(x1, x2, out=np.zeros(np.broadcast(x1, x2).shape), where=(x2 != 0))
 
 
@@ -50,7 +50,16 @@ class RE1(Problem):
         L = 200
 
         f1 = L * ((2 * x1) + np.sqrt(2.0) * x2 + np.sqrt(x3) + x4)
-        f2 = (F * L) / E * (div(2.0, x1) + div(2.0 * np.sqrt(2.0), x2) - div(2.0 * np.sqrt(2.0), x3) + div(2.0, x4))
+        f2 = (
+            (F * L)
+            / E
+            * (
+                div(2.0, x1)
+                + div(2.0 * np.sqrt(2.0), x2)
+                - div(2.0 * np.sqrt(2.0), x3)
+                + div(2.0, x4)
+            )
+        )
 
         out["F"] = np.column_stack([f1, f2])
 
@@ -63,7 +72,16 @@ def re1(x):
     L = 200
 
     f1 = L * ((2 * x1) + np.sqrt(2.0) * x2 + np.sqrt(x3) + x4)
-    f2 = (F * L) / E * (div(2.0, x1) + div(2.0 * np.sqrt(2.0), x2) - div(2.0 * np.sqrt(2.0), x3) + div(2.0, x4))
+    f2 = (
+        (F * L)
+        / E
+        * (
+            div(2.0, x1)
+            + div(2.0 * np.sqrt(2.0), x2)
+            - div(2.0 * np.sqrt(2.0), x3)
+            + div(2.0, x4)
+        )
+    )
 
     return np.array([f1, f2])
 
@@ -83,14 +101,26 @@ class RE5(Problem):
         x1, x2, x3, x4 = x[:, 0], x[:, 1], x[:, 2], x[:, 3]
 
         f1 = 4.9 * 1e-5 * (x2 * x2 - x1 * x1) * (x4 - 1.0)
-        f2 = div((9.82 * 1e6) * (x2 * x2 - x1 * x1), x3 * x4 * (x2 * x2 * x2 - x1 * x1 * x1))
+        f2 = div(
+            (9.82 * 1e6) * (x2 * x2 - x1 * x1), x3 * x4 * (x2 * x2 * x2 - x1 * x1 * x1)
+        )
 
-        g = np.column_stack([
-            (x2 - x1) - 20.0,
-            0.4 - div(x3, (3.14 * (x2 * x2 - x1 * x1))),
-            1.0 - div(2.22 * 1e-3 * x3 * (x2 * x2 * x2 - x1 * x1 * x1), np.power((x2 * x2 - x1 * x1), 2)),
-            div(2.66 * 1e-2 * x3 * x4 * (x2 * x2 * x2 - x1 * x1 * x1), x2 * x2 - x1 * x1) - 900.0
-        ])
+        g = np.column_stack(
+            [
+                (x2 - x1) - 20.0,
+                0.4 - div(x3, (3.14 * (x2 * x2 - x1 * x1))),
+                1.0
+                - div(
+                    2.22 * 1e-3 * x3 * (x2 * x2 * x2 - x1 * x1 * x1),
+                    np.power((x2 * x2 - x1 * x1), 2),
+                ),
+                div(
+                    2.66 * 1e-2 * x3 * x4 * (x2 * x2 * x2 - x1 * x1 * x1),
+                    x2 * x2 - x1 * x1,
+                )
+                - 900.0,
+            ]
+        )
 
         g[g >= 0] = 0
         g[g < 0] = -g[g < 0]
@@ -104,14 +134,25 @@ def re5(x):
     x1, x2, x3, x4 = x[0], x[1], x[2], x[3]
 
     f1 = 4.9 * 1e-5 * (x2 * x2 - x1 * x1) * (x4 - 1.0)
-    f2 = div((9.82 * 1e6) * (x2 * x2 - x1 * x1), x3 * x4 * (x2 * x2 * x2 - x1 * x1 * x1))
+    f2 = div(
+        (9.82 * 1e6) * (x2 * x2 - x1 * x1), x3 * x4 * (x2 * x2 * x2 - x1 * x1 * x1)
+    )
 
-    g = np.column_stack([
-        (x2 - x1) - 20.0,
-        0.4 - div(x3, (3.14 * (x2 * x2 - x1 * x1))),
-        1.0 - div(2.22 * 1e-3 * x3 * (x2 * x2 * x2 - x1 * x1 * x1), np.power((x2 * x2 - x1 * x1), 2)),
-        div(2.66 * 1e-2 * x3 * x4 * (x2 * x2 * x2 - x1 * x1 * x1), x2 * x2 - x1 * x1) - 900.0
-    ])
+    g = np.column_stack(
+        [
+            (x2 - x1) - 20.0,
+            0.4 - div(x3, (3.14 * (x2 * x2 - x1 * x1))),
+            1.0
+            - div(
+                2.22 * 1e-3 * x3 * (x2 * x2 * x2 - x1 * x1 * x1),
+                np.power((x2 * x2 - x1 * x1), 2),
+            ),
+            div(
+                2.66 * 1e-2 * x3 * x4 * (x2 * x2 * x2 - x1 * x1 * x1), x2 * x2 - x1 * x1
+            )
+            - 900.0,
+        ]
+    )
 
     g[g >= 0] = 0
     g[g < 0] = -g[g < 0]
@@ -361,7 +402,14 @@ def run_moead():
         hv_ref=hv_ref_point,
     )
 
-    res = minimize(problem, model, termination=("n_gen", n_gen), seed=1, verbose=True, save_history=True)
+    res = minimize(
+        problem,
+        model,
+        termination=("n_gen", n_gen),
+        seed=1,
+        verbose=True,
+        save_history=True,
+    )
 
     # Scatter().add(res.history[0].pop.get("F")).show()
     plt.show()

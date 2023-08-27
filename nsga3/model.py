@@ -11,21 +11,21 @@ import copy
 
 class NSGA3:
     def __init__(
-            self,
-            problem,
-            num_variables,
-            num_objectives,
-            num_generations,
-            population_size,
-            lower_bound,
-            upper_bound,
-            num_divisions,
-            crossover_probability=0.9,
-            eta_crossover=20.0,
-            eta_mutation=20.0,
-            log=None,
-            nd="log",
-            verbose=False,
+        self,
+        problem,
+        num_variables,
+        num_objectives,
+        num_generations,
+        population_size,
+        lower_bound,
+        upper_bound,
+        num_divisions,
+        crossover_probability=0.9,
+        eta_crossover=20.0,
+        eta_mutation=20.0,
+        log=None,
+        nd="log",
+        verbose=False,
     ):
         self.num_variables = num_variables
         self.num_objectives = num_objectives
@@ -43,8 +43,16 @@ class NSGA3:
         self.toolbox = None
         self.result_pop = None
         self.logbook = None
-        self.create_model(problem, num_variables, population_size, lower_bound,
-                          upper_bound, crossover_probability, eta_crossover, eta_mutation)
+        self.create_model(
+            problem,
+            num_variables,
+            population_size,
+            lower_bound,
+            upper_bound,
+            crossover_probability,
+            eta_crossover,
+            eta_mutation,
+        )
 
     def create_individual_class(self):
         creator.create(
@@ -56,8 +64,17 @@ class NSGA3:
             "Individual", array.array, typecode="d", fitness=creator.FitnessMin
         )
 
-    def create_model(self, problem, num_variables, population_size, lower_bound,
-                     upper_bound, crossover_probability, eta_crossover, eta_mutation):
+    def create_model(
+        self,
+        problem,
+        num_variables,
+        population_size,
+        lower_bound,
+        upper_bound,
+        crossover_probability,
+        eta_crossover,
+        eta_mutation,
+    ):
         self.create_individual_class()
 
         toolbox = base.Toolbox()
@@ -67,9 +84,21 @@ class NSGA3:
         )
         toolbox.register("population", tools.initRepeat, list, toolbox.individual)
         toolbox.register("evaluate", problem)
-        toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=lower_bound, up=upper_bound, eta=eta_crossover)
-        toolbox.register("mutate", tools.mutPolynomialBounded, low=lower_bound, up=upper_bound, eta=eta_mutation,
-                         indpb=1.0 / num_variables)
+        toolbox.register(
+            "mate",
+            tools.cxSimulatedBinaryBounded,
+            low=lower_bound,
+            up=upper_bound,
+            eta=eta_crossover,
+        )
+        toolbox.register(
+            "mutate",
+            tools.mutPolynomialBounded,
+            low=lower_bound,
+            up=upper_bound,
+            eta=eta_mutation,
+            indpb=1.0 / num_variables,
+        )
         toolbox.register("select", self.select)
 
         self.toolbox = toolbox
@@ -78,10 +107,13 @@ class NSGA3:
         self.stats.register("pop", copy.deepcopy)
 
     def select(self, individuals, k):
-        chosen = tools.selNSGA3(individuals, k,
-                                # tools.uniform_reference_points(nobj=self.num_objectives, p=self.num_divisions),
-                                tools.uniform_reference_points(nobj=3, p=12),
-                                nd=self.nd)
+        chosen = tools.selNSGA3(
+            individuals,
+            k,
+            # tools.uniform_reference_points(nobj=self.num_objectives, p=self.num_divisions),
+            tools.uniform_reference_points(nobj=3, p=12),
+            nd=self.nd,
+        )
         self.print_stats(chosen=chosen)
         return chosen
 

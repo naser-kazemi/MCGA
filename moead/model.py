@@ -18,18 +18,18 @@ from deap.tools._hypervolume import hv
 
 class MOEAD(LoopwiseAlgorithm, GeneticAlgorithm):
     def __init__(
-            self,
-            pop_size=100,
-            ref_dirs=None,
-            n_neighbors=20,
-            decomposition=None,
-            prob_neighbor_mating=0.9,
-            sampling=FloatRandomSampling(),
-            crossover=SBX(prob=0.9, eta=20),
-            mutation=PM(prob_var=None, eta=20),
-            output=MultiObjectiveOutput(),
-            hv_ref=None,
-            **kwargs
+        self,
+        pop_size=100,
+        ref_dirs=None,
+        n_neighbors=20,
+        decomposition=None,
+        prob_neighbor_mating=0.9,
+        sampling=FloatRandomSampling(),
+        crossover=SBX(prob=0.9, eta=20),
+        mutation=PM(prob_var=None, eta=20),
+        output=MultiObjectiveOutput(),
+        hv_ref=None,
+        **kwargs
     ):
         self.ref_dirs = ref_dirs
         self.decomposition = decomposition

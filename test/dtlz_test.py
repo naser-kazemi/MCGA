@@ -218,7 +218,12 @@ def run_nsga(selected_model=None):
 
 def run():
     problem_names = ["dtlz1", "dtlz2", "dltz3", "dtlz4"]
-    problems = [lambda ind: benchmarks.dtlz1(ind, 3), lambda ind: benchmarks.dtlz2(ind, 3), lambda ind: benchmarks.dtlz3(ind, 3), lambda ind: benchmarks.dtlz4(ind, 3)]
+    problems = [
+        lambda ind: benchmarks.dtlz1(ind, 3),
+        lambda ind: benchmarks.dtlz2(ind, 3),
+        lambda ind: benchmarks.dtlz3(ind, 3),
+        lambda ind: benchmarks.dtlz4(ind, 3),
+    ]
     global problem_name
     global problem
     global expr
@@ -234,4 +239,4 @@ def run():
 
 
 if __name__ == "__main__":
-        run()
+    run()
