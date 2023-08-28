@@ -1,6 +1,6 @@
 problem: dtlz1
 population_size: 500
-num_variables: 7
+num_variables: 10
 num_objectives: 3
 num_generations: 300
 eta_crossover: 20
@@ -12,4 +12,4 @@ hv_ref_point: [2 2 2]
 polar_offset_limit: 3.141592653589793
 num_max_sectors: 30
 front_frequency_threshold: 0.01
-monte_carlo_frequency: 2
+monte_carlo_frequency: 5

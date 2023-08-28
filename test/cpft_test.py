@@ -169,7 +169,7 @@ def run_nsga(selected_model=None):
     # plt.autoscale(tight=True)
     # plt.savefig(f"images/{problem_name}_mc_nsga3.png", dpi=300)
     # plt.savefig(f"images/{problem_name}_nsga3.png", dpi=300)
-    plt.show()
+    # plt.show()
 
     # hv_ref_point = np.array([-0.5, -0.5, -0.5])
     hv_ref_point = np.array([1, 1, 1])
@@ -182,7 +182,7 @@ def run_nsga(selected_model=None):
     plt.title("Hypervolume over time")
     # plt.savefig(f"images/{problem_name}_mc_nsga3_hypervolume.png", dpi=300)
     # plt.savefig(f"images/{problem_name}_nsga3_hypervolume.png", dpi=300)
-    plt.show()
+    # plt.show()
 
     path = f"result/cpft/{problem_name}/{model_name}"
 

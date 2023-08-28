@@ -176,7 +176,7 @@ def run_nsga(selected_model=None):
     hv_ref_point = np.array([2, 2, 2])
 
     # plt.savefig("images/dtlz1_nsga3.png", dpi=300)
-    plt.show()
+    # plt.show()
 
     hypervolumes = model.metric("hypervolume", all_gens=True, ref=hv_ref_point)
     fig = plt.figure(figsize=(7, 7))
@@ -185,7 +185,7 @@ def run_nsga(selected_model=None):
     plt.ylabel("Hypervolume")
     plt.title("Hypervolume over time")
     # plt.savefig("images/dtlz1_nsga3_hypervolume.png", dpi=300)
-    plt.show()
+    # plt.show()
 
     path = f"result/dtlz/{problem_name}/{model_name}"
 
