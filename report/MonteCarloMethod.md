@@ -112,10 +112,26 @@ results is shown in the following figure.
 | :------------------------------------------: | :---------------------------------------------: | :------------------------------------------: | :---------------------------------------------: |
 |    ![](../images/hypervolumes/cpft2.png)     |      ![](../images/hypervolumes/cpft3.png)      |    ![](../images/hypervolumes/cpft4.png)     |      ![](../images/hypervolumes/zdt4.png)       |
 
-|                  NSGA-II                  |                  MCNSGA-II                   |                 NSGA-III                  |                  MCNSGA-II                   |
-|:-----------------------------------------:|:--------------------------------------------:|:-----------------------------------------:|:--------------------------------------------:|
-| ![](../images/populations/zdt1_nsga2.png) | ![](../images/populations/zdt1_mc_nsga2.png) | ![](../images/populations/zdt1_nsga3.png) | ![](../images/populations/zdt1_mc_nsga3.png) |
-| ![](../images/populations/zdt2_nsga2.png) | ![](../images/populations/zdt2_mc_nsga2.png) | ![](../images/populations/zdt2_nsga3.png) | ![](../images/populations/zdt2_mc_nsga3.png) |
+|                 OKA1                 |                 OKA2                 |                 RE1                 |                 RE5                 |
+|:------------------------------------:|:------------------------------------:|:-----------------------------------:|:-----------------------------------:|
+| ![](../images/hypervolumes/oka1.png) | ![](../images/hypervolumes/oka2.png) | ![](../images/hypervolumes/re1.png) | ![](../images/hypervolumes/re5.png) |
+
+
+And Here is the result populations of the `NSGA-II` and `NSGA-III` algorithms and their augmented versions.
+
+
+|                  NSGA-II                   |                   MCNSGA-II                   |                  NSGA-III                  |                   MCNSGA-II                   |
+|:------------------------------------------:|:---------------------------------------------:|:------------------------------------------:|:---------------------------------------------:|
+| ![](../images/populations/zdt1_nsga2.png)  | ![](../images/populations/zdt1_mc_nsga2.png)  | ![](../images/populations/zdt1_nsga3.png)  | ![](../images/populations/zdt1_mc_nsga3.png)  |
+| ![](../images/populations/zdt2_nsga2.png)  | ![](../images/populations/zdt2_mc_nsga2.png)  | ![](../images/populations/zdt2_nsga3.png)  | ![](../images/populations/zdt2_mc_nsga3.png)  |
+| ![](../images/populations/zdt3_nsga2.png)  | ![](../images/populations/zdt3_mc_nsga2.png)  | ![](../images/populations/zdt3_nsga3.png)  | ![](../images/populations/zdt3_mc_nsga3.png)  |
+| ![](../images/populations/zdt4_nsga2.png)  | ![](../images/populations/zdt4_mc_nsga2.png)  | ![](../images/populations/zdt4_nsga3.png)  | ![](../images/populations/zdt4_mc_nsga3.png)  |
+| ![](../images/populations/dtlz1_nsga2.png) | ![](../images/populations/dtlz1_mc_nsga2.png) | ![](../images/populations/dtlz1_nsga3.png) | ![](../images/populations/dtlz1_mc_nsga3.png) |
+| ![](../images/populations/dtlz2_nsga2.png) | ![](../images/populations/dtlz2_mc_nsga2.png) | ![](../images/populations/dtlz2_nsga3.png) | ![](../images/populations/dtlz2_mc_nsga3.png) |
+| ![](../images/populations/dtlz3_nsga2.png) | ![](../images/populations/dtlz3_mc_nsga2.png) | ![](../images/populations/dtlz3_nsga3.png) | ![](../images/populations/dtlz3_mc_nsga3.png) |
+| ![](../images/populations/dtlz4_nsga2.png) | ![](../images/populations/dtlz4_mc_nsga2.png) | ![](../images/populations/dtlz4_nsga3.png) | ![](../images/populations/dtlz4_mc_nsga3.png) |
+| ![](../images/populations/zdt2_nsga2.png)  | ![](../images/populations/zdt2_mc_nsga2.png)  | ![](../images/populations/zdt2_nsga3.png)  | ![](../images/populations/zdt2_mc_nsga3.png)  |
+
 
 For Each test, I have saved the used parameters in the `parameters` folder. I have also saved the result populations of
 each method.
