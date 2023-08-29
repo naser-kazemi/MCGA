@@ -16,6 +16,6 @@ if __name__ == "__main__":
     # cpft_test.main()
     # cpft_moead_test.run()
     # f_test.run()
-    re_test.run()
+    # re_test.run()
     # re_test.main()
-    # oka_test.run()
+    oka_test.run()

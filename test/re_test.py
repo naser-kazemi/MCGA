@@ -491,6 +491,7 @@ def plot_re_pareto_front(ax, test):
             color="red",
             alpha=0.3,
             label="Optimal Pareto Front",
+            s=5,
         )
     elif test in {"re5"}:
         ax.scatter(
@@ -500,6 +501,7 @@ def plot_re_pareto_front(ax, test):
             color="red",
             alpha=0.3,
             label="Optimal Pareto Front",
+            s=5,
         )
 
 

@@ -20,7 +20,7 @@ def plot_hypervolume_util(test_suit, test, model_name, ax, color):
     for file in files:
         with open(path + file, "r") as f:
             hypervolumes.append(json.load(f))
-
+    hypervolumes = np.array(hypervolumes) / 1000
     mean_hypervolumes = np.mean(hypervolumes, axis=0)
     std_hypervolumes = np.std(hypervolumes, axis=0)
     # print(std_hypervolumes)
@@ -76,7 +76,7 @@ def get_mean_population(test_suit, test, model_name):
             populations.append(pop)
 
     # return np.mean(populations, axis=0)
-    return populations[0]
+    return populations[-2]
 
 
 def plot_populations(test_suite, test, model_name, num_objectives):
@@ -111,11 +111,11 @@ def plot_populations(test_suite, test, model_name, num_objectives):
 
 
 def main():
-    test_suite = "zdt"
-    test = "zdt1"
-    num_objectives = 2
-    # model_names = ["nsga3", "mc_nsga3"]
-    model_names = ["nsga2", "mc_nsga2", "nsga3", "mc_nsga3"]
+    test_suite = "oka"
+    test = "oka1"
+    num_objectives = 3
+    model_names = ["nsga3", "mc_nsga3"]
+    # model_names = ["nsga2", "mc_nsga2", "nsga3", "mc_nsga3"]
     # model_names = ["nsga2", "mc_nsga2"]
     # sns.set_theme(style="darkgrid")
     plot_hypevolumes(test_suite, test, model_names)
@@ -132,7 +132,7 @@ def main():
                 label="Optimal Pareto Front",
                 s=5
             )
-        if test_suite == "dtlz":
+        elif test_suite == "dtlz":
             problem = get_problem(test)
             ax.scatter(
                 problem.pareto_front()[:, 0],
@@ -144,10 +144,10 @@ def main():
                 s=5
             )
 
-        if test_suite == "re":
+        elif test_suite == "re":
             plot_re_pareto_front(ax, test)
 
-        if test_suite == "oka":
+        elif test_suite == "oka":
             plot_oka_pareto_front(ax, test)
 
         ax.legend()
