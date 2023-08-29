@@ -92,10 +92,10 @@ def oka2(x):
     return np.array([f1, f2])
 
 
-population_size = 1000
+population_size = 500
 num_variables = 3
 num_objectives = 2
-num_generations = 300
+num_generations = 750
 eta_crossover = 20
 eta_mutation = 20
 crossover_probability = 0.75

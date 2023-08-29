@@ -164,15 +164,15 @@ def re5(x):
 
 population_size = 1000
 num_variables = 4
-num_objectives = 2
+num_objectives = 3
 num_generations = 300
 eta_crossover = 20
 eta_mutation = 20
 crossover_probability = 0.6
-lower_bound = [1, np.sqrt(2), np.sqrt(2), 1]  # RE1
-upper_bound = [3, 3, 3, 3]  # RE!
-# lower_bound = [55, 75, 1000, 11]  # RE5
-# upper_bound = [80, 110, 3000, 20]  # RE5
+# lower_bound = [1, np.sqrt(2), np.sqrt(2), 1]  # RE1
+# upper_bound = [3, 3, 3, 3]  # RE!
+lower_bound = [55, 75, 1000, 11]  # RE5
+upper_bound = [80, 110, 3000, 20]  # RE5
 num_divisions = 8
 polar_offset_limit = np.pi
 num_max_sectors = 20
