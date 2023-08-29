@@ -80,5 +80,42 @@ first front, the second front, and so on.
 
 #### 2.2
 
-Now I try another thing. Instead of slicing the polar space in random sectors, I uniformly slice the polar space and
+I also tried another thing. Instead of slicing the polar space in random sectors, I uniformly slice the polar space and
 then rotate it with a random angle.
+
+## Using the Monte-Carlo Method as a general improvement method on other algorithms
+
+I tried to augment the other typical algorithms with the Monte-Carlo method to see if it can improve the results. For
+this purpose, in order to preserve the structure and performance of the base algorithm, either you have to apply the MC
+method on a portion of the population, or you have to apply it on the whole population but just in some iterations.
+
+I used `NSGA-II` and `NSGA-III` as the base algorithms. I applied the MC method on a portion of the population in the
+first, and the results where unsatisfactory. Then I applied the MC method on the whole population in some iterations,
+and the results where better. Even though the results where better in some cases, it was not consistent. In some tests,
+the `NSGA-III` itself was slightly better than the augmented version.
+
+In this approach, I used the first method of the MC elitism conditions with no relaxing, but used the uniform polar
+space slicing with random rotation.
+
+I tested the implementation on `ZDT`, `DTLZ`, `CPFT`, `OKA` and `RE` problems. The comparison of the hypervolume of the
+results is shown in the following figure.
+
+|                     ZDT1                     |                      ZDT2                       |                     ZDT3                     |                      ZDT4                       |
+|:--------------------------------------------:|:-----------------------------------------------:|:--------------------------------------------:|:-----------------------------------------------:|
+|     ![](../images/hypervolumes/zdt1.png)     |      ![](../images/hypervolumes/zdt2.png)       |     ![](../images/hypervolumes/zdt3.png)     |      ![](../images/hypervolumes/zdt4.png)       |
+
+|                    DTLZ1                     |                      DTLZ2                      |                    DTLZ3                     |                      DTLZ4                      |
+| :------------------------------------------: | :---------------------------------------------: | :------------------------------------------: | :---------------------------------------------: |
+|    ![](../images/hypervolumes/dtlza.png)     |      ![](../images/hypervolumes/dtlz2.png)      |    ![](../images/hypervolumes/dtlz3.png)     |      ![](../images/hypervolumes/stlz4.png)      |
+
+|                    CPFT2                     |                      CPFT3                      |                    CPFT4                     |                      ZDT4                       |
+| :------------------------------------------: | :---------------------------------------------: | :------------------------------------------: | :---------------------------------------------: |
+|    ![](../images/hypervolumes/cpft2.png)     |      ![](../images/hypervolumes/cpft3.png)      |    ![](../images/hypervolumes/cpft4.png)     |      ![](../images/hypervolumes/zdt4.png)       |
+
+|                  NSGA-II                  |                  MCNSGA-II                   |                 NSGA-III                  |                  MCNSGA-II                   |
+|:-----------------------------------------:|:--------------------------------------------:|:-----------------------------------------:|:--------------------------------------------:|
+| ![](../images/populations/zdt1_nsga2.png) | ![](../images/populations/zdt1_mc_nsga2.png) | ![](../images/populations/zdt1_nsga3.png) | ![](../images/populations/zdt1_mc_nsga3.png) |
+| ![](../images/populations/zdt2_nsga2.png) | ![](../images/populations/zdt2_mc_nsga2.png) | ![](../images/populations/zdt2_nsga3.png) | ![](../images/populations/zdt2_mc_nsga3.png) |
+
+For Each test, I have saved the used parameters in the `parameters` folder. I have also saved the result populations of
+each method.

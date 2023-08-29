@@ -111,11 +111,11 @@ def plot_populations(test_suite, test, model_name, num_objectives):
 
 
 def main():
-    test_suite = "oka"
-    test = "oka1"
+    test_suite = "zdt"
+    test = "zdt1"
     num_objectives = 2
-    model_names = ["nsga3", "mc_nsga3"]
-    # model_names = ["nsga2", "mc_nsga2", "nsga3", "mc_nsga3"]
+    # model_names = ["nsga3", "mc_nsga3"]
+    model_names = ["nsga2", "mc_nsga2", "nsga3", "mc_nsga3"]
     # model_names = ["nsga2", "mc_nsga2"]
     # sns.set_theme(style="darkgrid")
     plot_hypevolumes(test_suite, test, model_names)
