@@ -14,20 +14,20 @@ import copy
 
 class NSGA2:
     def __init__(
-        self,
-        problem,
-        num_variables,
-        num_objectives,
-        num_generations,
-        population_size,
-        lower_bound,
-        upper_bound,
-        crossover_probability=0.9,
-        eta_crossover=20.0,
-        eta_mutation=20.0,
-        log=None,
-        nd="log",
-        verbose=False,
+            self,
+            problem,
+            num_variables,
+            num_objectives,
+            num_generations,
+            population_size,
+            lower_bound,
+            upper_bound,
+            crossover_probability=0.9,
+            eta_crossover=20.0,
+            eta_mutation=20.0,
+            log=None,
+            nd="log",
+            verbose=False,
     ):
         self.num_variables = num_variables
         self.num_objectives = num_objectives
@@ -67,15 +67,15 @@ class NSGA2:
         )
 
     def create_model(
-        self,
-        problem,
-        num_variables,
-        population_size,
-        lower_bound,
-        upper_bound,
-        crossover_probability,
-        eta_crossover,
-        eta_mutation,
+            self,
+            problem,
+            num_variables,
+            population_size,
+            lower_bound,
+            upper_bound,
+            crossover_probability,
+            eta_crossover,
+            eta_mutation,
     ):
         self.create_individual_class()
 
@@ -99,7 +99,7 @@ class NSGA2:
             low=lower_bound,
             up=upper_bound,
             eta=eta_mutation,
-            indpb=1.0 / num_variables,
+            indpb=min(1.0 / num_variables, 0.2),
         )
         toolbox.register("select", self.select)
 
@@ -121,7 +121,7 @@ class NSGA2:
             mu=self.population_size,
             lambda_=self.population_size,
             cxpb=self.crossover_probability,
-            mutpb=1.0 / self.num_variables,
+            mutpb=min(1.0 / self.num_variables, 0.2),
             ngen=self.num_generations,
             stats=self.stats,
             verbose=False,

@@ -50,7 +50,7 @@ distance calculation.
 
 |               MCGA               |               NSGA-II               |
 |:--------------------------------:|:-----------------------------------:|
-| ![MCGA](../images/zdt3_mcga.png) | ![NSGA-II](../images/zdt3_nsga.png) |
+| ![MCGA](../images/all_tests/zdt3_mcga.png) | ![NSGA-II](../images/all_tests/zdt3_nsga.png) |
 
 The implementation for this approach is available in branch `approach1.1` on teh github repository.
 

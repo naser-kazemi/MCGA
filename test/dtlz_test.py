@@ -171,9 +171,9 @@ def run_nsga(selected_model=None):
     ax.set_zlabel("$f_3$", fontsize=15)
 
     # hv_ref should be the utopia point
-    # hv_ref_point = np.max(pymoo_problem.pareto_front(), axis=0) + 1
+    hv_ref_point = np.max(pymoo_problem.pareto_front(), axis=0) + 100
     # hv_ref_point = np.array([5, 5, 5])
-    hv_ref_point = np.array([2, 2, 2])
+    # hv_ref_point = np.array([2, 2, 2])
 
     # plt.savefig("images/dtlz1_nsga3.png", dpi=300)
     # plt.show()
@@ -217,12 +217,12 @@ def run_nsga(selected_model=None):
 
 
 def run():
-    problem_names = ["dtlz3", "dtlz4"]
+    problem_names = ["dtlz1", "dtlz2", "dtlz3", "dtlz4"]
     problems = [
         lambda ind: benchmarks.dtlz1(ind, 3),
         lambda ind: benchmarks.dtlz2(ind, 3),
         lambda ind: benchmarks.dtlz3(ind, 3),
-        lambda ind: benchmarks.dtlz4(ind, 3),
+        lambda ind: benchmarks.dtlz4(ind, 3, 100),
     ]
     global problem_name
     global problem

@@ -7,6 +7,10 @@ import numpy as np
 import os
 import sys
 
+from pymoo.problems import get_problem
+from test.re_test import calc_pareto_front, plot_re_pareto_front
+from test.oka_test import plot_oka_pareto_front
+
 
 def plot_hypervolume_util(test_suit, test, model_name, ax, color):
     path = f"result/{test_suit}/{test}/{model_name}/"
@@ -103,19 +107,51 @@ def plot_populations(test_suite, test, model_name, num_objectives):
     ax.set_xlabel("$f_1$", fontsize=15)
     ax.set_ylabel("$f_2$", fontsize=15)
     ax.set_title("Population")
-    ax.legend()
-    plt.show()
+    return ax
 
 
 def main():
-    test_suite = "re"
-    test = "re5"
-    num_objectives = 3
+    test_suite = "oka"
+    test = "oka1"
+    num_objectives = 2
     model_names = ["nsga3", "mc_nsga3"]
-    sns.set_theme(style="darkgrid")
+    # model_names = ["nsga2", "mc_nsga2", "nsga3", "mc_nsga3"]
+    # model_names = ["nsga2", "mc_nsga2"]
+    # sns.set_theme(style="darkgrid")
     plot_hypevolumes(test_suite, test, model_names)
-    plot_populations(test_suite, test, model_names[0], num_objectives)
-    plot_populations(test_suite, test, model_names[1], num_objectives)
+    for model_name in model_names:
+        ax = plot_populations(test_suite, test, model_name, num_objectives)
+        # plot true pareto front
+        if test_suite == "zdt":
+            problem = get_problem(test)
+            ax.scatter(
+                problem.pareto_front()[:, 0],
+                problem.pareto_front()[:, 1],
+                color="red",
+                alpha=0.5,
+                label="Optimal Pareto Front",
+                s=5
+            )
+        if test_suite == "dtlz":
+            problem = get_problem(test)
+            ax.scatter(
+                problem.pareto_front()[:, 0],
+                problem.pareto_front()[:, 1],
+                problem.pareto_front()[:, 2],
+                color="red",
+                alpha=0.5,
+                label="Optimal Pareto Front",
+                s=5
+            )
+
+        if test_suite == "re":
+            plot_re_pareto_front(ax, test)
+
+        if test_suite == "oka":
+            plot_oka_pareto_front(ax, test)
+
+        ax.legend()
+        plt.show()
 
 
 if __name__ == "__main__":

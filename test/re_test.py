@@ -51,14 +51,14 @@ class RE1(Problem):
 
         f1 = L * ((2 * x1) + np.sqrt(2.0) * x2 + np.sqrt(x3) + x4)
         f2 = (
-            (F * L)
-            / E
-            * (
-                div(2.0, x1)
-                + div(2.0 * np.sqrt(2.0), x2)
-                - div(2.0 * np.sqrt(2.0), x3)
-                + div(2.0, x4)
-            )
+                (F * L)
+                / E
+                * (
+                        div(2.0, x1)
+                        + div(2.0 * np.sqrt(2.0), x2)
+                        - div(2.0 * np.sqrt(2.0), x3)
+                        + div(2.0, x4)
+                )
         )
 
         out["F"] = np.column_stack([f1, f2])
@@ -73,14 +73,14 @@ def re1(x):
 
     f1 = L * ((2 * x1) + np.sqrt(2.0) * x2 + np.sqrt(x3) + x4)
     f2 = (
-        (F * L)
-        / E
-        * (
-            div(2.0, x1)
-            + div(2.0 * np.sqrt(2.0), x2)
-            - div(2.0 * np.sqrt(2.0), x3)
-            + div(2.0, x4)
-        )
+            (F * L)
+            / E
+            * (
+                    div(2.0, x1)
+                    + div(2.0 * np.sqrt(2.0), x2)
+                    - div(2.0 * np.sqrt(2.0), x3)
+                    + div(2.0, x4)
+            )
     )
 
     return np.array([f1, f2])
@@ -164,15 +164,15 @@ def re5(x):
 
 population_size = 1000
 num_variables = 4
-num_objectives = 3
+num_objectives = 2
 num_generations = 300
 eta_crossover = 20
 eta_mutation = 20
 crossover_probability = 0.6
-# lower_bound = [1, np.sqrt(2), np.sqrt(2), 1] # RE1
-# upper_bound = [3, 3, 3, 3] # RE!
-lower_bound = [55, 75, 1000, 11]  # RE5
-upper_bound = [80, 110, 3000, 20]  # RE5
+lower_bound = [1, np.sqrt(2), np.sqrt(2), 1]  # RE1
+upper_bound = [3, 3, 3, 3]  # RE!
+# lower_bound = [55, 75, 1000, 11]  # RE5
+# upper_bound = [80, 110, 3000, 20]  # RE5
 num_divisions = 8
 polar_offset_limit = np.pi
 num_max_sectors = 20
@@ -299,12 +299,12 @@ def run_nsga(selected_model=None):
     sns.set_theme(style="darkgrid")
     fig = plt.figure(figsize=(7, 7))
     # ax = fig.add_subplot(111, projection="3d")
-    # ax = fig.add_subplot(111)
-    ax = fig.add_subplot(111, projection="3d")
+    ax = fig.add_subplot(111)
+    # ax = fig.add_subplot(111, projection="3d")
     ax.scatter(
         calc_pareto_front(problem_name)[:, 0],
         calc_pareto_front(problem_name)[:, 1],
-        calc_pareto_front(problem_name)[:, 2],
+        # calc_pareto_front(problem_name)[:, 2],
         color="red",
         alpha=0.3,
         label="Optimal Pareto Front",
@@ -313,7 +313,7 @@ def run_nsga(selected_model=None):
     ax.scatter(
         individuals[:, 0],
         individuals[:, 1],
-        individuals[:, 2],
+        # individuals[:, 2],
         color="blue",
         alpha=0.6,
         label=model_name,
@@ -326,7 +326,7 @@ def run_nsga(selected_model=None):
     # plt.autoscale(tight=True)
     # plt.savefig(f"images/{problem_name}_mc_nsga3.png", dpi=300)
     # plt.savefig(f"images/{problem_name}_nsga3.png", dpi=300)
-    plt.show()
+    # plt.show()
 
     # hv_ref_point = np.array([-0.5, -0.5, -0.5])
     hv_ref_point = np.max(calc_pareto_front(problem_name), axis=0) + 0.5
@@ -340,7 +340,7 @@ def run_nsga(selected_model=None):
     plt.title("Hypervolume over time")
     # plt.savefig(f"images/{problem_name}_mc_nsga3_hypervolume.png", dpi=300)
     # plt.savefig(f"images/{problem_name}_nsga3_hypervolume.png", dpi=300)
-    plt.show()
+    # plt.show()
 
     path = f"result/re/{problem_name}/{model_name}"
 
@@ -458,8 +458,8 @@ def run():
     for i in range(1, 5 + 1):
         global expr
         expr = i
-        run_nsga("nsga3")
-        run_nsga("mc_nsga3")
+        run_nsga("nsga2")
+        run_nsga("mc_nsga2")
     # run_moead()
 
 
@@ -481,6 +481,26 @@ def main():
         label="Optimal Pareto Front",
     )
     plt.show()
+
+
+def plot_re_pareto_front(ax, test):
+    if test in {"re1"}:
+        ax.scatter(
+            calc_pareto_front(test)[:, 0],
+            calc_pareto_front(test)[:, 1],
+            color="red",
+            alpha=0.3,
+            label="Optimal Pareto Front",
+        )
+    elif test in {"re5"}:
+        ax.scatter(
+            calc_pareto_front(test)[:, 0],
+            calc_pareto_front(test)[:, 1],
+            calc_pareto_front(test)[:, 2],
+            color="red",
+            alpha=0.3,
+            label="Optimal Pareto Front",
+        )
 
 
 if __name__ == "__main__":
