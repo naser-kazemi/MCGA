@@ -50,7 +50,7 @@ distance calculation.
 
 |               MCGA               |               NSGA-II               |
 |:--------------------------------:|:-----------------------------------:|
-| ![MCGA](../images/zdt3_mcga.png) | ![NSGA-II](../images/zdt3_nsga.png) |
+| ![MCGA](../images/all_tests/zdt3_mcga.png) | ![NSGA-II](../images/all_tests/zdt3_nsga.png) |
 
 The implementation for this approach is available in branch `approach1.1` on teh github repository.
 
@@ -80,5 +80,76 @@ first front, the second front, and so on.
 
 #### 2.2
 
-Now I try another thing. Instead of slicing the polar space in random sectors, I uniformly slice the polar space and
+I also tried another thing. Instead of slicing the polar space in random sectors, I uniformly slice the polar space and
 then rotate it with a random angle.
+
+## Using the Monte-Carlo Method as a general improvement method on other algorithms
+
+I tried to augment the other typical algorithms with the Monte-Carlo method to see if it can improve the results. For
+this purpose, in order to preserve the structure and performance of the base algorithm, either you have to apply the MC
+method on a portion of the population, or you have to apply it on the whole population but just in some iterations.
+
+I used `NSGA-II` and `NSGA-III` as the base algorithms. I applied the MC method on a portion of the population in the
+first, and the results where unsatisfactory. Then I applied the MC method on the whole population in some iterations,
+and the results where better. Even though the results where better in some cases, it was not consistent. In some tests,
+the `NSGA-III` itself was slightly better than the augmented version.
+
+At first I tried to implement the `NSGA-III` algorithm. I have conducted three implementations of NSGA-III. The initial
+two attempts encountered issues with both convergence and diversity. hese instances demanded a notable iteration range
+of 500 to 700, alongside a population size spanning 200 to 300 for DTLZ problems, consuming nearly double the resources
+of NSGA-II. Ultimately, their outcomes did not significantly surpass those of the conventional method.
+
+In my exploration, I came across the "deap" library which proved to be highly versatile. This library offers an array of
+algorithms, and my contribution to the implementation involved the creation of selection functions. Notably, the library
+itself had already implemented the nd-sort mechanism. Additionally, the platform facilitated effortless testing of
+various algorithm configurations, including distinct mating strategies and the like.
+
+For instance, I observed that the SBX mating method exhibited superior performance in contrast to the real-valued
+approach.
+
+In this approach, I used the first method of the MC elitism conditions with no relaxing, but used the uniform polar
+space slicing with random rotation.
+
+I had an idea about the algorithm and that it can be effective on the problems with a wide pareto front, with a discrete
+pattern. So I looked for test problems with complex pareto fronts, those that have a degenerate form and some real-world
+problems with awkward shapes. explanation about these problems is available in attached pdf files.
+
+I tested the implementation on `ZDT`, `DTLZ`, `CPFT`, `OKA` and `RE` problems. The comparison of the hypervolume of the
+results is shown in the following figure.
+
+|                     ZDT1                     |                      ZDT2                       |                     ZDT3                     |                      ZDT4                       |
+|:--------------------------------------------:|:-----------------------------------------------:|:--------------------------------------------:|:-----------------------------------------------:|
+|     ![](../images/hypervolumes/zdt1.png)     |      ![](../images/hypervolumes/zdt2.png)       |     ![](../images/hypervolumes/zdt3.png)     |      ![](../images/hypervolumes/zdt4.png)       |
+
+|                 DTLZ1                 |                      DTLZ2                      |                    DTLZ3                     |                 DTLZ4                 |
+|:-------------------------------------:| :---------------------------------------------: | :------------------------------------------: |:-------------------------------------:|
+| ![](../images/hypervolumes/dtlz1.png) |      ![](../images/hypervolumes/dtlz2.png)      |    ![](../images/hypervolumes/dtlz3.png)     | ![](../images/hypervolumes/dtlz4.png) |
+
+|                    CPFT2                     |                      CPFT3                      |                    CPFT4                     |                      ZDT4                       |
+| :------------------------------------------: | :---------------------------------------------: | :------------------------------------------: | :---------------------------------------------: |
+|    ![](../images/hypervolumes/cpft2.png)     |      ![](../images/hypervolumes/cpft3.png)      |    ![](../images/hypervolumes/cpft4.png)     |      ![](../images/hypervolumes/zdt4.png)       |
+
+|                 OKA1                 |                 OKA2                 |                 RE1                 |                 RE5                 |
+|:------------------------------------:|:------------------------------------:|:-----------------------------------:|:-----------------------------------:|
+| ![](../images/hypervolumes/oka1.png) | ![](../images/hypervolumes/oka2.png) | ![](../images/hypervolumes/re1.png) | ![](../images/hypervolumes/re5.png) |
+
+And Here is the result populations of the `NSGA-II` and `NSGA-III` algorithms and their augmented versions.
+
+|                  NSGA-II                   |                   MCNSGA-II                   |                  NSGA-III                  |                   MCNSGA-II                   |
+|:------------------------------------------:|:---------------------------------------------:|:------------------------------------------:|:---------------------------------------------:|
+| ![](../images/populations/zdt1_nsga2.png)  | ![](../images/populations/zdt1_mc_nsga2.png)  | ![](../images/populations/zdt1_nsga3.png)  | ![](../images/populations/zdt1_mc_nsga3.png)  |
+| ![](../images/populations/zdt2_nsga2.png)  | ![](../images/populations/zdt2_mc_nsga2.png)  | ![](../images/populations/zdt2_nsga3.png)  | ![](../images/populations/zdt2_mc_nsga3.png)  |
+| ![](../images/populations/zdt3_nsga2.png)  | ![](../images/populations/zdt3_mc_nsga2.png)  | ![](../images/populations/zdt3_nsga3.png)  | ![](../images/populations/zdt3_mc_nsga3.png)  |
+| ![](../images/populations/zdt4_nsga2.png)  | ![](../images/populations/zdt4_mc_nsga2.png)  | ![](../images/populations/zdt4_nsga3.png)  | ![](../images/populations/zdt4_mc_nsga3.png)  |
+| ![](../images/populations/dtlz1_nsga2.png) | ![](../images/populations/dtlz1_mc_nsga2.png) | ![](../images/populations/dtlz1_nsga3.png) | ![](../images/populations/dtlz1_mc_nsga3.png) |
+| ![](../images/populations/dtlz2_nsga2.png) | ![](../images/populations/dtlz2_mc_nsga2.png) | ![](../images/populations/dtlz2_nsga3.png) | ![](../images/populations/dtlz2_mc_nsga3.png) |
+| ![](../images/populations/dtlz3_nsga2.png) | ![](../images/populations/dtlz3_mc_nsga2.png) | ![](../images/populations/dtlz3_nsga3.png) | ![](../images/populations/dtlz3_mc_nsga3.png) |
+| ![](../images/populations/dtlz4_nsga2.png) | ![](../images/populations/dtlz4_mc_nsga2.png) | ![](../images/populations/dtlz4_nsga3.png) | ![](../images/populations/dtlz4_mc_nsga3.png) |
+| ![](../images/populations/zdt2_nsga2.png)  | ![](../images/populations/zdt2_mc_nsga2.png)  | ![](../images/populations/zdt2_nsga3.png)  | ![](../images/populations/zdt2_mc_nsga3.png)  |
+
+For Each test, I have saved the used parameters in the `parameters` folder. I have also saved the result populations of
+each method.
+
+
+## Current Status
+Currently, I am working on 

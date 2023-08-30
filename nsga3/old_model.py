@@ -270,17 +270,17 @@ class NSGA3(NSGA2):
 
         return indices_to_add
 
-    def select(self, population: Population):
+    def select(self, individuals: Population):
         """
         The selection operator of the algorithm
-        :param population: The population
+        :param individuals: The population
         """
-        assert len(population) >= self.population_size
+        assert len(individuals) >= self.population_size
 
-        if len(population) == self.population_size:
-            return population
+        if len(individuals) == self.population_size:
+            return individuals
 
-        fronts = self.fast_non_dominated_sort(population)
+        fronts = self.fast_non_dominated_sort(individuals)
 
         selection = Population()
         front = fronts[0]

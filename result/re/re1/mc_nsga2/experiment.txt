@@ -1,0 +1,11 @@
+problem: re1
+population_size: 1000
+num_variables: 4
+num_objectives: 2
+num_generations: 300
+eta_crossover: 20
+eta_mutation: 20
+crossover_probability: 0.6
+lower_bound: [1, 1.4142135623730951, 1.4142135623730951, 1]
+upper_bound: [3, 3, 3, 3]
+hv_ref_point: [2.09279873e+03 5.03414214e-01]

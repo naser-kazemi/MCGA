@@ -10,26 +10,27 @@ from deap import base, creator, tools, algorithms
 
 class MCNSGA3(NSGA3):
     def __init__(
-            self,
-            problem,
-            num_variables,
-            num_objectives,
-            num_generations,
-            population_size,
-            lower_bound,
-            upper_bound,
-            num_divisions,
-            crossover_probability=0.9,
-            eta_crossover=20.0,
-            eta_mutation=20.0,
-            log=None,
-            nd="log",
-            verbose=False,
-            polar_offset_limit: np.float64 = 2 * np.pi,
-            num_max_sectors: int = 10,
-            front_frequency_threshold: float = 0.1,
-            niche_ratio: float = 0.1,
-            monte_carlo_frequency: int = 5,
+        self,
+        problem,
+        num_variables,
+        num_objectives,
+        num_generations,
+        population_size,
+        lower_bound,
+        upper_bound,
+        num_divisions,
+        crossover_probability=0.9,
+        eta_crossover=20.0,
+        eta_mutation=20.0,
+        log=None,
+        nd="log",
+        verbose=False,
+        polar_offset_limit: np.float64 = 2 * np.pi,
+        num_max_sectors: int = 10,
+        front_frequency_threshold: float = 0.1,
+        niche_ratio: float = 0.1,
+        monte_carlo_frequency: int = 5,
+        polar_scale: float = 1000.0,
     ):
         super().__init__(
             problem=problem,
@@ -50,29 +51,38 @@ class MCNSGA3(NSGA3):
 
         self.polar_offset_limit = polar_offset_limit
         self.num_max_sectors = num_max_sectors
+        self.sectors = self.initial_sectors()
         self.front_frequency_threshold = front_frequency_threshold
         self.niche_ratio = niche_ratio
         self.monte_carlo_frequency = monte_carlo_frequency
-        self.scale = 1000.0
+        self.scale = polar_scale
+
+        self.nd_sort = self.init_ndsort(nd)
+
+    def init_ndsort(self, nd):
+        if nd == "standard":
+            return tools.sortNondominated
+        elif nd == "log":
+            return tools.sortLogNondominated
+        else:
+            raise Exception(
+                "The choice of non-dominated sorting "
+                "method '{0}' is invalid.".format(nd)
+            )
 
     def create_individual_class(self):
         creator.create(
-            "FitnessMin", base.Fitness, weights=(-1.0,) * self.num_objectives,
+            "FitnessMin",
+            base.Fitness,
+            weights=(-1.0,) * self.num_objectives,
             polar_coords=np.zeros(self.num_objectives, dtype=np.float64),
-            front_freq=np.zeros(self.population_size * 2, dtype=np.float64)
+            front_freq=np.zeros(self.population_size * 2, dtype=np.float64),
         )
         creator.create(
             "Individual", array.array, typecode="d", fitness=creator.FitnessMin
         )
 
-    def divide_planes(self):
-        """
-        Create sectors in polar space,
-        each sector is a tuple of (start, end) angles in n-dimensional polar space
-        where n is the number of objectives
-        :return: The sectors
-        """
-
+    def initial_sectors(self):
         # create a list of sectors
         sectors_points = []
 
@@ -91,15 +101,9 @@ class MCNSGA3(NSGA3):
                 ]
             )
 
-        # now rotate the sectors to create the offset
-        offset = random.uniform(0, self.polar_offset_limit)
-        for i in range(self.num_objectives - 1):
-            sectors[i] = [(x + offset, y + offset) for x, y in sectors[i]]
+        return np.array(list(product(*sectors)))
 
-        return sectors
-
-    @classmethod
-    def create_sectors(cls, plane_sectors):
+    def create_sectors(self):
         """
         Create sectors in polar space,
         each sector is list of a tuples of (start, end) angles in n-dimensional polar space
@@ -108,8 +112,14 @@ class MCNSGA3(NSGA3):
         :return: The sectors
         """
 
-        # create the cartesian product of the plane sectors
-        sectors = np.array(list(product(*plane_sectors)))
+        # print(self.sectors)
+
+        offset = random.uniform(0, self.polar_offset_limit)
+        sectors = self.sectors + offset
+
+        # print(offset)
+
+        # print(sectors)
 
         return sectors
 
@@ -141,8 +151,7 @@ class MCNSGA3(NSGA3):
         :return: The sliced population in polar space
         """
 
-        plane_sectors = self.divide_planes()
-        sectors = self.create_sectors(plane_sectors)
+        sectors = self.create_sectors()
 
         sliced_population = [[] for _ in range(len(sectors))]
         # divide the population into sectors
@@ -152,9 +161,7 @@ class MCNSGA3(NSGA3):
                     sliced_population[i].append(ind)
                     break
             else:
-                print(
-                    f"Error: Member {ind.fitness.polar_coords[1:]} not in any sector"
-                )
+                print(f"Error: Member {ind.fitness.polar_coords[1:]} not in any sector")
 
         sliced_population = [slc for slc in sliced_population if len(slc) > 0]
 
@@ -203,14 +210,17 @@ class MCNSGA3(NSGA3):
         #     c *= 0.8
         # return value
 
-        return ' '.join([str(x) for x in individual.fitness.front_freq])
+        return " ".join([str(x) for x in individual.fitness.front_freq])
 
     def mc_select(self, individuals):
         self.convert_to_polar(individuals)
         cached_individuals = copy.deepcopy(individuals)
         self.monte_carlo_step(individuals)
 
-        while self.compute_front_frequency_diff(individuals, cached_individuals) > self.front_frequency_threshold:
+        while (
+            self.compute_front_frequency_diff(individuals, cached_individuals)
+            > self.front_frequency_threshold
+        ):
             cached_individuals = copy.deepcopy(individuals)
             self.monte_carlo_step(individuals)
 
@@ -226,81 +236,47 @@ class MCNSGA3(NSGA3):
         :return: The selected individuals
         """
 
-        if (self.current_generation % self.monte_carlo_frequency) != 1:
-            ref_points = self.generate_reference_points()
-
-            pareto_fronts = self.nd_sort(individuals, k, first_front_only=False)
-
-            fitnesses = np.array([ind.fitness.wvalues for f in pareto_fronts for ind in f])
-            fitnesses *= -1
-
-            # Get best and worst point of population, contrary to pymoo
-            # we don't use memory
-            best_point = np.min(fitnesses, axis=0)
-            worst_point = np.max(fitnesses, axis=0)
-
-            extreme_points = self.find_extreme_points(fitnesses, best_point)
-            front_worst = np.max(fitnesses[: sum(len(f) for f in pareto_fronts), :], axis=0)
-            intercepts = self.find_intercepts(
-                extreme_points, best_point, worst_point, front_worst
+        if (self.current_generation % self.monte_carlo_frequency) != 1 and (
+            self.current_generation < self.num_generations
+        ):
+            chosen = tools.selNSGA3(
+                individuals,
+                k,
+                tools.uniform_reference_points(
+                    nobj=self.num_objectives, p=self.num_divisions
+                ),
+                nd=self.nd,
             )
-            niches, dist = self.associate(fitnesses, ref_points, best_point, intercepts)
 
-            # Get counts per niche for individuals in all front but the last
-            niche_counts = np.zeros(len(ref_points), dtype=np.int64)
-            index, counts = np.unique(niches[: -len(pareto_fronts[-1])], return_counts=True)
-            niche_counts[index] = counts
-
-            # Choose individuals from all fronts but the last
-            chosen = list(chain(*pareto_fronts[:-1]))
-
-            # Use niching to select the remaining individuals
-            sel_count = len(chosen)
-            n = k - sel_count
-            selected = self.niching(
-                pareto_fronts[-1], n, niches[sel_count:], dist[sel_count:], niche_counts
-            )
-            chosen.extend(selected)
-            self.print_stats(chosen=chosen)
-            return chosen
-
-        for ind in individuals:
-            ind.fitness.values = tuple([x * self.scale for x in ind.fitness.values])
-
-        mc_sorted = self.mc_select(individuals)
-        chosen = mc_sorted[:self.population_size]
-
-        for ind in individuals:
-            ind.fitness.values = tuple([x / self.scale for x in ind.fitness.values])
-
-        # ref_points = self.generate_reference_points()
-        # fitnesses = np.array([ind.fitness.wvalues for ind in individuals])
-        # fitnesses *= -1
+        # k_nsga3 = int(k * (1 - self.niche_ratio))
+        # k_mc = k - k_nsga3
         #
-        # # Get best and worst point of population, contrary to pymoo
-        # # we don't use memory
-        # best_point = np.min(fitnesses, axis=0)
-        # worst_point = np.max(fitnesses, axis=0)
+        # # split the population into two parts randomly and apply NSGA-III on the first part
+        # # and Monte Carlo on the second part
         #
-        # extreme_points = self.find_extreme_points(fitnesses, best_point)
-        # front_worst = np.max(fitnesses, axis=0)
-        # intercepts = self.find_intercepts(
-        #     extreme_points, best_point, worst_point, front_worst
-        # )
-        # niches, dist = self.associate(fitnesses, ref_points, best_point, intercepts)
+        # # shuffle the individuals
+        # random.shuffle(individuals)
         #
-        # # Get counts per niche for individuals in all front but the last
-        # niche_counts = np.zeros(len(ref_points), dtype=np.int64)
-        # index, counts = np.unique(niches[: len(chosen) + 1], return_counts=True)
-        # niche_counts[index] = counts
+        # individuals_nsga3 = individuals[:int((1 - self.niche_ratio) * len(individuals))]
+        # individuals_mc = individuals[int((1 - self.niche_ratio) * len(individuals)):]
         #
-        # # Use niching to select the remaining individuals
-        # sel_count = len(chosen)
-        # n = k - sel_count
-        # selected = self.niching(
-        #     mc_sorted[len(chosen):], n, niches[sel_count:], dist[sel_count:], niche_counts
-        # )
-        # chosen.extend(selected)
+        # chosen = tools.selNSGA3(individuals_nsga3, k_nsga3,
+        #                         tools.uniform_reference_points(nobj=self.num_objectives, p=self.num_divisions),
+        #                         nd=self.nd)
+
+        else:
+            # for ind in individuals_mc:
+            for ind in individuals:
+                ind.fitness.values = tuple([x * self.scale for x in ind.fitness.values])
+
+            # mc_sorted = self.mc_select(individuals_mc)
+            mc_sorted = self.mc_select(individuals)
+            chosen = mc_sorted[:k]
+            # chosen.extend(mc_sorted[: k_mc])
+
+            for ind in individuals:
+                # for ind in individuals_mc:
+                ind.fitness.values = tuple([x / self.scale for x in ind.fitness.values])
 
         self.print_stats(chosen=chosen)
 

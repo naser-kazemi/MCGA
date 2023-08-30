@@ -3,102 +3,242 @@ from emoa.moop import MOOP
 
 import matplotlib.pyplot as plt
 from emoa.utils import *
-from nsga2.model import NSGA2
-from mcga.mc_nsga2 import MCGA
+from mcga import MCNSGA3
+from nsga2 import NSGA2
+from mcga import MCNSGA2
 import math
+import json
+
+from deap import benchmarks, tools
+
+from nsga3 import NSGA3
+
+problem_name = "zdt4"
+pymoo_problem = get_problem(problem_name)
+lower_bound = 0.0
+upper_bound = 1.0
+population_size = 100
+num_variables = pymoo_problem.n_var
+num_objectives = pymoo_problem.n_obj
+num_generations = 2000
+eta_crossover = 20
+eta_mutation = 20
+crossover_probability = 0.8
+polar_offset_limit = np.pi
+num_max_sectors = 30
+num_divisions = 12
+front_frequency_threshold = 0.01
+monte_carlo_frequency = 2
+log = ["hv"]
+verbose = True
+expr = 5
+model_name = ""
+problem = lambda ind: benchmarks.zdt4(ind)
+
+
+def nsga2_model():
+    global model_name
+    model_name = "nsga2"
+    return NSGA2(
+        problem=problem,
+        population_size=population_size,
+        num_variables=num_variables,
+        num_objectives=num_objectives,
+        num_generations=num_generations,
+        eta_crossover=eta_crossover,
+        eta_mutation=eta_mutation,
+        crossover_probability=crossover_probability,
+        lower_bound=lower_bound,
+        upper_bound=upper_bound,
+        log=log,
+        verbose=verbose,
+    )
+
+
+def mcnsga2_model():
+    global model_name
+    model_name = "mc_nsga2"
+    return MCNSGA2(
+        problem=problem,
+        population_size=population_size,
+        num_variables=num_variables,
+        num_objectives=num_objectives,
+        num_generations=num_generations,
+        eta_crossover=eta_crossover,
+        eta_mutation=eta_mutation,
+        crossover_probability=crossover_probability,
+        lower_bound=lower_bound,
+        upper_bound=upper_bound,
+        polar_offset_limit=polar_offset_limit,
+        num_max_sectors=num_max_sectors,
+        front_frequency_threshold=front_frequency_threshold,
+        monte_carlo_frequency=monte_carlo_frequency,
+        log=log,
+        verbose=verbose,
+    )
+
+
+def nsga3_model():
+    global model_name
+    model_name = "nsga3"
+    return NSGA3(
+        problem=problem,
+        population_size=population_size,
+        num_variables=num_variables,
+        num_objectives=num_objectives,
+        num_generations=num_generations,
+        eta_crossover=eta_crossover,
+        eta_mutation=eta_mutation,
+        crossover_probability=crossover_probability,
+        lower_bound=lower_bound,
+        upper_bound=upper_bound,
+        num_divisions=5,
+        log=log,
+        verbose=verbose,
+    )
+
+
+def mcnsga3_model():
+    global model_name
+    model_name = "mc_nsga3"
+    return MCNSGA3(
+        problem=problem,
+        population_size=population_size,
+        num_variables=num_variables,
+        num_objectives=num_objectives,
+        num_generations=num_generations,
+        eta_crossover=eta_crossover,
+        eta_mutation=eta_mutation,
+        crossover_probability=crossover_probability,
+        lower_bound=lower_bound,
+        upper_bound=upper_bound,
+        num_divisions=num_divisions,
+        polar_offset_limit=polar_offset_limit,
+        num_max_sectors=num_max_sectors,
+        front_frequency_threshold=front_frequency_threshold,
+        monte_carlo_frequency=monte_carlo_frequency,
+        log=log,
+        verbose=verbose,
+    )
+
+
+def run_nsga(selected_model=None):
+    if selected_model is not None:
+        if selected_model == "nsga3":
+            model = nsga3_model()
+        elif selected_model == "mc_nsga3":
+            model = mcnsga3_model()
+        elif selected_model == "nsga2":
+            model = nsga2_model()
+        else:
+            model = mcnsga2_model()
+    else:
+        # model = nsga2_model()
+        # model = mcnsga2_model()
+        # model = nsga3_model()
+        model = mcnsga3_model()
+
+    model.run()
+
+    individuals = model.result_pop
+    individuals = np.array([ind.fitness.values for ind in individuals])
+
+    sns.set_theme(style="darkgrid")
+    fig = plt.figure(figsize=(7, 7))
+    ax = fig.add_subplot(111)
+
+    # plot true pareto front
+    ax.scatter(
+        pymoo_problem.pareto_front()[:, 0],
+        pymoo_problem.pareto_front()[:, 1],
+        color="red",
+        alpha=0.5,
+        label="Optimal Pareto Front",
+    )
+
+    ax.scatter(
+        individuals[:, 0],
+        individuals[:, 1],
+        color="blue",
+        alpha=0.5,
+        label=model_name,
+    )
+
+    ax.set_xlabel("$f_1$", fontsize=15)
+    ax.set_ylabel("$f_2$", fontsize=15)
+
+    # hv_ref should be the utopia point
+    # hv_ref_point = np.max(pymoo_problem.pareto_front(), axis=0) + 1
+    # hv_ref_point = np.array([5, 5, 5])
+    hv_ref_point = np.array([2, 2])
+
+    # plt.savefig("images/dtlz1_nsga3.png", dpi=300)
+    # plt.show()
+
+    hypervolumes = model.metric("hypervolume", all_gens=True, ref=hv_ref_point)
+    fig = plt.figure(figsize=(7, 7))
+    plt.plot(hypervolumes)
+    plt.xlabel("Iterations (t)")
+    plt.ylabel("Hypervolume")
+    plt.title("Hypervolume over time")
+    # plt.savefig("images/dtlz1_nsga3_hypervolume.png", dpi=300)
+    # plt.show()
+
+    path = f"result/zdt/{problem_name}/{model_name}"
+
+    with open(path + "/experiment.txt", "w") as f:
+        f.write(f"problem: {problem_name}\n")
+        f.write(f"population_size: {population_size}\n")
+        f.write(f"num_variables: {num_variables}\n")
+        f.write(f"num_objectives: {num_objectives}\n")
+        f.write(f"num_generations: {num_generations}\n")
+        f.write(f"eta_crossover: {eta_crossover}\n")
+        f.write(f"eta_mutation: {eta_mutation}\n")
+        f.write(f"crossover_probability: {crossover_probability}\n")
+        f.write(f"lower_bound: {lower_bound}\n")
+        f.write(f"upper_bound: {upper_bound}\n")
+        f.write(f"hv_ref_point: {hv_ref_point}\n")
+        if model_name == "mc_nsga2":
+            f.write(f"polar_offset_limit: {polar_offset_limit}\n")
+            f.write(f"num_max_sectors: {num_max_sectors}\n")
+            f.write(f"front_frequency_threshold: {front_frequency_threshold}\n")
+            f.write(f"monte_carlo_frequency: {monte_carlo_frequency}\n")
+
+    # save the final population
+    with open(path + f"/population{expr}.json", "w") as f:
+        json.dump(individuals.tolist(), f)
+
+    # save hypervolume data
+    with open(path + f"/hypervolume{expr}.json", "w") as f:
+        json.dump(hypervolumes, f)
 
 
 def run():
-    problem = get_problem("zdt3")
-    lower_bound = problem.xl
-    upper_bound = problem.xu
-
-    # create a new NSGA2 instance
-    # create two objectives
-    f1 = lambda x: x[0]
-    g = lambda x: 1 + 9 * sum(x[1:]) / (len(x) - 1)
-    f2 = lambda x: g(x) * (
-        1 - math.sqrt(x[0] / g(x)) - (x[0] / g(x)) * math.sin(10 * math.pi * x[0])
-    )
-    objectives = [f1, f2]
-
-    moop = MOOP(
-        problem.n_var, objectives, problem.pareto_front(), lower_bound, upper_bound
-    )
-
-    mcga = MCGA(moop, 120, 50, 0.9, 2, 1, 1, np.pi, 20, 0.01)
-
-    # clearing the gif_images directory
-    for image in os.listdir("../gif_images"):
-        os.remove(os.path.join("../gif_images", image))
-    # for image in os.listdir("monte_carlo_gif_images"):
-    #     os.remove(os.path.join("monte_carlo_gif_images", image))
-
-    # run the algorithm
-    mcga.run()
-    front = np.array(mcga.fast_non_dominated_sort(mcga.population)[0])
-    front = np.array([member.objective_values for member in front])
-    distance_mean, distance_std = mcga.evaluate_distance_metric()
-    print("Distance metric mean: ", distance_mean)
-    print("Distance metric std: ", distance_std)
-    diversity = mcga.evaluate_diversity_metric()
-    print("Diversity metric: ", diversity)
-
-    # plot the results and save the figure
-    fig = plt.figure(figsize=(10, 10))
-    plt.scatter(
-        problem.pareto_front()[:, 0],
-        problem.pareto_front()[:, 1],
-        color="red",
-        label="Pareto Front",
-    )
-    plt.scatter(front[:, 0], front[:, 1], color="blue", label="MCGA")
-
-    plt.xlabel("$f_1(x)$")
-    plt.ylabel("$f_2(x)$")
-    plt.title("ZDT3")
-    plt.legend()
-    plt.savefig("images/zdt3_mcga.png")
-    plt.close()
-
-    # create a GIF from the gif_images in the gif_images directory
-    create_gif("gif_images", "../gifs/zdt3_mcga.gif")
-    # create_gif("monte_carlo_gif_images", f"./gifs/zdt3_mcga_polar.gif")
-
-    nsga2 = NSGA2(moop, 120, 50, 0.9, 20, 20)
-
-    # clearing the gif_images directory
-    for image in os.listdir("../gif_images"):
-        os.remove(os.path.join("../gif_images", image))
-
-    # run the algorithm
-    nsga2.run()
-    front = np.array(nsga2.fast_non_dominated_sort(nsga2.population)[0])
-    front = np.array([member.objective_values for member in front])
-    distance_mean, distance_std = nsga2.evaluate_distance_metric()
-    print("Distance metric mean: ", distance_mean)
-    print("Distance metric std: ", distance_std)
-    diversity = nsga2.evaluate_diversity_metric()
-    print("Diversity metric: ", diversity)
-
-    # plot the results and save the figure
-    fig = plt.figure(figsize=(10, 10))
-    plt.scatter(
-        problem.pareto_front()[:, 0],
-        problem.pareto_front()[:, 1],
-        color="red",
-        label="Pareto Front",
-    )
-    plt.scatter(front[:, 0], front[:, 1], color="blue", label="MCGA")
-
-    plt.xlabel("$f_1(x)$")
-    plt.ylabel("$f_2(x)$")
-    plt.title("ZDT3")
-    plt.legend()
-    plt.savefig("images/zdt3_nsga.png")
-    plt.close()
-
-    create_gif("gif_images", "../gifs/zdt3_nsga.gif")
+    problem_names = ["zdt1", "zdt2", "zdt3", "zdt4"]
+    problems = [
+        benchmarks.zdt1,
+        benchmarks.zdt2,
+        benchmarks.zdt3,
+        benchmarks.zdt4,
+    ]
+    global problem_name
+    global problem
+    global expr
+    global pymoo_problem
+    global num_objectives
+    global num_variables
+    for (pn, p) in zip(problem_names, problems):
+        problem_name = pn
+        problem = p
+        pymoo_problem = get_problem(pn)
+        num_objectives = pymoo_problem.n_obj
+        num_variables = pymoo_problem.n_var
+        for i in range(1, 5 + 1):
+            expr = i
+            # run_nsga("nsga2")
+            # run_nsga("mc_nsga2")
+            run_nsga("nsga3")
+            run_nsga("mc_nsga3")
 
 
 if __name__ == "__main__":

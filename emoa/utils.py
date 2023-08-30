@@ -1,10 +1,16 @@
+import io
+
+import PIL
 import numpy as np
 import argparse as ap
 import os
 import sys
 import matplotlib.pyplot as plt
+import seaborn as sns
 import imageio
 import random
+
+from matplotlib.figure import Figure
 
 
 def create_parser():
@@ -323,3 +329,37 @@ def uniform(low, up, size=None):
         return [random.uniform(a, b) for a, b in zip(low, up)]
     except TypeError:
         return [random.uniform(a, b) for a, b in zip([low] * size, [up] * size)]
+
+
+def make_gif_from_history(history, path):
+    images = []
+    for i in range(len(history)):
+        fig = plt.figure(figsize=(7, 7))
+        if len(history[i][0]) == 3:
+            ax = fig.add_subplot(111, projection="3d")
+            ax.scatter(
+                history[i][:, 0],
+                history[i][:, 1],
+                history[i][:, 2],
+                color="blue",
+                alpha=0.5,
+            )
+            ax.set_zlabel("Objective 3")
+        else:
+            ax = fig.add_subplot(111)
+            ax.scatter(
+                history[i][:, 0],
+                history[i][:, 1],
+                color="blue",
+                alpha=0.5,
+            )
+        ax.set_xlabel("Objective 1")
+        ax.set_ylabel("Objective 2")
+        ax.set_title("Pareto Front")
+        image_buf = io.BytesIO()
+        plt.savefig(image_buf, format="png")
+        image = PIL.Image.open(image_buf)
+        images.append(image)
+        plt.close(fig)
+
+    imageio.mimsave(path, images, duration=0.5)

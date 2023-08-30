@@ -8,7 +8,7 @@ from nsga3.model import NSGA3
 from mcga.mc_nsga3 import MCNSGA3
 import math
 
-from deap import benchmarks
+from deap import benchmarks, tools
 
 
 def run():
