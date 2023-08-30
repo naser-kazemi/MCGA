@@ -94,8 +94,25 @@ first, and the results where unsatisfactory. Then I applied the MC method on the
 and the results where better. Even though the results where better in some cases, it was not consistent. In some tests,
 the `NSGA-III` itself was slightly better than the augmented version.
 
+At first I tried to implement the `NSGA-III` algorithm. I have conducted three implementations of NSGA-III. The initial
+two attempts encountered issues with both convergence and diversity. hese instances demanded a notable iteration range
+of 500 to 700, alongside a population size spanning 200 to 300 for DTLZ problems, consuming nearly double the resources
+of NSGA-II. Ultimately, their outcomes did not significantly surpass those of the conventional method.
+
+In my exploration, I came across the "deap" library which proved to be highly versatile. This library offers an array of
+algorithms, and my contribution to the implementation involved the creation of selection functions. Notably, the library
+itself had already implemented the nd-sort mechanism. Additionally, the platform facilitated effortless testing of
+various algorithm configurations, including distinct mating strategies and the like.
+
+For instance, I observed that the SBX mating method exhibited superior performance in contrast to the real-valued
+approach.
+
 In this approach, I used the first method of the MC elitism conditions with no relaxing, but used the uniform polar
 space slicing with random rotation.
+
+I had an idea about the algorithm and that it can be effective on the problems with a wide pareto front, with a discrete
+pattern. So I looked for test problems with complex pareto fronts, those that have a degenerate form and some real-world
+problems with awkward shapes. explanation about these problems is available in attached pdf files.
 
 I tested the implementation on `ZDT`, `DTLZ`, `CPFT`, `OKA` and `RE` problems. The comparison of the hypervolume of the
 results is shown in the following figure.
@@ -116,9 +133,7 @@ results is shown in the following figure.
 |:------------------------------------:|:------------------------------------:|:-----------------------------------:|:-----------------------------------:|
 | ![](../images/hypervolumes/oka1.png) | ![](../images/hypervolumes/oka2.png) | ![](../images/hypervolumes/re1.png) | ![](../images/hypervolumes/re5.png) |
 
-
 And Here is the result populations of the `NSGA-II` and `NSGA-III` algorithms and their augmented versions.
-
 
 |                  NSGA-II                   |                   MCNSGA-II                   |                  NSGA-III                  |                   MCNSGA-II                   |
 |:------------------------------------------:|:---------------------------------------------:|:------------------------------------------:|:---------------------------------------------:|
@@ -132,6 +147,9 @@ And Here is the result populations of the `NSGA-II` and `NSGA-III` algorithms an
 | ![](../images/populations/dtlz4_nsga2.png) | ![](../images/populations/dtlz4_mc_nsga2.png) | ![](../images/populations/dtlz4_nsga3.png) | ![](../images/populations/dtlz4_mc_nsga3.png) |
 | ![](../images/populations/zdt2_nsga2.png)  | ![](../images/populations/zdt2_mc_nsga2.png)  | ![](../images/populations/zdt2_nsga3.png)  | ![](../images/populations/zdt2_mc_nsga3.png)  |
 
-
 For Each test, I have saved the used parameters in the `parameters` folder. I have also saved the result populations of
 each method.
+
+
+## Current Status
+Currently, I am working on 
