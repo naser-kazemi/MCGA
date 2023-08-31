@@ -51,14 +51,14 @@ class RE1(Problem):
 
         f1 = L * ((2 * x1) + np.sqrt(2.0) * x2 + np.sqrt(x3) + x4)
         f2 = (
-                (F * L)
-                / E
-                * (
-                        div(2.0, x1)
-                        + div(2.0 * np.sqrt(2.0), x2)
-                        - div(2.0 * np.sqrt(2.0), x3)
-                        + div(2.0, x4)
-                )
+            (F * L)
+            / E
+            * (
+                div(2.0, x1)
+                + div(2.0 * np.sqrt(2.0), x2)
+                - div(2.0 * np.sqrt(2.0), x3)
+                + div(2.0, x4)
+            )
         )
 
         out["F"] = np.column_stack([f1, f2])
@@ -73,14 +73,14 @@ def re1(x):
 
     f1 = L * ((2 * x1) + np.sqrt(2.0) * x2 + np.sqrt(x3) + x4)
     f2 = (
-            (F * L)
-            / E
-            * (
-                    div(2.0, x1)
-                    + div(2.0 * np.sqrt(2.0), x2)
-                    - div(2.0 * np.sqrt(2.0), x3)
-                    + div(2.0, x4)
-            )
+        (F * L)
+        / E
+        * (
+            div(2.0, x1)
+            + div(2.0 * np.sqrt(2.0), x2)
+            - div(2.0 * np.sqrt(2.0), x3)
+            + div(2.0, x4)
+        )
     )
 
     return np.array([f1, f2])

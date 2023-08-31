@@ -38,7 +38,11 @@ class OKA1(Problem):
         x2_ = sin * x1 + cos * x2
 
         f1 = x1_
-        f2 = np.sqrt(2 * np.pi) - np.sqrt(np.abs(x1_)) + 2 * np.abs(x2_ - 3 * np.cos(x1_) - 3) ** (1. / 3)
+        f2 = (
+            np.sqrt(2 * np.pi)
+            - np.sqrt(np.abs(x1_))
+            + 2 * np.abs(x2_ - 3 * np.cos(x1_) - 3) ** (1.0 / 3)
+        )
 
         return np.column_stack([f1, f2])
 
@@ -56,7 +60,11 @@ def oka1(x):
     x2_ = sin * x1 + cos * x2
 
     f1 = x1_
-    f2 = np.sqrt(2 * np.pi) - np.sqrt(np.abs(x1_)) + 2 * np.abs(x2_ - 3 * np.cos(x1_) - 3) ** (1. / 3)
+    f2 = (
+        np.sqrt(2 * np.pi)
+        - np.sqrt(np.abs(x1_))
+        + 2 * np.abs(x2_ - 3 * np.cos(x1_) - 3) ** (1.0 / 3)
+    )
 
     return np.array([f1, f2])
 
@@ -71,14 +79,18 @@ class OKA2(Problem):
         x1, x2, x3 = x[:, 0], x[:, 1], x[:, 2]
 
         f1 = x1
-        f2 = 1 - (x1 + np.pi) ** 2 / (4 * np.pi ** 2) + \
-             np.abs(x2 - 5 * np.cos(x1)) ** (1. / 3) + np.abs(x3 - 5 * np.sin(x1)) ** (1. / 3)
+        f2 = (
+            1
+            - (x1 + np.pi) ** 2 / (4 * np.pi**2)
+            + np.abs(x2 - 5 * np.cos(x1)) ** (1.0 / 3)
+            + np.abs(x3 - 5 * np.sin(x1)) ** (1.0 / 3)
+        )
 
         return np.column_stack([f1, f2])
 
     def _calc_pareto_front(self, n_pareto_points=100):
         f1 = np.linspace(-np.pi, np.pi, n_pareto_points)
-        f2 = 1 - (f1 + np.pi) ** 2 / (4 * np.pi ** 2)
+        f2 = 1 - (f1 + np.pi) ** 2 / (4 * np.pi**2)
         return np.column_stack([f1, f2])
 
 
@@ -86,8 +98,12 @@ def oka2(x):
     x1, x2, x3 = x[0], x[1], x[2]
 
     f1 = x1
-    f2 = 1 - (x1 + np.pi) ** 2 / (4 * np.pi ** 2) + \
-         np.abs(x2 - 5 * np.cos(x1)) ** (1. / 3) + np.abs(x3 - 5 * np.sin(x1)) ** (1. / 3)
+    f2 = (
+        1
+        - (x1 + np.pi) ** 2 / (4 * np.pi**2)
+        + np.abs(x2 - 5 * np.cos(x1)) ** (1.0 / 3)
+        + np.abs(x3 - 5 * np.sin(x1)) ** (1.0 / 3)
+    )
 
     return np.array([f1, f2])
 

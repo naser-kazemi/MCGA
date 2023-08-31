@@ -14,20 +14,20 @@ import copy
 
 class NSGA2:
     def __init__(
-            self,
-            problem,
-            num_variables,
-            num_objectives,
-            num_generations,
-            population_size,
-            lower_bound,
-            upper_bound,
-            crossover_probability=0.9,
-            eta_crossover=20.0,
-            eta_mutation=20.0,
-            log=None,
-            nd="log",
-            verbose=False,
+        self,
+        problem,
+        num_variables,
+        num_objectives,
+        num_generations,
+        population_size,
+        lower_bound,
+        upper_bound,
+        crossover_probability=0.9,
+        eta_crossover=20.0,
+        eta_mutation=20.0,
+        log=None,
+        nd="log",
+        verbose=False,
     ):
         self.num_variables = num_variables
         self.num_objectives = num_objectives
@@ -67,15 +67,15 @@ class NSGA2:
         )
 
     def create_model(
-            self,
-            problem,
-            num_variables,
-            population_size,
-            lower_bound,
-            upper_bound,
-            crossover_probability,
-            eta_crossover,
-            eta_mutation,
+        self,
+        problem,
+        num_variables,
+        population_size,
+        lower_bound,
+        upper_bound,
+        crossover_probability,
+        eta_crossover,
+        eta_mutation,
     ):
         self.create_individual_class()
 

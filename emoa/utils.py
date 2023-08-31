@@ -2,6 +2,7 @@ import io
 
 import PIL
 import numpy as np
+import numpy.typing as npt
 import argparse as ap
 import os
 import sys

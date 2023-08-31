@@ -20,13 +20,13 @@ logger = logging.getLogger(__name__)
 
 
 def get_random_parameters(
-        limits: list,
-        prec_facs: npt.NDArray,
-        cont_ds: npt.NDArray,
-        samp_cnt: int,
-        min_ppl: int = None,
-        max_t: float = None,
-        hyp_lt: float = None,
+    limits: list,
+    prec_facs: npt.NDArray,
+    cont_ds: npt.NDArray,
+    samp_cnt: int,
+    min_ppl: int = None,
+    max_t: float = None,
+    hyp_lt: float = None,
 ) -> npt.NDArray:
     """
     TODO fill
@@ -95,18 +95,18 @@ def get_random_parameters(
 
 
 def generate_offsprings(
-        pot_par_ds: npt.NDArray,
-        new_pop_sz: int,
-        cross_prob: float,
-        mut_prob: float,
-        scores: npt.NDArray,
-        bits_per_param: npt.NDArray,
-        prec_facs: npt.NDArray,
-        limits: List[npt.NDArray],
-        min_ppl: int = None,
-        max_t: float = None,
-        hyp_lt: float = None,
-        divs: npt.NDArray = np.array([1000, 1, 1, 1, 1, 1, 1]),
+    pot_par_ds: npt.NDArray,
+    new_pop_sz: int,
+    cross_prob: float,
+    mut_prob: float,
+    scores: npt.NDArray,
+    bits_per_param: npt.NDArray,
+    prec_facs: npt.NDArray,
+    limits: List[npt.NDArray],
+    min_ppl: int = None,
+    max_t: float = None,
+    hyp_lt: float = None,
+    divs: npt.NDArray = np.array([1000, 1, 1, 1, 1, 1, 1]),
 ) -> npt.NDArray:
     """
     TODO fill

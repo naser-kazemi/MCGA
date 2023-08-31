@@ -130,7 +130,7 @@ def main():
                 color="red",
                 alpha=0.5,
                 label="Optimal Pareto Front",
-                s=5
+                s=5,
             )
         elif test_suite == "dtlz":
             problem = get_problem(test)
@@ -141,7 +141,7 @@ def main():
                 color="red",
                 alpha=0.5,
                 label="Optimal Pareto Front",
-                s=5
+                s=5,
             )
 
         elif test_suite == "re":
