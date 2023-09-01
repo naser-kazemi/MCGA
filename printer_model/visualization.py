@@ -1,9 +1,7 @@
-
 """
 @Author Sebastian Cucerca
 @Created 08/03/2023
 """
-
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,10 +10,8 @@ import numpy.typing as npt
 
 
 def plot_lab_gamut(lab_colors: npt.NDArray):
-
     #
     for i in range(lab_colors.shape[0]):
-
         #
         lab_color = lab_colors[i, :]
 
@@ -40,7 +36,6 @@ def plot_lab_gamut(lab_colors: npt.NDArray):
 
 
 def save_lab_gamut(lab_colors: npt.NDArray, file_path: str, file_name: str = "plot", title: str = ""):
-
     #
     plt.figure()
 
@@ -49,7 +44,6 @@ def save_lab_gamut(lab_colors: npt.NDArray, file_path: str, file_name: str = "pl
 
     #
     for i in range(lab_colors.shape[0]):
-
         #
         lab_color = lab_colors[i, :]
 

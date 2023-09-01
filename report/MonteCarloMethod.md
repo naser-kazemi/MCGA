@@ -160,7 +160,9 @@ observed in my tests.
 One big difference is that in the original implementation of the printer model, the previous population is not
 completely discarded. The new population is created by adding the new individuals to the previous population, and then
 another selection is done to select the individuals that will be used in the next generation. This is different from the
-implementation I have done, where the previous population is completely discarded.
+implementation I have done, where the previous population is completely discarded. Another difference is that in the
+Original implementation, the polar slicing is done on the performance space, which is different from the objective
+space, while I apply it in the objective space. Other differences are in the mating and mutation operators.
 
 ## First Try
 

@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from . import exploration_params
 from .printer_objectives import *
 
@@ -5,6 +7,7 @@ from scipy.spatial import ConvexHull
 from emoa.utils import *
 from skimage import color
 from .printer_utils import *
+from .printer_mcga import PrinterMCNSGA3
 
 
 def main():
@@ -39,12 +42,18 @@ def main():
         "Full printer gamut",
     )
 
-    points_ds_p0 = get_random_parameters(
-        exploration_params.limits_ds,
-        exploration_params.prec_facs,
-        exploration_params.cont_ds,
-        exploration_params.pop_size,
-    ) * 0.001
+    ### Run full exploration
+    model = PrinterMCNSGA3()
+    model.run()
+
+    plt.figure()
+    plt.plot(np.arange(1, model.num_generations + 1), model.areas, label="Exploration")
+    plt.plot(np.arange(1, model.num_generations + 1), np.repeat(test_area, model.num_generations), label="Baseline")
+    plt.title("Gamut area over time")
+    plt.xlabel("Iteration")
+    plt.ylabel("Gamut area")
+    plt.legend(loc="lower right")
+    plt.savefig(os.path.join(plot_dir, "gamut_area_over_time.png"), dpi=300)
 
 
 if __name__ == "__main__":

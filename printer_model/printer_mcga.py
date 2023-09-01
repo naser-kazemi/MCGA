@@ -12,8 +12,8 @@ class PrinterMCNSGA3(MCNSGA3):
         num_variables = 3
         num_objectives = 3
         limits_ds = np.array(exploration_params.limits_ds)
-        lower_bound = limits_ds[:, 0]
-        upper_bound = limits_ds[:, 1]
+        lower_bound = limits_ds[:, 0].tolist()
+        upper_bound = limits_ds[:, 1].tolist()
         population_size = exploration_params.pop_size
         super().__init__(lambda x: np.zeros(num_objectives),
                          num_variables,
@@ -96,27 +96,13 @@ class PrinterMCNSGA3(MCNSGA3):
 
         return population, xyz_colors_p0, points_ps_p0
 
-    def validate_individuals(self, population):
-        invalid_ind = [ind for ind in population if not ind.fitness.valid]
-        fitnesses = self.toolbox.map(self.toolbox.evaluate, invalid_ind)
-        for ind, fit in zip(invalid_ind, fitnesses):
-            ind.fitness.values = fit
-        return invalid_ind
+    # def validate_individuals(self, population):
+    #     invalid_ind = [ind for ind in population if not ind.fitness.valid]
+    #     self.evaluate(invalid_ind)
+    #     return invalid_ind
 
     def run(self):
         population, xyz_colors_p0, points_ps_p0 = self.init_population()
-
-        self.result_pop, self.logbook = algorithms.eaMuPlusLambda(
-            population,
-            self.toolbox,
-            mu=self.population_size,
-            lambda_=self.population_size,
-            cxpb=self.crossover_probability,
-            mutpb=min(1.0 / self.num_variables, 0.2),
-            ngen=self.num_generations,
-            stats=self.stats,
-            verbose=False,
-        )
 
         # compute and visualize gamut area of the test samples
         p0_area = compute_area(xyz_colors_p0)
@@ -129,11 +115,14 @@ class PrinterMCNSGA3(MCNSGA3):
 
         logbook = tools.Logbook()
         logbook.header = ['gen', 'nevals'] + self.stats.fields
+        # logbook.header.remove('pop')
 
-        invalid_ind = self.validate_individuals(population)
+        # invalid_ind = self.validate_individuals(population)
 
         record = self.stats.compile(population)
-        logbook.record(gen=0, nevals=len(invalid_ind), **record)
+        del record['pop']
+
+        logbook.record(gen=0, **record)
         if self.verbose:
             print(logbook.stream)
 
@@ -141,18 +130,16 @@ class PrinterMCNSGA3(MCNSGA3):
         points_ps_pi = self.all_performance_space
 
         for g in range(1, self.num_generations + 1):
-            self.evaluate(population)
-
             offspring = varOr(population, self.toolbox, self.population_size, self.crossover_probability,
                               1.0 / self.num_variables)
+            # invalid_ind = self.validate_individuals(population)
 
             # combine offspring and population
             population = population + offspring
+            self.evaluate(population)
+            chosen_qi = self.select(population, self.population_size)
 
-            invalid_ind = self.validate_individuals(population)
-            chosen = self.select(population, self.population_size)
-
-            points_ds_qi = np.array(chosen)
+            points_ds_qi = np.array(chosen_qi)
             [_, xyz_colors_qi, points_ps_qi] = predict_printer_colors(
                 points_ds_qi,
                 exploration_params.ng_primary_reflectances,
@@ -162,16 +149,19 @@ class PrinterMCNSGA3(MCNSGA3):
                 exploration_params.ybar,
                 exploration_params.zbar,
             )
+            # print(points_ps_qi)
 
             self.all_performance_space = np.vstack((self.all_performance_space, points_ps_qi))
             self.all_xyz_colors = np.vstack((self.all_xyz_colors, xyz_colors_qi))
+            print(self.all_performance_space)
 
             # compute and visualize gamut area of the test samples
             current_area = compute_area(self.all_xyz_colors)
-
+            self.areas[g] = current_area
             print("Gamut area of current collection is %.6f" % current_area)
             visualization.save_lab_gamut(
-                self.all_performance_space, self.plot_dir, "gamut_a_current", "Current gamut (area=%.3f)" % current_area
+                self.all_performance_space, self.plot_dir, "gamut_after_iter_%d" % g,
+                                                           "Gamut after iteration %d (area=%.3f)" % (g, current_area)
             )
 
             points_ds_ri = np.vstack((points_ds_pi, points_ds_qi))
@@ -180,5 +170,66 @@ class PrinterMCNSGA3(MCNSGA3):
             for i in range(len(points_ds_ri)):
                 for v in range(self.num_variables):
                     population_ri[i][v] = points_ds_ri[i][v]
+            self.evaluate(population_ri)
+            chosen_pi = self.select(population_ri, self.population_size)
 
-            
+            points_ds_pi = np.array(chosen_pi)
+            [_, xyz_colors_pi, points_ps_pi] = predict_printer_colors(
+                points_ds_pi,
+                exploration_params.ng_primary_reflectances,
+                exploration_params.white_ciexyz,
+                exploration_params.d65_illuminant,
+                exploration_params.xbar,
+                exploration_params.ybar,
+                exploration_params.zbar,
+            )
+            population = chosen_pi
+
+            record = self.stats.compile(population)
+            del record['pop']
+            logbook.record(gen=g, **record)
+            if self.verbose:
+                print(logbook.stream)
+
+            self.current_generation += 1
+
+        self.result_pop = population
+        self.logbook = logbook
+
+    def select(self, individuals, k):
+        """
+        Select the individuals to survive to the next generation
+        :param individuals: The individuals to select from
+        :param k: The number of individuals to select
+        :return: The selected individuals
+        """
+
+        if (self.current_generation % self.monte_carlo_frequency) != 1 and (
+                self.current_generation < self.num_generations
+        ):
+            chosen = tools.selNSGA3(
+                individuals,
+                k,
+                tools.uniform_reference_points(
+                    nobj=self.num_objectives, p=self.num_divisions
+                ),
+                nd=self.nd,
+            )
+
+
+        else:
+            # for ind in individuals_mc:
+            # for ind in individuals:
+            #     ind.fitness.values = tuple([x * self.scale for x in ind.fitness.values])
+
+            # mc_sorted = self.mc_select(individuals_mc)
+            # print(individuals)
+            mc_sorted = self.mc_select(individuals)
+            chosen = mc_sorted[:k]
+            # chosen.extend(mc_sorted[: k_mc])
+
+            # for ind in individuals:
+            # for ind in individuals_mc:
+            # ind.fitness.values = tuple([x / self.scale for x in ind.fitness.values])
+
+        return chosen
