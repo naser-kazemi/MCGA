@@ -56,7 +56,6 @@ limits_ds = [[0, 1], [0, 1], [0, 1]]
 
 limits_ds = [np.array(arr, dtype=np.float32) for arr in limits_ds]
 
-
 xyz2rgb = np.array(
     [
         [3.240454200000000, -1.537138500000000, -0.498531400000000],
@@ -480,3 +479,15 @@ ng_primary_reflectances = np.array(
         ],
     ]
 )
+
+num_divisions = 8
+eta_crossover = 20
+eta_mutation = 20
+crossover_probability = 0.8
+polar_offset_limit = np.pi
+num_max_sectors = 30
+front_frequency_threshold = 0.01
+monte_carlo_frequency = 5
+log = ["hv"]
+verbose = True
+nd = "log"

@@ -6,10 +6,11 @@ from test import cpft_moead_test
 from test import f_test
 from test import re_test
 from test import oka_test
+from printer_model import printer_test
 
 if __name__ == "__main__":
     # zdt_test.run()
-    # dtlz_test.run()
+    dtlz_test.run()
     # nsag3_test.run()
     # nsag3_test.main()
     # cpft_test.run()
@@ -18,4 +19,5 @@ if __name__ == "__main__":
     # f_test.run()
     # re_test.run()
     # re_test.main()
-    oka_test.run()
+    # oka_test.run()
+    # printer_test.main()

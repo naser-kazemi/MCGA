@@ -26,7 +26,7 @@ def _l_star_obj(l_star_values: npt.NDArray) -> npt.NDArray:
     return obj_values
 
 
-def _diversity_mult_obj(
+def diversity_mult_obj(
         parameter_values: npt.NDArray, k: int, limits: list[npt.NDArray]
 ) -> npt.NDArray:
     """
@@ -64,7 +64,7 @@ def _diversity_mult_obj(
     return diversity_scores
 
 
-def _chromaticity_obj(ab_star_values: npt.NDArray) -> npt.NDArray:
+def chromaticity_obj(ab_star_values: npt.NDArray) -> npt.NDArray:
     """
     TODO Write explanation
     :param ab_star_values:
@@ -86,17 +86,6 @@ def compute_score(
         limits_ds: list[npt.NDArray],
         limits_ps: list[npt.NDArray],
 ):
-    """
-    TODO Fill
-    :param points_ds:
-    :param points_ps:
-    :param obj:
-    :param k_n:
-    :param limits_ds:
-    :param limits_ps:
-    :return:
-    """
-
     assert len(obj) == 5
 
     assert np.sum(obj) >= 1
@@ -106,9 +95,9 @@ def compute_score(
     if len(points_ps.shape) == 1:
         points_ps = points_ps[None, :]
 
-    obj1 = _chromaticity_obj(points_ps[:, 1:3])
-    obj2 = _diversity_mult_obj(points_ds, k_n, limits_ds)
-    obj3 = _diversity_mult_obj(points_ps[:, 1:3], k_n, limits_ps[1:3])
+    obj1 = chromaticity_obj(points_ps[:, 1:3])
+    obj2 = diversity_mult_obj(points_ds, k_n, limits_ds)
+    obj3 = diversity_mult_obj(points_ps[:, 1:3], k_n, limits_ps[1:3])
     obj4 = _lt_obj(points_ps[:, 3])
     obj5 = _l_star_obj(points_ps[:, 0])
 

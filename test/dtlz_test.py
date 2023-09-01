@@ -232,10 +232,10 @@ def run():
         problem = p
         for i in range(1, 5 + 1):
             expr = i
-            run_nsga("nsga2")
-            run_nsga("mc_nsga2")
+            # run_nsga("nsga2")
+            # run_nsga("mc_nsga2")
             run_nsga("nsga3")
-            run_nsga("mc_nsga3")
+            # run_nsga("mc_nsga3")
 
 
 if __name__ == "__main__":

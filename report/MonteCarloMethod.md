@@ -150,6 +150,18 @@ And Here is the result populations of the `NSGA-II` and `NSGA-III` algorithms an
 For Each test, I have saved the used parameters in the `parameters` folder. I have also saved the result populations of
 each method.
 
-
 ## Current Status
-Currently, I am working on 
+
+Currently, I am working on testing my implementation on the printer model. After reading the code and the reference
+paper again, I have noticed some
+differences. I will test all the configuration to see if these differences are the source of the behavior I have
+observed in my tests.
+
+One big difference is that in the original implementation of the printer model, the previous population is not
+completely discarded. The new population is created by adding the new individuals to the previous population, and then
+another selection is done to select the individuals that will be used in the next generation. This is different from the
+implementation I have done, where the previous population is completely discarded.
+
+## First Try
+
+First of all, I try my own configuration, with only in change in preserving the previous population.
