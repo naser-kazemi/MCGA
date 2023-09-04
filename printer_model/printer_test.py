@@ -8,10 +8,11 @@ from emoa.utils import *
 from skimage import color
 from .printer_utils import *
 from .printer_mcga import PrinterMCNSGA3
-
+from .printer_nsga2 import PrinterNSGA2
+from .printer_mc_nsga2 import PrinterMCNSGA2
 
 def main():
-    plot_dir = os.path.join("printer_plots", exploration_params.name)
+    plot_dir = os.path.join("printer_plots", exploration_params.model, exploration_params.name)
     os.makedirs(plot_dir, exist_ok=True)
     print(plot_dir)
 
@@ -43,12 +44,14 @@ def main():
     )
 
     ### Run full exploration
-    model = PrinterMCNSGA3()
+    # model = PrinterMCNSGA3()
+    model = PrinterNSGA2()
+    # model = PrinterMCNSGA2()
     model.run()
 
     plt.figure()
-    plt.plot(np.arange(1, model.num_generations + 1), model.areas, label="Exploration")
-    plt.plot(np.arange(1, model.num_generations + 1), np.repeat(test_area, model.num_generations), label="Baseline")
+    plt.plot(np.arange(model.num_generations + 1), model.areas, label="Exploration")
+    plt.plot(np.arange(model.num_generations + 1), np.repeat(test_area, model.num_generations + 1), label="Baseline")
     plt.title("Gamut area over time")
     plt.xlabel("Iteration")
     plt.ylabel("Gamut area")

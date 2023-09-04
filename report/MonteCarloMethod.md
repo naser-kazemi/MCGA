@@ -164,6 +164,23 @@ implementation I have done, where the previous population is completely discarde
 Original implementation, the polar slicing is done on the performance space, which is different from the objective
 space, while I apply it in the objective space. Other differences are in the mating and mutation operators.
 
-## First Try
+### Baseline
 
-First of all, I try my own configuration, with only in change in preserving the previous population.
+At first, I try to tun the `NSGA-II` algorithm with the same parameters as to have a baseline to compare the results
+with. This is the result.
+
+|                                    |                                      |                                    |                                      |                                  |                                      |
+|:------------------------------------------:|:---------------------------------------------:|:------------------------------------------:|:------------------------------------:|:------------------------------------------:|:---------------------------------------------:|
+| ![](../printer_plots/nsga2/1.0_0.2/gamut_a_initial.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_1.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_2.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_3.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_4.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_5.png)|
+| ![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_6.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_7.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_8.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_9.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_10.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_11.png)|
+| ![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_12.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_13.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_14.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_15.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_16.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_17.png)|
+| ![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_18.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_19.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_20.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_21.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_22.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_23.png)|
+| ![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_24.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_25.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_26.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_27.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_28.png)|![](../printer_plots/nsga2/1.0_0.2/gamut_after_iter_29.png)|
+
+### Approach 1
+
+In the first approach, I only change the sorting algorithm, and let everything else the same. i.e. I use the same mating
+and mutation operators as the `NSGA-II` algorithm, do not use the crowding distance, and do not relax the elitism and
+discard
+the population. This is the result.
+

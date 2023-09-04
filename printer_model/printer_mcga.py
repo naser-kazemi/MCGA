@@ -34,7 +34,7 @@ class PrinterMCNSGA3(MCNSGA3):
                          nd=exploration_params.nd,
                          verbose=exploration_params.verbose,
                          )
-        self.plot_dir = os.path.join("printer_plots", exploration_params.name)
+        self.plot_dir = os.path.join("printer_plots", exploration_params.model, exploration_params.name)
         self.all_design_space = None
         self.all_performance_space = None
         self.all_xyz_colors = None
@@ -74,7 +74,7 @@ class PrinterMCNSGA3(MCNSGA3):
             exploration_params.prec_facs,
             exploration_params.cont_ds,
             exploration_params.pop_size,
-        ) * 0.001
+        )
 
         [_, xyz_colors_p0, points_ps_p0] = predict_printer_colors(
             points_ds_p0,
@@ -153,7 +153,6 @@ class PrinterMCNSGA3(MCNSGA3):
 
             self.all_performance_space = np.vstack((self.all_performance_space, points_ps_qi))
             self.all_xyz_colors = np.vstack((self.all_xyz_colors, xyz_colors_qi))
-            print(self.all_performance_space)
 
             # compute and visualize gamut area of the test samples
             current_area = compute_area(self.all_xyz_colors)

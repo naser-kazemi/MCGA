@@ -59,7 +59,7 @@ class NSGA2:
         creator.create(
             "FitnessMin",
             base.Fitness,
-            weights=(-1.0,) * self.num_objectives,
+            weights=(1.0,) * self.num_objectives,
             crowding_dist=0.0,
         )
         creator.create(

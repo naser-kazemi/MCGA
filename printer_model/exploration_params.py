@@ -12,6 +12,10 @@ from math import pi
 # - thickness minimization
 
 # marking
+model = "nsga2"
+# model = "mc_nsga2"
+# model = "mc_nsga3"
+# model = "nsga3"
 name = "1.0_0.2"
 marking_area = np.array([120, 120])
 calib_params = [227265, 600, 75.0, 40, 1]
@@ -36,7 +40,7 @@ random_start = 1
 # genetic algorithm
 hw = 1
 objs = np.array([1, 1, 1, 0, 0])  # c, dsd, psd, t, l*
-pop_size = 49
+pop_size = 100
 iterations = 30
 cross_prob = 0.8
 mut_prob = 0.2
@@ -487,7 +491,7 @@ crossover_probability = 0.8
 polar_offset_limit = np.pi
 num_max_sectors = 30
 front_frequency_threshold = 0.01
-monte_carlo_frequency = 5
+monte_carlo_frequency = 2
 log = ["hv"]
 verbose = True
 nd = "log"
