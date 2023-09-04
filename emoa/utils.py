@@ -177,7 +177,7 @@ def vector_to_cartesian(r, _theta):
 
     # compute the x coordinates
     x = np.zeros((len(theta) + 1))
-    sin_prod = np.prod(np.sin(theta[1:]), axis=1)
+    sin_prod = np.prod(np.sin(theta[1:]))
 
     x[0] = r * np.cos(theta[0]) * sin_prod
     x[1] = r * np.sin(theta[0]) * sin_prod

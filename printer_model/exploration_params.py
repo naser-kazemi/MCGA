@@ -12,11 +12,11 @@ from math import pi
 # - thickness minimization
 
 # marking
-model = "nsga2"
-# model = "mc_nsga2"
+# model = "nsga2"
+model = "mc_nsga2"
 # model = "mc_nsga3"
 # model = "nsga3"
-name = "1.0_0.2"
+name = "2.0_0.2"
 marking_area = np.array([120, 120])
 calib_params = [227265, 600, 75.0, 40, 1]
 calib_offs = -1.2
@@ -488,10 +488,10 @@ num_divisions = 8
 eta_crossover = 20
 eta_mutation = 20
 crossover_probability = 0.8
-polar_offset_limit = np.pi
-num_max_sectors = 30
+polar_offset_limit = [0, 2 * pi]
+num_max_sectors = [10, 50]
 front_frequency_threshold = 0.01
-monte_carlo_frequency = 2
+monte_carlo_frequency = 5
 log = ["hv"]
 verbose = True
 nd = "log"

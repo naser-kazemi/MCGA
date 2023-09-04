@@ -10,6 +10,8 @@ from .printer_utils import *
 from .printer_mcga import PrinterMCNSGA3
 from .printer_nsga2 import PrinterNSGA2
 from .printer_mc_nsga2 import PrinterMCNSGA2
+from .printer_nsga3 import PrinterNSGA3
+
 
 def main():
     plot_dir = os.path.join("printer_plots", exploration_params.model, exploration_params.name)
@@ -44,9 +46,10 @@ def main():
     )
 
     ### Run full exploration
+    # model = PrinterNSGA3()
     # model = PrinterMCNSGA3()
-    model = PrinterNSGA2()
-    # model = PrinterMCNSGA2()
+    # model = PrinterNSGA2()
+    model = PrinterMCNSGA2()
     model.run()
 
     plt.figure()

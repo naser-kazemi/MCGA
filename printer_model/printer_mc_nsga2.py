@@ -2,6 +2,9 @@ import array
 import copy
 from itertools import product
 
+import numpy as np
+from scipy.spatial import Delaunay
+
 from nsga2 import NSGA2
 from .printer_utils import *
 from . import exploration_params, visualization
@@ -59,8 +62,9 @@ class PrinterMCNSGA2(NSGA2):
             "FitnessMin",
             base.Fitness,
             weights=(1.0,) * self.num_objectives,
-            polar_coords=np.zeros(self.num_objectives, dtype=np.float64),
+            idx=0,
             front_freq=np.zeros(self.population_size * 2, dtype=np.float64),
+            performance_space=np.zeros(3, dtype=np.float64),
         )
         creator.create(
             "Individual", array.array, typecode="d", fitness=creator.FitnessMin
@@ -91,6 +95,7 @@ class PrinterMCNSGA2(NSGA2):
 
         for i in range(len(individuals)):
             individuals[i].fitness.values = obj_scores[i]
+            individuals[i].fitness.performance_space = performance_space[i]
 
     def init_population(self):
         population = self.toolbox.population(n=self.population_size)
@@ -121,11 +126,6 @@ class PrinterMCNSGA2(NSGA2):
 
         return population, xyz_colors_p0, points_ps_p0
 
-    # def validate_individuals(self, population):
-    #     invalid_ind = [ind for ind in population if not ind.fitness.valid]
-    #     self.evaluate(invalid_ind)
-    #     return invalid_ind
-
     def run(self):
         population, xyz_colors_p0, points_ps_p0 = self.init_population()
 
@@ -154,9 +154,7 @@ class PrinterMCNSGA2(NSGA2):
                               1.0 / self.num_variables)
 
             # combine offspring and population
-            population = population + offspring
-            self.evaluate(population)
-            chosen = self.select(population, self.population_size)
+            chosen = self.select(population + offspring, self.population_size)
 
             points_ds = np.array(chosen)
             [_, xyz_colors_qi, points_ps] = predict_printer_colors(
@@ -194,181 +192,70 @@ class PrinterMCNSGA2(NSGA2):
         self.result_pop = population
         self.logbook = logbook
 
-    def divide_planes(self):
-        """
-        Create sectors in polar space,
-        each sector is a tuple of (start, end) angles in n-dimensional polar space
-        where n is the number of objectives
-        :return: The sectors
-        """
-
-        # create a list of sectors
-        sectors_points = []
-
-        # divide the 2 * pi radians into num_sectors sectors evenly
-        for i in range(self.num_objectives - 1):
-            sector = np.linspace(0, 2 * np.pi, self.num_max_sectors + 1)
-            sectors_points.append(sector)
-
-        sectors = []
-        # now create the (start, end) tuples for each sector
-        for i in range(self.num_objectives - 1):
-            sectors.append(
-                [
-                    (sectors_points[i][j], sectors_points[i][j + 1])
-                    for j in range(len(sectors_points[i]) - 1)
-                ]
-            )
-
-        # now rotate the sectors to create the offset
-        offset = random.uniform(0, self.polar_offset_limit)
-        for i in range(self.num_objectives - 1):
-            sectors[i] = [(x + offset, y + offset) for x, y in sectors[i]]
-
-        return sectors
-
-    @classmethod
-    def create_sectors(cls, plane_sectors):
-        """
-        Create sectors in polar space,
-        each sector is list of a tuples of (start, end) angles in n-dimensional polar space
-        where n is the number of objectives
-        The sectors are cartesian product of the plane sectors
-        :return: The sectors
-        """
-
-        # create the cartesian product of the plane sectors
-        sectors = np.array(list(product(*plane_sectors)))
-
-        return sectors
-
-    @staticmethod
-    def convert_to_polar(individuals):
-        """
-        Convert the individuals in the population to polar coordinates
-        :return: None
-        """
-        for ind in individuals:
-            ind.fitness.polar_coords = vector_to_polar(ind.fitness.values)[1]
-
-    @staticmethod
-    def is_in_sector(sector, individual):
-        is_in_bounds = True
-        for x, (start, end) in zip(individual.fitness.polar_coords[1:], sector):
-            if end <= 2 * np.pi:
-                in_this_sector = start <= x < end
-            else:
-                in_this_sector = start <= x < 2 * np.pi or 0 <= x < end - 2 * np.pi
-            is_in_bounds = is_in_bounds and in_this_sector
-
-        return is_in_bounds
-
-    def slice_polar_space(self, individuals):
-        """
-        Slice the polar space into sectors and assign each member of the population to a sector
-        :param individuals: The population to slice
-        :return: The sliced population in polar space
-        """
-
-        plane_sectors = self.divide_planes()
-        sectors = self.create_sectors(plane_sectors)
-
-        sliced_population = [[] for _ in range(len(sectors))]
-        # divide the population into sectors
-        for ind in individuals:
-            for i in range(len(sectors)):
-                if self.is_in_sector(sectors[i], ind):
-                    sliced_population[i].append(ind)
-                    break
-            else:
-                print(f"Error: Member {ind.fitness.polar_coords[1:]} not in any sector")
-
-        sliced_population = [slc for slc in sliced_population if len(slc) > 0]
-
-        return sliced_population
-
-    def mc_nds(self, sliced_population) -> None:
-        """
-        Monte Carlo Non-Dominated Sorting
-        Apply non-dominated sorting on the sliced population and assign ranks to the members
-        :param sliced_population: The sliced population
-        """
-
-        for population in sliced_population:
-            fronts = self.nd_sort(population, len(population))
-            for i, front in enumerate(fronts):
-                for ind in front:
-                    ind.fitness.front_freq[i] += 1
-
-    def monte_carlo_step(self, individuals):
-
-        sliced_population = self.slice_polar_space(individuals)
-        self.mc_nds(sliced_population)
-
-    @staticmethod
-    def compute_front_frequency_diff(individuals, cached_individuals):
-        """
-        Compute the difference between the front frequencies of the individuals
-        :param individuals: The individuals to compare
-        :param cached_individuals: The cached individuals to compare
-        """
-
-        a = np.array([ind.fitness.front_freq for ind in individuals])
-        b = np.array([ind.fitness.front_freq for ind in cached_individuals])
-
-        a = a / np.linalg.norm(a, ord="fro")
-        b = b / np.linalg.norm(b, ord="fro")
-
-        return np.linalg.norm(a - b, ord="fro")
-
-    @staticmethod
-    def front_value(individual):
-        # value = 0.0
-        # c = 1.0
-        # for ff in individual.fitness.front_freq:
-        #     value += ff * c
-        #     c *= 0.8
-        # return value
-
-        return " ".join([str(x) for x in individual.fitness.front_freq])
-
-    def mc_select(self, individuals):
-        self.convert_to_polar(individuals)
-        cached_individuals = copy.deepcopy(individuals)
-        self.monte_carlo_step(individuals)
-
-        while (
-                self.compute_front_frequency_diff(individuals, cached_individuals)
-                > self.front_frequency_threshold
-        ):
-            cached_individuals = copy.deepcopy(individuals)
-            self.monte_carlo_step(individuals)
-
-        sorted_individuals = sorted(individuals, key=self.front_value, reverse=True)
-
-        return sorted_individuals
-
     def select(self, individuals, k):
-        """
-        Select the individuals to survive to the next generation
-        :param individuals: The individuals to select from
-        :param k: The number of individuals to select
-        :return: The selected individuals
-        """
-
-        for ind in individuals:
-            ind.fitness.values = tuple([x * self.scale for x in ind.fitness.values])
-
-        mc_sorted = self.mc_select(individuals)
-        chosen = mc_sorted[: self.population_size]
-
-        print("Chosen individuals:")
-        for ind in chosen:
-            print(ind.fitness.values)
-
-        for ind in individuals:
-            ind.fitness.values = tuple([x / self.scale for x in ind.fitness.values])
-
-        # self.print_stats(chosen=chosen)
-
+        self.evaluate(individuals)
+        ranks, scores, sorted_ids, point_fronts = self.mc_sort(individuals)
+        chosen = [individuals[i] for i in sorted_ids[:k]]
         return chosen
+
+    def mc_sort(self, individuals):
+        mc_samples = 0
+        slice_radius = 100
+
+        num_individuals = len(individuals)
+        for i in range(num_individuals):
+            individuals[i].fitness.idx = i
+
+        point_fronts = np.zeros((num_individuals, num_individuals))
+        norm_point_fronts = np.zeros((num_individuals, num_individuals))
+
+        min_mc_samples = 20
+        max_mc_samples = 1000
+        avg_diff = np.inf
+
+        while ((avg_diff > self.front_frequency_threshold) or (mc_samples < min_mc_samples)) and (
+                mc_samples < max_mc_samples):
+            cr = np.random.rand()
+            ora = np.random.rand()
+
+            start_angle = self.polar_offset_limit[0] + ora * (self.polar_offset_limit[1] - self.polar_offset_limit[0])
+            slice_count = self.num_max_sectors[0] + round(cr * (self.num_max_sectors[1] - self.num_max_sectors[0]))
+            rad_per_slice = 2 * np.pi / slice_count
+
+            for s in range(slice_count):
+                slx, sly = vector_to_cartesian(slice_radius, np.array([start_angle + s * rad_per_slice]))
+                srx, sry = vector_to_cartesian(slice_radius, np.array([start_angle + (s + 1) * rad_per_slice]))
+                poly = np.array([[0, 0], [slx, sly], [srx, sry], [0, 0]])
+
+                # point = np.column_stack([individuals.fitness.values[:, 1], individuals.fitness.values[:, 2]])
+                point = np.array([ind.fitness.performance_space[1:] for ind in individuals])
+                # point = np.array([ind.fitness.values[1:] for ind in individuals])
+
+                in_mask = Delaunay(poly).find_simplex(point)
+                slice_points_ids = np.where(in_mask != -1)[0]
+
+                if len(slice_points_ids) != 0:
+                    curr_inds = [individuals[i] for i in slice_points_ids]
+                    fronts = self.nd_sort(curr_inds, len(curr_inds))
+
+                    for f in range(len(fronts)):
+                        p_ids = np.array([ind.fitness.idx for ind in fronts[f]])
+                        point_fronts[p_ids, f] = point_fronts[p_ids, f] + 1
+
+            new_norm_point_fronts = point_fronts / point_fronts.sum(axis=1, keepdims=True)
+            diffs = abs(new_norm_point_fronts - norm_point_fronts)
+            avg_diff = np.mean(diffs)
+            norm_point_fronts = new_norm_point_fronts
+
+            mc_samples += 1
+
+            print(f"Computed fronts (#{mc_samples} hue wheel samplings, {avg_diff})")
+            sorted_ids = np.lexsort(-point_fronts.T[::-1])
+            ranks = np.zeros(len(individuals), dtype=np.int64)
+            ranks[sorted_ids] = np.arange(len(individuals))
+            scores = (len(individuals) - ranks) / len(individuals)
+            sorted_ids = ranks.argsort()
+
+            scores = scores / np.sum(scores)
+
+            return ranks, scores, sorted_ids, point_fronts
