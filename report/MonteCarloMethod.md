@@ -240,7 +240,7 @@ This is the result.
 
 And here is the comparison of the gamut area of the results.
 
-|              Average Difference Stopping Criteria               |          Normalilzed Frobinious Norm Stopping Criteral          |
+|              Average Difference Stopping Criteria               |          Normalized Frobinious Norm Stopping Criteria           |
 |:---------------------------------------------------------------:|:---------------------------------------------------------------:|
 | ![](../printer_plots/mc_nsga2/2.0_0.1/gamut_area_over_time.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_area_over_time.png) |
 
