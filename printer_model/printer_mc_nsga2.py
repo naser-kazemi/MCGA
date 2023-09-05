@@ -14,7 +14,7 @@ from .printer_objectives import *
 class PrinterMCNSGA2(NSGA2):
     def __init__(self):
         num_variables = 3
-        num_objectives = 3
+        num_objectives = 2
         limits_ds = np.array(exploration_params.limits_ds)
         lower_bound = limits_ds[:, 0].tolist()
         upper_bound = limits_ds[:, 1].tolist()
@@ -45,6 +45,7 @@ class PrinterMCNSGA2(NSGA2):
         self.all_samples = []
         self.areas = np.zeros(self.num_generations + 1)
         self.nd_sort = self.init_ndsort(exploration_params.nd)
+        self.fig = plt.figure(figsize=(10, 10))
 
     def init_ndsort(self, nd):
         if nd == "standard":
@@ -94,7 +95,11 @@ class PrinterMCNSGA2(NSGA2):
         # zero = np.zeros(len(individuals))
         # obj_scores = np.column_stack((obj1, zero, zero))
 
-        obj_scores = np.column_stack((obj1, obj2, obj3))
+        a_star = performance_space[:, 1]
+        b_star = performance_space[:, 2]
+        obj_scores = np.column_stack((a_star, b_star))
+        #
+        # obj_scores = np.column_stack((obj1, obj2, obj3))
 
         for i in range(len(individuals)):
             individuals[i].fitness.values = obj_scores[i]
@@ -223,7 +228,7 @@ class PrinterMCNSGA2(NSGA2):
 
             start_angle = self.polar_offset_limit[0] + ora * (self.polar_offset_limit[1] - self.polar_offset_limit[0])
             slice_count = self.num_max_sectors[0] + round(cr * (self.num_max_sectors[1] - self.num_max_sectors[0]))
-            rad_per_slice = 2 * np.pi / slice_count
+            rad_per_slice = (self.polar_offset_limit[1] - self.polar_offset_limit[0]) / slice_count
             prev_point_fronts = point_fronts.copy()
             for s in range(slice_count):
                 slx, sly = vector_to_cartesian(slice_radius, np.array([start_angle + s * rad_per_slice]))

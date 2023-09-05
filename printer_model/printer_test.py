@@ -19,7 +19,7 @@ def main():
     print(plot_dir)
 
     # Sample design space space
-    smp = np.linspace(0.25, 0.75, 10)
+    smp = np.linspace(0.0, 1.0, 10)
     sets = np.stack((smp, smp, smp), axis=1)
     points_ds_test = np.array(np.meshgrid(smp, smp, smp)).T.reshape(-1, 3)
 

@@ -16,7 +16,7 @@ from math import pi
 model = "mc_nsga2"
 # model = "mc_nsga3"
 # model = "nsga3"
-name = "3.0_0.1"
+name = "3.0_0.2"
 marking_area = np.array([120, 120])
 calib_params = [227265, 600, 75.0, 40, 1]
 calib_offs = -1.2
