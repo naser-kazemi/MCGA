@@ -19,7 +19,7 @@ def main():
     print(plot_dir)
 
     # Sample design space space
-    smp = np.linspace(0, 1, 10)
+    smp = np.linspace(0.25, 0.75, 10)
     sets = np.stack((smp, smp, smp), axis=1)
     points_ds_test = np.array(np.meshgrid(smp, smp, smp)).T.reshape(-1, 3)
 
@@ -37,6 +37,8 @@ def main():
     # Compute and visualize gamut area of test samples
     test_area = compute_area(test_xyz_colors)
     print("Gamut area of test samples is %.6f" % test_area)
+
+    # plot_lab_gamut(test_lab_colors)
 
     save_lab_gamut(
         test_lab_colors,

@@ -91,6 +91,9 @@ class PrinterMCNSGA2(NSGA2):
             exploration_params.k_n,
             exploration_params.limits_ps[1:3],
         )
+        # zero = np.zeros(len(individuals))
+        # obj_scores = np.column_stack((obj1, zero, zero))
+
         obj_scores = np.column_stack((obj1, obj2, obj3))
 
         for i in range(len(individuals)):
@@ -209,7 +212,7 @@ class PrinterMCNSGA2(NSGA2):
         point_fronts = np.zeros((num_individuals, num_individuals))
         norm_point_fronts = np.zeros((num_individuals, num_individuals))
 
-        min_mc_samples = 20
+        min_mc_samples = 1
         max_mc_samples = 1000
         avg_diff = np.inf
 
@@ -221,7 +224,7 @@ class PrinterMCNSGA2(NSGA2):
             start_angle = self.polar_offset_limit[0] + ora * (self.polar_offset_limit[1] - self.polar_offset_limit[0])
             slice_count = self.num_max_sectors[0] + round(cr * (self.num_max_sectors[1] - self.num_max_sectors[0]))
             rad_per_slice = 2 * np.pi / slice_count
-
+            prev_point_fronts = point_fronts.copy()
             for s in range(slice_count):
                 slx, sly = vector_to_cartesian(slice_radius, np.array([start_angle + s * rad_per_slice]))
                 srx, sry = vector_to_cartesian(slice_radius, np.array([start_angle + (s + 1) * rad_per_slice]))
@@ -242,20 +245,25 @@ class PrinterMCNSGA2(NSGA2):
                         p_ids = np.array([ind.fitness.idx for ind in fronts[f]])
                         point_fronts[p_ids, f] = point_fronts[p_ids, f] + 1
 
-            new_norm_point_fronts = point_fronts / point_fronts.sum(axis=1, keepdims=True)
-            diffs = abs(new_norm_point_fronts - norm_point_fronts)
-            avg_diff = np.mean(diffs)
+            # new_norm_point_fronts = point_fronts / point_fronts.sum(axis=1, keepdims=True)
+            # print(point_fronts)
+            new_norm_point_fronts = (point_fronts / np.linalg.norm(point_fronts, ord="fro"))
+            if mc_samples > 0:
+                prev_point_fronts = (prev_point_fronts / np.linalg.norm(prev_point_fronts, ord="fro"))
+            diffs = np.linalg.norm(new_norm_point_fronts - prev_point_fronts, ord="fro")
+            # avg_diff = np.mean(diffs)
+            avg_diff = diffs
             norm_point_fronts = new_norm_point_fronts
 
             mc_samples += 1
 
-            print(f"Computed fronts (#{mc_samples} hue wheel samplings, {avg_diff})")
-            sorted_ids = np.lexsort(-point_fronts.T[::-1])
-            ranks = np.zeros(len(individuals), dtype=np.int64)
-            ranks[sorted_ids] = np.arange(len(individuals))
-            scores = (len(individuals) - ranks) / len(individuals)
-            sorted_ids = ranks.argsort()
+        print(f"Computed fronts (#{mc_samples} hue wheel samplings, {avg_diff})")
+        sorted_ids = np.lexsort(-point_fronts.T[::-1])
+        ranks = np.zeros(len(individuals), dtype=np.int64)
+        ranks[sorted_ids] = np.arange(len(individuals))
+        scores = (len(individuals) - ranks) / len(individuals)
+        sorted_ids = ranks.argsort()
 
-            scores = scores / np.sum(scores)
+        scores = scores / np.sum(scores)
 
-            return ranks, scores, sorted_ids, point_fronts
+        return ranks, scores, sorted_ids, point_fronts

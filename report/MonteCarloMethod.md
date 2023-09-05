@@ -217,3 +217,31 @@ These plots are for using Monte-Carlo on the objective space.
 | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_12.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_13.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_14.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_15.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_16.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_17.png) |
 | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_18.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_19.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_20.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_21.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_22.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_23.png) |
 | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_24.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_25.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_26.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_27.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_28.png) | ![](../printer_plots/mc_nsga2/2.0_0.2/gamut_after_iter_29.png) |
+
+#### Changing the monte-carlo sampling criteria and turning the diversity objectives off
+
+I noticed that at least in my implementation, given the original stopping criteria, the sampling only occurs once in
+each generation, which is not correct. I think it makes sense, because the difference measure used is average of
+difference of front frequency matrices, normalized by dividing by the sum of each row. Obviously for enough large
+population, which is not that large, the difference will be close to zer. So I changed the stopping criteria to be the
+normalized frobinious norm of the difference matrix. This way, the sampling will occur more often. And the final
+frequency matrix will give a more correct representation distribution of the individuals over the sectors of the polar
+space.
+
+This is the result.
+
+|                                                            |                                      |                                    |                                      |                                  |                                      |
+|:----------------------------------------------------------:|:---------------------------------------------:|:------------------------------------------:|:------------------------------------:|:------------------------------------------:|:---------------------------------------------:|
+| ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_a_initial.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_1.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_2.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_3.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_4.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_5.png) |
+| ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_6.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_7.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_8.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_9.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_10.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_11.png) |
+| ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_12.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_13.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_14.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_15.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_16.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_17.png) |
+| ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_18.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_19.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_20.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_21.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_22.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_23.png) |
+| ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_24.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_25.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_26.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_27.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_28.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_after_iter_29.png) |
+
+And here is the comparison of the gamut area of the results.
+
+|              Average Difference Stopping Criteria               |          Normalilzed Frobinious Norm Stopping Criteral          |
+|:---------------------------------------------------------------:|:---------------------------------------------------------------:|
+| ![](../printer_plots/mc_nsga2/2.0_0.1/gamut_area_over_time.png) | ![](../printer_plots/mc_nsga2/2.0_0.3/gamut_area_over_time.png) |
+
+We Also tested turning the diversity objectives off. This is the result.
