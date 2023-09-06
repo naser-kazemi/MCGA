@@ -8,7 +8,7 @@ from test import re_test
 from test import oka_test
 from printer_model import printer_test
 
-from test import plot_polar
+# from test import plot_polar
 
 if __name__ == "__main__":
     # zdt_test.run()

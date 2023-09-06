@@ -93,7 +93,8 @@ class MCNSGA2(NSGA2):
         logbook = tools.Logbook()
         logbook.header = ['gen', 'nevals'] + self.stats.fields
 
-        self.stats.compile(population)
+        record = self.stats.compile(population)
+        logbook.record(gen=0, nevals=len(population), **record)
 
         for g in range(1, self.num_generations + 1):
             self.evaluate(population)
@@ -106,7 +107,8 @@ class MCNSGA2(NSGA2):
             chosen = self.select(population, self.population_size)
             population = chosen
 
-            self.stats.compile(population)
+            record = self.stats.compile(population)
+            logbook.record(gen=g, nevals=len(population), **record)
 
             self.print_stats(chosen)
 
@@ -129,8 +131,8 @@ class MCNSGA2(NSGA2):
         point_fronts = np.zeros((num_individuals, num_individuals))
         norm_point_fronts = np.zeros((num_individuals, num_individuals))
 
-        min_mc_samples = 10
-        max_mc_samples = 1000
+        min_mc_samples = 3
+        max_mc_samples = 100
         avg_diff = np.inf
 
         while ((avg_diff > self.front_frequency_threshold) or (mc_samples < min_mc_samples)) and (

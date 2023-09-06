@@ -76,7 +76,7 @@ def get_mean_population(test_suit, test, model_name):
             populations.append(pop)
 
     # return np.mean(populations, axis=0)
-    return populations[-2]
+    return populations[0]
 
 
 def plot_populations(test_suite, test, model_name, num_objectives):
@@ -113,10 +113,10 @@ def plot_populations(test_suite, test, model_name, num_objectives):
 def main():
     test_suite = "dtlz"
     test = "dtlz2"
-    num_objectives = 2
+    num_objectives = 3
     # model_names = ["nsga3", "mc_nsga3"]
-    model_names = ["nsga2", "mc_nsga2", "nsga3", "mc_nsga3"]
-    # model_names = ["nsga2", "mc_nsga2"]
+    # model_names = ["nsga2", "mc_nsga2", "nsga3", "mc_nsga3"]
+    model_names = ["nsga2", "mc_nsga2"]
     # sns.set_theme(style="darkgrid")
     plot_hypevolumes(test_suite, test, model_names)
     for model_name in model_names:
