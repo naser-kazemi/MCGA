@@ -17,17 +17,17 @@ problem_name = "dtlz4"
 pymoo_problem = get_problem(problem_name)
 lower_bound = 0.0
 upper_bound = 1.0
-population_size = 500
+population_size = 100
 num_variables = pymoo_problem.n_var
 num_objectives = pymoo_problem.n_obj
-num_generations = 300
+num_generations = 100
 num_divisions = 8
 eta_crossover = 20
 eta_mutation = 20
 crossover_probability = 0.8
-polar_offset_limit = np.pi
-num_max_sectors = 30
-front_frequency_threshold = 0.01
+polar_offset_limit = [0, 2 * np.pi]
+num_max_sectors = [10, 50]
+front_frequency_threshold = 0.1
 monte_carlo_frequency = 5
 log = ["hv"]
 verbose = True
@@ -217,12 +217,13 @@ def run_nsga(selected_model=None):
 
 
 def run():
-    problem_names = ["dtlz1", "dtlz2", "dtlz3", "dtlz4"]
+    # problem_names = ["dtlz1", "dtlz2", "dtlz3", "dtlz4"]
+    problem_names = ["dtlz2"]
     problems = [
-        lambda ind: benchmarks.dtlz1(ind, 3),
+        # lambda ind: benchmarks.dtlz1(ind, 3),
         lambda ind: benchmarks.dtlz2(ind, 3),
-        lambda ind: benchmarks.dtlz3(ind, 3),
-        lambda ind: benchmarks.dtlz4(ind, 3, 100),
+        # lambda ind: benchmarks.dtlz3(ind, 3),
+        # lambda ind: benchmarks.dtlz4(ind, 3, 100),
     ]
     global problem_name
     global problem
@@ -232,9 +233,9 @@ def run():
         problem = p
         for i in range(1, 5 + 1):
             expr = i
-            # run_nsga("nsga2")
-            # run_nsga("mc_nsga2")
-            run_nsga("nsga3")
+            run_nsga("nsga2")
+            run_nsga("mc_nsga2")
+            # run_nsga("nsga3")
             # run_nsga("mc_nsga3")
 
 

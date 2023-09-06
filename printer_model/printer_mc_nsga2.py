@@ -14,7 +14,7 @@ from .printer_objectives import *
 class PrinterMCNSGA2(NSGA2):
     def __init__(self):
         num_variables = 3
-        num_objectives = 2
+        num_objectives = 3
         limits_ds = np.array(exploration_params.limits_ds)
         lower_bound = limits_ds[:, 0].tolist()
         upper_bound = limits_ds[:, 1].tolist()
@@ -95,11 +95,11 @@ class PrinterMCNSGA2(NSGA2):
         # zero = np.zeros(len(individuals))
         # obj_scores = np.column_stack((obj1, zero, zero))
 
-        a_star = performance_space[:, 1]
-        b_star = performance_space[:, 2]
-        obj_scores = np.column_stack((a_star, b_star))
-        #
-        # obj_scores = np.column_stack((obj1, obj2, obj3))
+        # a_star = performance_space[:, 1]
+        # b_star = performance_space[:, 2]
+        # obj_scores = np.column_stack((a_star, b_star))
+
+        obj_scores = np.column_stack((obj1, obj2, obj3))
 
         for i in range(len(individuals)):
             individuals[i].fitness.values = obj_scores[i]
@@ -272,3 +272,4 @@ class PrinterMCNSGA2(NSGA2):
         scores = scores / np.sum(scores)
 
         return ranks, scores, sorted_ids, point_fronts
+

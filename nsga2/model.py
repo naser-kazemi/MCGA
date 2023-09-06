@@ -14,20 +14,20 @@ import copy
 
 class NSGA2:
     def __init__(
-        self,
-        problem,
-        num_variables,
-        num_objectives,
-        num_generations,
-        population_size,
-        lower_bound,
-        upper_bound,
-        crossover_probability=0.9,
-        eta_crossover=20.0,
-        eta_mutation=20.0,
-        log=None,
-        nd="log",
-        verbose=False,
+            self,
+            problem,
+            num_variables,
+            num_objectives,
+            num_generations,
+            population_size,
+            lower_bound,
+            upper_bound,
+            crossover_probability=0.9,
+            eta_crossover=20.0,
+            eta_mutation=20.0,
+            log=None,
+            nd="log",
+            verbose=False,
     ):
         self.num_variables = num_variables
         self.num_objectives = num_objectives
@@ -35,6 +35,7 @@ class NSGA2:
         self.population_size = population_size
         self.crossover_probability = crossover_probability
         self.nd = nd
+        self.problem = problem
 
         self.current_generation = 1
         self.log = log if log is not None else []
@@ -67,15 +68,15 @@ class NSGA2:
         )
 
     def create_model(
-        self,
-        problem,
-        num_variables,
-        population_size,
-        lower_bound,
-        upper_bound,
-        crossover_probability,
-        eta_crossover,
-        eta_mutation,
+            self,
+            problem,
+            num_variables,
+            population_size,
+            lower_bound,
+            upper_bound,
+            crossover_probability,
+            eta_crossover,
+            eta_mutation,
     ):
         self.create_individual_class()
 
@@ -178,3 +179,23 @@ class NSGA2:
             return [hyper_volume_util(pop, ref) for pop in pops]
         else:
             return hyper_volume_util(population, ref)
+
+    @staticmethod
+    def varOr(population, toolbox, lambda_, cxpb, mutpb):
+        offspring = []
+        for _ in range(lambda_):
+            op_choice = random.random()
+            if op_choice < cxpb:  # Apply crossover
+                ind1, ind2 = [toolbox.clone(i) for i in random.sample(population, 2)]
+                ind1, ind2 = toolbox.mate(ind1, ind2)
+                del ind1.fitness.values
+                offspring.append(ind1)
+            elif op_choice < cxpb + mutpb:  # Apply mutation
+                ind = toolbox.clone(random.choice(population))
+                ind, = toolbox.mutate(ind)
+                del ind.fitness.values
+                offspring.append(ind)
+            else:  # Apply reproduction
+                offspring.append(random.choice(population))
+
+        return offspring
