@@ -183,7 +183,10 @@ def vector_to_cartesian(r, _theta):
     x[1] = r * np.sin(theta[0]) * sin_prod
 
     for i in range(2, len(x)):
-        sin_prod = sin_prod / np.sin(theta[i - 1])
+        if np.sin(theta[i - 1]) != 0:
+            sin_prod = sin_prod / np.sin(theta[i - 1])
+        else:
+            sin_prod = 1
         x[i] = r * np.cos(theta[i - 1]) * sin_prod
 
     return x

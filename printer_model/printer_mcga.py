@@ -15,26 +15,29 @@ class PrinterMCNSGA3(MCNSGA3):
         lower_bound = limits_ds[:, 0].tolist()
         upper_bound = limits_ds[:, 1].tolist()
         population_size = exploration_params.pop_size
-        super().__init__(lambda x: np.zeros(num_objectives),
-                         num_variables,
-                         num_objectives,
-                         num_generations=exploration_params.iterations,
-                         population_size=population_size,
-                         lower_bound=lower_bound,
-                         upper_bound=upper_bound,
-                         num_divisions=exploration_params.num_divisions,
-                         crossover_probability=exploration_params.crossover_probability,
-                         eta_crossover=exploration_params.eta_crossover,
-                         eta_mutation=exploration_params.eta_mutation,
-                         num_max_sectors=exploration_params.num_max_sectors,
-                         front_frequency_threshold=exploration_params.front_frequency_threshold,
-                         polar_offset_limit=exploration_params.polar_offset_limit,
-                         monte_carlo_frequency=exploration_params.monte_carlo_frequency,
-                         log=exploration_params.log,
-                         nd=exploration_params.nd,
-                         verbose=exploration_params.verbose,
-                         )
-        self.plot_dir = os.path.join("printer_plots", exploration_params.model, exploration_params.name)
+        super().__init__(
+            lambda x: np.zeros(num_objectives),
+            num_variables,
+            num_objectives,
+            num_generations=exploration_params.iterations,
+            population_size=population_size,
+            lower_bound=lower_bound,
+            upper_bound=upper_bound,
+            num_divisions=exploration_params.num_divisions,
+            crossover_probability=exploration_params.crossover_probability,
+            eta_crossover=exploration_params.eta_crossover,
+            eta_mutation=exploration_params.eta_mutation,
+            num_max_sectors=exploration_params.num_max_sectors,
+            front_frequency_threshold=exploration_params.front_frequency_threshold,
+            polar_offset_limit=exploration_params.polar_offset_limit,
+            monte_carlo_frequency=exploration_params.monte_carlo_frequency,
+            log=exploration_params.log,
+            nd=exploration_params.nd,
+            verbose=exploration_params.verbose,
+        )
+        self.plot_dir = os.path.join(
+            "printer_plots", exploration_params.model, exploration_params.name
+        )
         self.all_design_space = None
         self.all_performance_space = None
         self.all_xyz_colors = None
@@ -110,17 +113,20 @@ class PrinterMCNSGA3(MCNSGA3):
 
         print("Gamut area of initial collection is %.6f" % p0_area)
         visualization.save_lab_gamut(
-            points_ps_p0, self.plot_dir, "gamut_a_initial", "Initial gamut (area=%.3f)" % p0_area
+            points_ps_p0,
+            self.plot_dir,
+            "gamut_a_initial",
+            "Initial gamut (area=%.3f)" % p0_area,
         )
 
         logbook = tools.Logbook()
-        logbook.header = ['gen', 'nevals'] + self.stats.fields
+        logbook.header = ["gen", "nevals"] + self.stats.fields
         # logbook.header.remove('pop')
 
         # invalid_ind = self.validate_individuals(population)
 
         record = self.stats.compile(population)
-        del record['pop']
+        del record["pop"]
 
         logbook.record(gen=0, **record)
         if self.verbose:
@@ -130,8 +136,13 @@ class PrinterMCNSGA3(MCNSGA3):
         points_ps_pi = self.all_performance_space
 
         for g in range(1, self.num_generations + 1):
-            offspring = varOr(population, self.toolbox, self.population_size, self.crossover_probability,
-                              1.0 / self.num_variables)
+            offspring = varOr(
+                population,
+                self.toolbox,
+                self.population_size,
+                self.crossover_probability,
+                1.0 / self.num_variables,
+            )
             # invalid_ind = self.validate_individuals(population)
 
             # combine offspring and population
@@ -151,7 +162,9 @@ class PrinterMCNSGA3(MCNSGA3):
             )
             # print(points_ps_qi)
 
-            self.all_performance_space = np.vstack((self.all_performance_space, points_ps_qi))
+            self.all_performance_space = np.vstack(
+                (self.all_performance_space, points_ps_qi)
+            )
             self.all_xyz_colors = np.vstack((self.all_xyz_colors, xyz_colors_qi))
 
             # compute and visualize gamut area of the test samples
@@ -159,8 +172,10 @@ class PrinterMCNSGA3(MCNSGA3):
             self.areas[g] = current_area
             print("Gamut area of current collection is %.6f" % current_area)
             visualization.save_lab_gamut(
-                self.all_performance_space, self.plot_dir, "gamut_after_iter_%d" % g,
-                                                           "Gamut after iteration %d (area=%.3f)" % (g, current_area)
+                self.all_performance_space,
+                self.plot_dir,
+                "gamut_after_iter_%d" % g,
+                "Gamut after iteration %d (area=%.3f)" % (g, current_area),
             )
 
             points_ds_ri = np.vstack((points_ds_pi, points_ds_qi))
@@ -185,7 +200,7 @@ class PrinterMCNSGA3(MCNSGA3):
             population = chosen_pi
 
             record = self.stats.compile(population)
-            del record['pop']
+            del record["pop"]
             logbook.record(gen=g, **record)
             if self.verbose:
                 print(logbook.stream)
@@ -204,7 +219,7 @@ class PrinterMCNSGA3(MCNSGA3):
         """
 
         if (self.current_generation % self.monte_carlo_frequency) != 1 and (
-                self.current_generation < self.num_generations
+            self.current_generation < self.num_generations
         ):
             chosen = tools.selNSGA3(
                 individuals,
@@ -214,7 +229,6 @@ class PrinterMCNSGA3(MCNSGA3):
                 ),
                 nd=self.nd,
             )
-
 
         else:
             # for ind in individuals_mc:

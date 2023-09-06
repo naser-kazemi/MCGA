@@ -52,7 +52,7 @@ def sort_nd(points_ps, start_angle_range, cone_count_range, obj_scores):
 
         #
         start_angle = start_angle_range[0] + ora * (
-                start_angle_range[1] - start_angle_range[0]
+            start_angle_range[1] - start_angle_range[0]
         )
         cone_count = cone_count_range[0] + round(
             cr * (cone_count_range[1] - cone_count_range[0])
@@ -125,12 +125,12 @@ def sort_nd(points_ps, start_angle_range, cone_count_range, obj_scores):
 
 
 def compute_score(
-        points_ds: npt.NDArray,
-        points_ps: npt.NDArray,
-        obj: npt.NDArray,
-        k_n: int,
-        limits_ds: List[npt.NDArray],
-        limits_ps: List[npt.NDArray],
+    points_ds: npt.NDArray,
+    points_ps: npt.NDArray,
+    obj: npt.NDArray,
+    k_n: int,
+    limits_ds: List[npt.NDArray],
+    limits_ps: List[npt.NDArray],
 ):
     """
     TODO Fill

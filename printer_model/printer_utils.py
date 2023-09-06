@@ -12,7 +12,9 @@ def compute_area(xyz_colors) -> float:
     return area
 
 
-def compute_neugebauer(colorant_area_coverage: npt.NDArray, ng_primary_reflectances: npt.NDArray) -> npt.NDArray:
+def compute_neugebauer(
+    colorant_area_coverage: npt.NDArray, ng_primary_reflectances: npt.NDArray
+) -> npt.NDArray:
     predicted_spectrum = np.matmul(colorant_area_coverage, ng_primary_reflectances)
     return predicted_spectrum
 
@@ -61,11 +63,13 @@ def xyz_2_lab(xyz_values: npt.NDArray, white_reference: npt.NDArray) -> npt.NDAr
     return Lab
 
 
-def spectrum_2_xyz(spectra: npt.NDArray,
-                   illuminant: npt.NDArray,
-                   xbar: npt.NDArray,
-                   ybar: npt.NDArray,
-                   zbar: npt.NDArray) -> npt.NDArray:
+def spectrum_2_xyz(
+    spectra: npt.NDArray,
+    illuminant: npt.NDArray,
+    xbar: npt.NDArray,
+    ybar: npt.NDArray,
+    zbar: npt.NDArray,
+) -> npt.NDArray:
     # TODO explain
     norm_fac = 100 / np.sum(illuminant * ybar)
 
@@ -82,16 +86,18 @@ def spectrum_2_xyz(spectra: npt.NDArray,
 
 
 def predict_printer_colors(
-        ink_area_coverages: npt.NDArray,
-        ng_primary_reflectances: npt.NDArray,
-        white_reference: npt.NDArray,
-        d65_illuminant: npt.NDArray,
-        xbar: npt.NDArray,
-        ybar: npt.NDArray,
-        zbar: npt.NDArray,
+    ink_area_coverages: npt.NDArray,
+    ng_primary_reflectances: npt.NDArray,
+    white_reference: npt.NDArray,
+    d65_illuminant: npt.NDArray,
+    xbar: npt.NDArray,
+    ybar: npt.NDArray,
+    zbar: npt.NDArray,
 ) -> tuple:
     colorant_area_coverages = compute_demichel(ink_area_coverages)
-    predicted_spectrum = compute_neugebauer(colorant_area_coverages, ng_primary_reflectances)
+    predicted_spectrum = compute_neugebauer(
+        colorant_area_coverages, ng_primary_reflectances
+    )
 
     # Convert spectra to XYZ
     predicted_xyz_colors = spectrum_2_xyz(
@@ -124,13 +130,11 @@ def plot_lab_gamut(lab_colors: npt.NDArray):
         rgb_color = color.lab2rgb([lab_color[0], lab_color[1], lab_color[2]])
 
         #
-        plt.scatter(lab_color[1],
-                    lab_color[2],
-                    color=np.array(rgb_color))
+        plt.scatter(lab_color[1], lab_color[2], color=np.array(rgb_color))
 
     #
-    plt.xlabel('CIE-a*')
-    plt.ylabel('CIE-b*')
+    plt.xlabel("CIE-a*")
+    plt.ylabel("CIE-b*")
 
     #
     plt.xlim(-60, 60)
@@ -140,7 +144,9 @@ def plot_lab_gamut(lab_colors: npt.NDArray):
     plt.show()
 
 
-def save_lab_gamut(lab_colors: npt.NDArray, file_path: str, file_name: str = "plot", title: str = ""):
+def save_lab_gamut(
+    lab_colors: npt.NDArray, file_path: str, file_name: str = "plot", title: str = ""
+):
     #
     plt.figure()
 
@@ -163,8 +169,8 @@ def save_lab_gamut(lab_colors: npt.NDArray, file_path: str, file_name: str = "pl
     plt.scatter(a_values, b_values, color=colors, s=20)
 
     #
-    plt.xlabel('CIE-a*')
-    plt.ylabel('CIE-b*')
+    plt.xlabel("CIE-a*")
+    plt.ylabel("CIE-b*")
 
     #
     plt.title(title)
@@ -174,7 +180,7 @@ def save_lab_gamut(lab_colors: npt.NDArray, file_path: str, file_name: str = "pl
     plt.ylim(-60, 60)
 
     #
-    plt.savefig('%s/%s.png' % (file_path, file_name), dpi=300)
+    plt.savefig("%s/%s.png" % (file_path, file_name), dpi=300)
 
     #
     plt.clf()
@@ -184,13 +190,13 @@ def save_lab_gamut(lab_colors: npt.NDArray, file_path: str, file_name: str = "pl
 
 
 def get_random_parameters(
-        limits: list,
-        prec_facs: npt.NDArray,
-        cont_ds: npt.NDArray,
-        samp_cnt: int,
-        min_ppl: int = None,
-        max_t: float = None,
-        hyp_lt: float = None,
+    limits: list,
+    prec_facs: npt.NDArray,
+    cont_ds: npt.NDArray,
+    samp_cnt: int,
+    min_ppl: int = None,
+    max_t: float = None,
+    hyp_lt: float = None,
 ) -> npt.NDArray:
     """
     TODO fill
@@ -266,7 +272,7 @@ def varOr(population, toolbox, lambda_, cxpb, mutpb):
             offspring.append(ind1)
         elif op_choice < cxpb + mutpb:  # Apply mutation
             ind = toolbox.clone(random.choice(population))
-            ind, = toolbox.mutate(ind)
+            (ind,) = toolbox.mutate(ind)
             del ind.fitness.values
             offspring.append(ind)
         else:  # Apply reproduction

@@ -10,27 +10,27 @@ from deap import base, creator, tools, algorithms
 
 class MCNSGA3(NSGA3):
     def __init__(
-            self,
-            problem,
-            num_variables,
-            num_objectives,
-            num_generations,
-            population_size,
-            lower_bound,
-            upper_bound,
-            num_divisions,
-            crossover_probability=0.9,
-            eta_crossover=20.0,
-            eta_mutation=20.0,
-            log=None,
-            nd="log",
-            verbose=False,
-            polar_offset_limit: np.float64 = 2 * np.pi,
-            num_max_sectors: int = 10,
-            front_frequency_threshold: float = 0.1,
-            niche_ratio: float = 0.1,
-            monte_carlo_frequency: int = 5,
-            polar_scale: float = 1000.0,
+        self,
+        problem,
+        num_variables,
+        num_objectives,
+        num_generations,
+        population_size,
+        lower_bound,
+        upper_bound,
+        num_divisions,
+        crossover_probability=0.9,
+        eta_crossover=20.0,
+        eta_mutation=20.0,
+        log=None,
+        nd="log",
+        verbose=False,
+        polar_offset_limit: np.float64 = 2 * np.pi,
+        num_max_sectors: int = 10,
+        front_frequency_threshold: float = 0.1,
+        niche_ratio: float = 0.1,
+        monte_carlo_frequency: int = 5,
+        polar_scale: float = 1000.0,
     ):
         super().__init__(
             problem=problem,
@@ -218,8 +218,8 @@ class MCNSGA3(NSGA3):
         self.monte_carlo_step(individuals)
 
         while (
-                self.compute_front_frequency_diff(individuals, cached_individuals)
-                > self.front_frequency_threshold
+            self.compute_front_frequency_diff(individuals, cached_individuals)
+            > self.front_frequency_threshold
         ):
             cached_individuals = copy.deepcopy(individuals)
             self.monte_carlo_step(individuals)
@@ -237,7 +237,7 @@ class MCNSGA3(NSGA3):
         """
 
         if (self.current_generation % self.monte_carlo_frequency) != 1 and (
-                self.current_generation < self.num_generations
+            self.current_generation < self.num_generations
         ):
             chosen = tools.selNSGA3(
                 individuals,

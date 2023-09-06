@@ -14,26 +14,27 @@ from deap import base, creator, tools, algorithms
 
 class MCNSGA3(NSGA2):
     def __init__(
-            self,
-            problem,
-            num_variables,
-            num_objectives,
-            num_generations,
-            population_size,
-            lower_bound,
-            upper_bound,
-            crossover_probability=0.9,
-            eta_crossover=20.0,
-            eta_mutation=20.0,
-            log=None,
-            nd="log",
-            verbose=False,
-            polar_offset_limit: np.float64 = 2 * np.pi,
-            num_max_sectors: int = 10,
-            front_frequency_threshold: float = 0.1,
-            niche_ratio: float = 0.1,
-            monte_carlo_frequency: int = 5,
-            polar_scale: float = 1000.0,
+        self,
+        problem,
+        num_variables,
+        num_objectives,
+        num_generations,
+        population_size,
+        lower_bound,
+        upper_bound,
+        crossover_probability=0.9,
+        eta_crossover=20.0,
+        eta_mutation=20.0,
+        log=None,
+        nd="log",
+        verbose=False,
+        polar_offset_limit: np.float64 = 2 * np.pi,
+        num_max_sectors: int = 10,
+        num_divisions: int = 8,
+        front_frequency_threshold: float = 0.1,
+        niche_ratio: float = 0.1,
+        monte_carlo_frequency: int = 5,
+        polar_scale: float = 1000.0,
     ):
         super().__init__(
             problem=problem,
@@ -88,14 +89,19 @@ class MCNSGA3(NSGA2):
         self.toolbox.evaluate(population)
 
         logbook = tools.Logbook()
-        logbook.header = ['gen', 'nevals'] + self.stats.fields
+        logbook.header = ["gen", "nevals"] + self.stats.fields
 
         self.stats.compile(population)
 
         for g in range(1, self.num_generations + 1):
             self.toolbox.evaluate(population)
-            offspring = MCNSGA3.varOr(population, self.toolbox, self.population_size, self.crossover_probability,
-                                      1.0 / self.num_variables)
+            offspring = MCNSGA3.varOr(
+                population,
+                self.toolbox,
+                self.population_size,
+                self.crossover_probability,
+                1.0 / self.num_variables,
+            )
 
             # combine offspring and population
             population = population + offspring
@@ -130,14 +136,21 @@ class MCNSGA3(NSGA2):
         max_mc_samples = 1000
         avg_diff = np.inf
 
-        while ((avg_diff > self.front_frequency_threshold) or (mc_samples < min_mc_samples)) and (
-                mc_samples < max_mc_samples):
+        while (
+            (avg_diff > self.front_frequency_threshold) or (mc_samples < min_mc_samples)
+        ) and (mc_samples < max_mc_samples):
             cr = np.random.rand(self.num_objectives - 1)
             ora = np.random.rand(self.num_objectives - 1)
 
-            start_angle = self.polar_offset_limit[0] + ora * (self.polar_offset_limit[1] - self.polar_offset_limit[0])
-            slice_count = self.num_max_sectors[0] + np.round(cr * (self.num_max_sectors[1] - self.num_max_sectors[0]))
-            rad_per_slice = (self.polar_offset_limit[1] - self.polar_offset_limit[0]) / slice_count
+            start_angle = self.polar_offset_limit[0] + ora * (
+                self.polar_offset_limit[1] - self.polar_offset_limit[0]
+            )
+            slice_count = self.num_max_sectors[0] + np.round(
+                cr * (self.num_max_sectors[1] - self.num_max_sectors[0])
+            )
+            rad_per_slice = (
+                self.polar_offset_limit[1] - self.polar_offset_limit[0]
+            ) / slice_count
 
             slices = []
             for a, sc, r in zip(start_angle, slice_count, rad_per_slice):
@@ -147,7 +160,9 @@ class MCNSGA3(NSGA2):
             prev_point_fronts = point_fronts.copy()
             for s in sectors:
                 points_polar = product(*s)
-                poly = [[0.0] * self.num_objectives] + [vector_to_cartesian(slice_radius, p) for p in points_polar]
+                poly = [[0.0] * self.num_objectives] + [
+                    vector_to_cartesian(slice_radius, p) for p in points_polar
+                ]
 
                 point = np.array([ind.fitness.values for ind in individuals])
 
@@ -162,9 +177,13 @@ class MCNSGA3(NSGA2):
                         p_ids = np.array([ind.fitness.idx for ind in fronts[f]])
                         point_fronts[p_ids, f] = point_fronts[p_ids, f] + 1
 
-            new_norm_point_fronts = (point_fronts / np.linalg.norm(point_fronts, ord="fro"))
+            new_norm_point_fronts = point_fronts / np.linalg.norm(
+                point_fronts, ord="fro"
+            )
             if mc_samples > 0:
-                prev_point_fronts = (prev_point_fronts / np.linalg.norm(prev_point_fronts, ord="fro"))
+                prev_point_fronts = prev_point_fronts / np.linalg.norm(
+                    prev_point_fronts, ord="fro"
+                )
             diffs = np.linalg.norm(new_norm_point_fronts - prev_point_fronts, ord="fro")
             avg_diff = diffs
             norm_point_fronts = new_norm_point_fronts

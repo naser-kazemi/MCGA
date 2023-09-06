@@ -27,7 +27,7 @@ def _l_star_obj(l_star_values: npt.NDArray) -> npt.NDArray:
 
 
 def diversity_mult_obj(
-        parameter_values: npt.NDArray, k: int, limits: list[npt.NDArray]
+    parameter_values: npt.NDArray, k: int, limits: list[npt.NDArray]
 ) -> npt.NDArray:
     """
     Computes average distance of each point to its closest k points
@@ -79,12 +79,12 @@ def chromaticity_obj(ab_star_values: npt.NDArray) -> npt.NDArray:
 
 
 def compute_score(
-        points_ds: npt.NDArray,
-        points_ps: npt.NDArray,
-        obj: npt.NDArray,
-        k_n: int,
-        limits_ds: list[npt.NDArray],
-        limits_ps: list[npt.NDArray],
+    points_ds: npt.NDArray,
+    points_ps: npt.NDArray,
+    obj: npt.NDArray,
+    k_n: int,
+    limits_ds: list[npt.NDArray],
+    limits_ps: list[npt.NDArray],
 ):
     assert len(obj) == 5
 

@@ -19,13 +19,11 @@ def plot_lab_gamut(lab_colors: npt.NDArray):
         rgb_color = color.lab2rgb([lab_color[0], lab_color[1], lab_color[2]])
 
         #
-        plt.scatter(lab_color[1],
-                    lab_color[2],
-                    color=np.array(rgb_color))
+        plt.scatter(lab_color[1], lab_color[2], color=np.array(rgb_color))
 
     #
-    plt.xlabel('CIE-a*')
-    plt.ylabel('CIE-b*')
+    plt.xlabel("CIE-a*")
+    plt.ylabel("CIE-b*")
 
     #
     plt.xlim(-60, 60)
@@ -35,7 +33,9 @@ def plot_lab_gamut(lab_colors: npt.NDArray):
     plt.show()
 
 
-def save_lab_gamut(lab_colors: npt.NDArray, file_path: str, file_name: str = "plot", title: str = ""):
+def save_lab_gamut(
+    lab_colors: npt.NDArray, file_path: str, file_name: str = "plot", title: str = ""
+):
     #
     plt.figure()
 
@@ -58,8 +58,8 @@ def save_lab_gamut(lab_colors: npt.NDArray, file_path: str, file_name: str = "pl
     plt.scatter(a_values, b_values, color=colors, s=20)
 
     #
-    plt.xlabel('CIE-a*')
-    plt.ylabel('CIE-b*')
+    plt.xlabel("CIE-a*")
+    plt.ylabel("CIE-b*")
 
     #
     plt.title(title)
@@ -69,7 +69,7 @@ def save_lab_gamut(lab_colors: npt.NDArray, file_path: str, file_name: str = "pl
     plt.ylim(-60, 60)
 
     #
-    plt.savefig('%s/%s.png' % (file_path, file_name))
+    plt.savefig("%s/%s.png" % (file_path, file_name))
 
     #
     plt.clf()

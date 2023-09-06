@@ -15,21 +15,24 @@ class PrinterNSGA2(NSGA2):
         lower_bound = limits_ds[:, 0].tolist()
         upper_bound = limits_ds[:, 1].tolist()
         population_size = exploration_params.pop_size
-        super().__init__(lambda x: np.zeros(num_objectives),
-                         num_variables,
-                         num_objectives,
-                         num_generations=exploration_params.iterations,
-                         population_size=population_size,
-                         lower_bound=lower_bound,
-                         upper_bound=upper_bound,
-                         crossover_probability=exploration_params.crossover_probability,
-                         eta_crossover=exploration_params.eta_crossover,
-                         eta_mutation=exploration_params.eta_mutation,
-                         log=exploration_params.log,
-                         nd=exploration_params.nd,
-                         verbose=exploration_params.verbose,
-                         )
-        self.plot_dir = os.path.join("printer_plots", exploration_params.model, exploration_params.name)
+        super().__init__(
+            lambda x: np.zeros(num_objectives),
+            num_variables,
+            num_objectives,
+            num_generations=exploration_params.iterations,
+            population_size=population_size,
+            lower_bound=lower_bound,
+            upper_bound=upper_bound,
+            crossover_probability=exploration_params.crossover_probability,
+            eta_crossover=exploration_params.eta_crossover,
+            eta_mutation=exploration_params.eta_mutation,
+            log=exploration_params.log,
+            nd=exploration_params.nd,
+            verbose=exploration_params.verbose,
+        )
+        self.plot_dir = os.path.join(
+            "printer_plots", exploration_params.model, exploration_params.name
+        )
         self.all_design_space = None
         self.all_performance_space = None
         self.all_xyz_colors = None
@@ -108,14 +111,17 @@ class PrinterNSGA2(NSGA2):
 
         print("Gamut area of initial collection is %.6f" % p0_area)
         visualization.save_lab_gamut(
-            points_ps_p0, self.plot_dir, "gamut_a_initial", "Initial gamut (area=%.3f)" % p0_area
+            points_ps_p0,
+            self.plot_dir,
+            "gamut_a_initial",
+            "Initial gamut (area=%.3f)" % p0_area,
         )
 
         logbook = tools.Logbook()
-        logbook.header = ['gen', 'nevals'] + self.stats.fields
+        logbook.header = ["gen", "nevals"] + self.stats.fields
 
         record = self.stats.compile(population)
-        del record['pop']
+        del record["pop"]
 
         logbook.record(gen=0, **record)
         if self.verbose:
@@ -123,8 +129,13 @@ class PrinterNSGA2(NSGA2):
 
         for g in range(1, self.num_generations + 1):
             self.evaluate(population)
-            offspring = varOr(population, self.toolbox, self.population_size, self.crossover_probability,
-                              1.0 / self.num_variables)
+            offspring = varOr(
+                population,
+                self.toolbox,
+                self.population_size,
+                self.crossover_probability,
+                1.0 / self.num_variables,
+            )
 
             # combine offspring and population
             population = population + offspring
@@ -143,7 +154,9 @@ class PrinterNSGA2(NSGA2):
             )
             population = chosen
 
-            self.all_performance_space = np.vstack((self.all_performance_space, points_ps))
+            self.all_performance_space = np.vstack(
+                (self.all_performance_space, points_ps)
+            )
             self.all_xyz_colors = np.vstack((self.all_xyz_colors, xyz_colors_qi))
             # print(self.all_performance_space)
 
@@ -152,12 +165,14 @@ class PrinterNSGA2(NSGA2):
             self.areas[g] = current_area
             print("Gamut area of current collection is %.6f" % current_area)
             visualization.save_lab_gamut(
-                self.all_performance_space, self.plot_dir, "gamut_after_iter_%d" % g,
-                                                           "Gamut after iteration %d (area=%.3f)" % (g, current_area)
+                self.all_performance_space,
+                self.plot_dir,
+                "gamut_after_iter_%d" % g,
+                "Gamut after iteration %d (area=%.3f)" % (g, current_area),
             )
 
             record = self.stats.compile(population)
-            del record['pop']
+            del record["pop"]
             logbook.record(gen=g, **record)
             if self.verbose:
                 print(logbook.stream)

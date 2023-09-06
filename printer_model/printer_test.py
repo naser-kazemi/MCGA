@@ -14,7 +14,9 @@ from .printer_nsga3 import PrinterNSGA3
 
 
 def main():
-    plot_dir = os.path.join("printer_plots", exploration_params.model, exploration_params.name)
+    plot_dir = os.path.join(
+        "printer_plots", exploration_params.model, exploration_params.name
+    )
     os.makedirs(plot_dir, exist_ok=True)
     print(plot_dir)
 
@@ -56,7 +58,11 @@ def main():
 
     plt.figure()
     plt.plot(np.arange(model.num_generations + 1), model.areas, label="Exploration")
-    plt.plot(np.arange(model.num_generations + 1), np.repeat(test_area, model.num_generations + 1), label="Baseline")
+    plt.plot(
+        np.arange(model.num_generations + 1),
+        np.repeat(test_area, model.num_generations + 1),
+        label="Baseline",
+    )
     plt.title("Gamut area over time")
     plt.xlabel("Iteration")
     plt.ylabel("Gamut area")

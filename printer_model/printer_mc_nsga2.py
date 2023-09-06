@@ -19,26 +19,29 @@ class PrinterMCNSGA2(NSGA2):
         lower_bound = limits_ds[:, 0].tolist()
         upper_bound = limits_ds[:, 1].tolist()
         population_size = exploration_params.pop_size
-        super().__init__(lambda x: np.zeros(num_objectives),
-                         num_variables,
-                         num_objectives,
-                         num_generations=exploration_params.iterations,
-                         population_size=population_size,
-                         lower_bound=lower_bound,
-                         upper_bound=upper_bound,
-                         crossover_probability=exploration_params.crossover_probability,
-                         eta_crossover=exploration_params.eta_crossover,
-                         eta_mutation=exploration_params.eta_mutation,
-                         log=exploration_params.log,
-                         nd=exploration_params.nd,
-                         verbose=exploration_params.verbose,
-                         )
+        super().__init__(
+            lambda x: np.zeros(num_objectives),
+            num_variables,
+            num_objectives,
+            num_generations=exploration_params.iterations,
+            population_size=population_size,
+            lower_bound=lower_bound,
+            upper_bound=upper_bound,
+            crossover_probability=exploration_params.crossover_probability,
+            eta_crossover=exploration_params.eta_crossover,
+            eta_mutation=exploration_params.eta_mutation,
+            log=exploration_params.log,
+            nd=exploration_params.nd,
+            verbose=exploration_params.verbose,
+        )
         self.num_max_sectors = exploration_params.num_max_sectors
         self.polar_offset_limit = exploration_params.polar_offset_limit
         self.front_frequency_threshold = exploration_params.front_frequency_threshold
         self.scale = 1.0
 
-        self.plot_dir = os.path.join("printer_plots", exploration_params.model, exploration_params.name)
+        self.plot_dir = os.path.join(
+            "printer_plots", exploration_params.model, exploration_params.name
+        )
         self.all_design_space = None
         self.all_performance_space = None
         self.all_xyz_colors = None
@@ -143,14 +146,17 @@ class PrinterMCNSGA2(NSGA2):
 
         print("Gamut area of initial collection is %.6f" % p0_area)
         visualization.save_lab_gamut(
-            points_ps_p0, self.plot_dir, "gamut_a_initial", "Initial gamut (area=%.3f)" % p0_area
+            points_ps_p0,
+            self.plot_dir,
+            "gamut_a_initial",
+            "Initial gamut (area=%.3f)" % p0_area,
         )
 
         logbook = tools.Logbook()
-        logbook.header = ['gen', 'nevals'] + self.stats.fields
+        logbook.header = ["gen", "nevals"] + self.stats.fields
 
         record = self.stats.compile(population)
-        del record['pop']
+        del record["pop"]
 
         logbook.record(gen=0, **record)
         if self.verbose:
@@ -158,8 +164,13 @@ class PrinterMCNSGA2(NSGA2):
 
         for g in range(1, self.num_generations + 1):
             self.evaluate(population)
-            offspring = varOr(population, self.toolbox, self.population_size, self.crossover_probability,
-                              1.0 / self.num_variables)
+            offspring = varOr(
+                population,
+                self.toolbox,
+                self.population_size,
+                self.crossover_probability,
+                1.0 / self.num_variables,
+            )
 
             # combine offspring and population
             chosen = self.select(population + offspring, self.population_size)
@@ -176,7 +187,9 @@ class PrinterMCNSGA2(NSGA2):
             )
             population = chosen
 
-            self.all_performance_space = np.vstack((self.all_performance_space, points_ps))
+            self.all_performance_space = np.vstack(
+                (self.all_performance_space, points_ps)
+            )
             self.all_xyz_colors = np.vstack((self.all_xyz_colors, xyz_colors_qi))
             # print(self.all_performance_space)
 
@@ -185,12 +198,14 @@ class PrinterMCNSGA2(NSGA2):
             self.areas[g] = current_area
             print("Gamut area of current collection is %.6f" % current_area)
             visualization.save_lab_gamut(
-                self.all_performance_space, self.plot_dir, "gamut_after_iter_%d" % g,
-                                                           "Gamut after iteration %d (area=%.3f)" % (g, current_area)
+                self.all_performance_space,
+                self.plot_dir,
+                "gamut_after_iter_%d" % g,
+                "Gamut after iteration %d (area=%.3f)" % (g, current_area),
             )
 
             record = self.stats.compile(population)
-            del record['pop']
+            del record["pop"]
             logbook.record(gen=g, **record)
             if self.verbose:
                 print(logbook.stream)
@@ -221,22 +236,35 @@ class PrinterMCNSGA2(NSGA2):
         max_mc_samples = 1000
         avg_diff = np.inf
 
-        while ((avg_diff > self.front_frequency_threshold) or (mc_samples < min_mc_samples)) and (
-                mc_samples < max_mc_samples):
+        while (
+            (avg_diff > self.front_frequency_threshold) or (mc_samples < min_mc_samples)
+        ) and (mc_samples < max_mc_samples):
             cr = np.random.rand()
             ora = np.random.rand()
 
-            start_angle = self.polar_offset_limit[0] + ora * (self.polar_offset_limit[1] - self.polar_offset_limit[0])
-            slice_count = self.num_max_sectors[0] + round(cr * (self.num_max_sectors[1] - self.num_max_sectors[0]))
-            rad_per_slice = (self.polar_offset_limit[1] - self.polar_offset_limit[0]) / slice_count
+            start_angle = self.polar_offset_limit[0] + ora * (
+                self.polar_offset_limit[1] - self.polar_offset_limit[0]
+            )
+            slice_count = self.num_max_sectors[0] + round(
+                cr * (self.num_max_sectors[1] - self.num_max_sectors[0])
+            )
+            rad_per_slice = (
+                self.polar_offset_limit[1] - self.polar_offset_limit[0]
+            ) / slice_count
             prev_point_fronts = point_fronts.copy()
             for s in range(slice_count):
-                slx, sly = vector_to_cartesian(slice_radius, np.array([start_angle + s * rad_per_slice]))
-                srx, sry = vector_to_cartesian(slice_radius, np.array([start_angle + (s + 1) * rad_per_slice]))
+                slx, sly = vector_to_cartesian(
+                    slice_radius, np.array([start_angle + s * rad_per_slice])
+                )
+                srx, sry = vector_to_cartesian(
+                    slice_radius, np.array([start_angle + (s + 1) * rad_per_slice])
+                )
                 poly = np.array([[0, 0], [slx, sly], [srx, sry], [0, 0]])
 
                 # point = np.column_stack([individuals.fitness.values[:, 1], individuals.fitness.values[:, 2]])
-                point = np.array([ind.fitness.performance_space[1:] for ind in individuals])
+                point = np.array(
+                    [ind.fitness.performance_space[1:] for ind in individuals]
+                )
                 # point = np.array([ind.fitness.values[1:] for ind in individuals])
 
                 in_mask = Delaunay(poly).find_simplex(point)
@@ -252,9 +280,13 @@ class PrinterMCNSGA2(NSGA2):
 
             # new_norm_point_fronts = point_fronts / point_fronts.sum(axis=1, keepdims=True)
             # print(point_fronts)
-            new_norm_point_fronts = (point_fronts / np.linalg.norm(point_fronts, ord="fro"))
+            new_norm_point_fronts = point_fronts / np.linalg.norm(
+                point_fronts, ord="fro"
+            )
             if mc_samples > 0:
-                prev_point_fronts = (prev_point_fronts / np.linalg.norm(prev_point_fronts, ord="fro"))
+                prev_point_fronts = prev_point_fronts / np.linalg.norm(
+                    prev_point_fronts, ord="fro"
+                )
             diffs = np.linalg.norm(new_norm_point_fronts - prev_point_fronts, ord="fro")
             # avg_diff = np.mean(diffs)
             avg_diff = diffs
@@ -272,4 +304,3 @@ class PrinterMCNSGA2(NSGA2):
         scores = scores / np.sum(scores)
 
         return ranks, scores, sorted_ids, point_fronts
-

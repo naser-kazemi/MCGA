@@ -17,7 +17,7 @@ problem_name = "dtlz4"
 pymoo_problem = get_problem(problem_name)
 lower_bound = 0.0
 upper_bound = 1.0
-population_size = 200
+population_size = 300
 num_variables = pymoo_problem.n_var
 num_objectives = pymoo_problem.n_obj
 num_generations = 200
@@ -25,8 +25,8 @@ num_divisions = 8
 eta_crossover = 20
 eta_mutation = 20
 crossover_probability = 0.8
-polar_offset_limit = [0, 2 * np.pi]
-num_max_sectors = [5, 30]
+polar_offset_limit = (0, np.pi / 2)
+num_max_sectors = (30, 60)
 front_frequency_threshold = 0.1
 monte_carlo_frequency = 5
 log = ["hv"]
@@ -215,6 +215,9 @@ def run_nsga(selected_model=None):
     with open(path + f"/hypervolume{expr}.json", "w") as f:
         json.dump(hypervolumes, f)
 
+    # history = np.array(model.logbook.select("pop"))
+    # make_gif_from_history(history, path + f"/generations{expr}.gif")
+
 
 def run():
     # problem_names = ["dtlz1", "dtlz2", "dtlz3", "dtlz4"]
@@ -233,7 +236,7 @@ def run():
         problem = p
         for i in range(1, 1 + 1):
             expr = i
-            run_nsga("nsga2")
+            # run_nsga("nsga2")
             run_nsga("mc_nsga2")
             # run_nsga("nsga3")
             # run_nsga("mc_nsga3")
