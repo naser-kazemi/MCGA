@@ -1,8 +1,8 @@
 problem: dtlz3
-population_size: 500
+population_size: 300
 num_variables: 10
 num_objectives: 3
-num_generations: 300
+num_generations: 200
 eta_crossover: 20
 eta_mutation: 20
 crossover_probability: 0.8
