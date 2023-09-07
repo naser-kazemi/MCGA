@@ -83,48 +83,49 @@ class MCNSGA2(NSGA2):
             "Individual", array.array, typecode="d", fitness=creator.FitnessMin
         )
 
-    def run(self):
-        population = self.toolbox.population(n=self.population_size)
-        self.evaluate(population)
-
-        logbook = tools.Logbook()
-        logbook.header = ["gen", "nevals"] + self.stats.fields
-
-        record = self.stats.compile(population)
-        logbook.record(gen=0, nevals=len(population), **record)
-
-        for g in range(1, self.num_generations + 1):
-            self.evaluate(population)
-            offspring = MCNSGA2.varOr(
-                population,
-                self.toolbox,
-                self.population_size,
-                self.crossover_probability,
-                1.0 / self.num_variables,
-            )
-
-            # combine offspring and population
-            population = population + offspring
-            self.evaluate(population)
-            chosen = self.select(population, self.population_size)
-            population = chosen
-
-            record = self.stats.compile(population)
-            logbook.record(gen=g, nevals=len(population), **record)
-
-            self.print_stats(chosen)
-
-        self.result_pop = population
-        self.logbook = logbook
+    # def run(self):
+    #     population = self.toolbox.population(n=self.population_size)
+    #     self.evaluate(population)
+    #
+    #     logbook = tools.Logbook()
+    #     logbook.header = ["gen", "nevals"] + self.stats.fields
+    #
+    #     record = self.stats.compile(population)
+    #     logbook.record(gen=0, nevals=len(population), **record)
+    #
+    #     for g in range(1, self.num_generations + 1):
+    #         self.evaluate(population)
+    #         offspring = MCNSGA2.varOr(
+    #             population,
+    #             self.toolbox,
+    #             self.population_size,
+    #             self.crossover_probability,
+    #             1.0 / self.num_variables,
+    #         )
+    #
+    #         # combine offspring and population
+    #         population = population + offspring
+    #         self.evaluate(population)
+    #         chosen = self.select(population, self.population_size)
+    #         population = chosen
+    #
+    #         record = self.stats.compile(population)
+    #         logbook.record(gen=g, nevals=len(population), **record)
+    #
+    #         self.print_stats(chosen)
+    #
+    #     self.result_pop = population
+    #     self.logbook = logbook
 
     def select(self, individuals, k):
         ranks, scores, sorted_ids, point_fronts = self.mc_sort(individuals)
         chosen = [individuals[i] for i in sorted_ids[:k]]
+        self.print_stats(chosen)
         return chosen
 
     def mc_sort(self, individuals):
         mc_samples = 0
-        slice_radius = 100
+        slice_radius = 1e10
 
         num_individuals = len(individuals)
         for i in range(num_individuals):
@@ -184,7 +185,7 @@ class MCNSGA2(NSGA2):
 
                 in_mask = Delaunay(poly).find_simplex(point)
                 slice_points_ids = np.where(in_mask != -1)[0]
-                not_slice_points_ids = np.where(in_mask == -1)[0]
+                # not_slice_points_ids = np.where(in_mask == -1)[0]
                 # all_mask[slice_points_ids] = 1
 
                 # ax.scatter(point[slice_points_ids, 0], point[slice_points_ids, 1], point[slice_points_ids, 2], c="r")
@@ -203,6 +204,7 @@ class MCNSGA2(NSGA2):
             # ax.scatter(point[1 - all_mask, 0], point[1 - all_mask, 1],
             #            point[1 - all_mask, 2], c="b")
             # plt.show()
+            # print(point_fronts)
             new_norm_point_fronts = point_fronts / np.linalg.norm(
                 point_fronts, ord="fro"
             )

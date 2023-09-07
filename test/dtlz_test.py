@@ -26,7 +26,7 @@ eta_crossover = 20
 eta_mutation = 20
 crossover_probability = 0.8
 polar_offset_limit = (0, np.pi / 2)
-num_max_sectors = (30, 60)
+num_max_sectors = (60, 100)
 front_frequency_threshold = 0.1
 monte_carlo_frequency = 5
 log = ["hv"]
@@ -220,8 +220,8 @@ def run_nsga(selected_model=None):
 
 
 def run():
-    problem_names = ["dtlz1", "dtlz2", "dtlz3", "dtlz4"]
-    # problem_names = ["dtlz2"]
+    # problem_names = ["dtlz1", "dtlz2", "dtlz3", "dtlz4"]
+    problem_names = ["dtlz1"]
     problems = [
         lambda ind: benchmarks.dtlz1(ind, 3),
         lambda ind: benchmarks.dtlz2(ind, 3),
@@ -236,7 +236,7 @@ def run():
         problem = p
         for i in range(1, 5 + 1):
             expr = i
-            run_nsga("nsga2")
+            # run_nsga("nsga2")
             run_nsga("mc_nsga2")
             # run_nsga("nsga3")
             # run_nsga("mc_nsga3")

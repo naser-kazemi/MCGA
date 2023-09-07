@@ -14,20 +14,20 @@ import copy
 
 class NSGA2:
     def __init__(
-        self,
-        problem,
-        num_variables,
-        num_objectives,
-        num_generations,
-        population_size,
-        lower_bound,
-        upper_bound,
-        crossover_probability=0.9,
-        eta_crossover=20.0,
-        eta_mutation=20.0,
-        log=None,
-        nd="log",
-        verbose=False,
+            self,
+            problem,
+            num_variables,
+            num_objectives,
+            num_generations,
+            population_size,
+            lower_bound,
+            upper_bound,
+            crossover_probability=0.9,
+            eta_crossover=20.0,
+            eta_mutation=20.0,
+            log=None,
+            nd="log",
+            verbose=False,
     ):
         self.num_variables = num_variables
         self.num_objectives = num_objectives
@@ -60,7 +60,7 @@ class NSGA2:
         creator.create(
             "FitnessMin",
             base.Fitness,
-            weights=(1.0,) * self.num_objectives,
+            weights=(-1.0,) * self.num_objectives,
             crowding_dist=0.0,
         )
         creator.create(
@@ -68,15 +68,15 @@ class NSGA2:
         )
 
     def create_model(
-        self,
-        problem,
-        num_variables,
-        population_size,
-        lower_bound,
-        upper_bound,
-        crossover_probability,
-        eta_crossover,
-        eta_mutation,
+            self,
+            problem,
+            num_variables,
+            population_size,
+            lower_bound,
+            upper_bound,
+            crossover_probability,
+            eta_crossover,
+            eta_mutation,
     ):
         self.create_individual_class()
 
@@ -111,22 +111,95 @@ class NSGA2:
 
     def select(self, individuals, k):
         chosen = tools.selNSGA2(individuals, k, nd=self.nd)
+        self.print_stats(chosen=chosen)
         return chosen
 
-    # def run(self):
-    #     pop = self.toolbox.population(n=self.population_size)
-    #     self.result_pop, self.logbook = algorithms.eaMuPlusLambda(
-    #         pop,
-    #         self.toolbox,
-    #         mu=self.population_size,
-    #         lambda_=self.population_size,
-    #         cxpb=self.crossover_probability,
-    #         mutpb=min(1.0 / self.num_variables, 0.2),
-    #         ngen=self.num_generations,
-    #         stats=self.stats,
-    #         verbose=False,
-    #     )
+    def run(self):
+        pop = self.toolbox.population(n=self.population_size)
+        self.result_pop, self.logbook = algorithms.eaMuPlusLambda(
+            pop,
+            self.toolbox,
+            mu=self.population_size,
+            lambda_=self.population_size,
+            cxpb=self.crossover_probability,
+            mutpb=min(1.0 / self.num_variables, 0.2),
+            ngen=self.num_generations,
+            stats=self.stats,
+            verbose=False,
+        )
 
+    # def create_individual_class(self):
+    #     creator.create(
+    #         "FitnessMin",
+    #         base.Fitness,
+    #         weights=(1.0,) * self.num_objectives,
+    #         crowding_dist=0.0,
+    #     )
+    #     creator.create(
+    #         "Individual", array.array, typecode="d", fitness=creator.FitnessMin
+    #     )
+    #
+    # def create_model(
+    #         self,
+    #         problem,
+    #         num_variables,
+    #         population_size,
+    #         lower_bound,
+    #         upper_bound,
+    #         crossover_probability,
+    #         eta_crossover,
+    #         eta_mutation,
+    # ):
+    #     self.create_individual_class()
+    #
+    #     toolbox = base.Toolbox()
+    #     toolbox.register("attr_float", uniform, lower_bound, upper_bound, num_variables)
+    #     toolbox.register(
+    #         "individual", tools.initIterate, creator.Individual, toolbox.attr_float
+    #     )
+    #     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+    #     toolbox.register("evaluate", problem)
+    #     toolbox.register(
+    #         "mate",
+    #         tools.cxSimulatedBinaryBounded,
+    #         low=lower_bound,
+    #         up=upper_bound,
+    #         eta=eta_crossover,
+    #     )
+    #     toolbox.register(
+    #         "mutate",
+    #         tools.mutPolynomialBounded,
+    #         low=lower_bound,
+    #         up=upper_bound,
+    #         eta=eta_mutation,
+    #         indpb=min(1.0 / num_variables, 0.2),
+    #     )
+    #     toolbox.register("select", self.select)
+    #
+    #     self.toolbox = toolbox
+    #
+    #     self.stats = tools.Statistics(lambda ind: ind.fitness.values)
+    #     self.stats.register("pop", copy.deepcopy)
+    #
+    # def select(self, individuals, k):
+    #     chosen = tools.selNSGA2(individuals, k, nd=self.nd)
+    #     self.print_stats(chosen)
+    #     return chosen
+    #
+    # # def run(self):
+    # #     pop = self.toolbox.population(n=self.population_size)
+    # #     self.result_pop, self.logbook = algorithms.eaMuPlusLambda(
+    # #         pop,
+    # #         self.toolbox,
+    # #         mu=self.population_size,
+    # #         lambda_=self.population_size,
+    # #         cxpb=self.crossover_probability,
+    # #         mutpb=min(1.0 / self.num_variables, 0.2),
+    # #         ngen=self.num_generations,
+    # #         stats=self.stats,
+    # #         verbose=False,
+    # #     )
+    #
     def print_stats(self, chosen=None):
         print("\n" + "=" * 80)
         print(f"Generation {self.current_generation}, population size: {len(chosen)}")
@@ -178,7 +251,7 @@ class NSGA2:
             return [hyper_volume_util(pop, ref) for pop in pops]
         else:
             return hyper_volume_util(population, ref)
-
+    #
     @staticmethod
     def varOr(population, toolbox, lambda_, cxpb, mutpb):
         offspring = []
@@ -198,41 +271,55 @@ class NSGA2:
                 offspring.append(random.choice(population))
 
         return offspring
-
+    #
     def evaluate(self, population):
         for ind in population:
             ind.fitness.values = self.problem(ind)
+    #
+    # def run(self):
+    #     pop = self.toolbox.population(n=self.population_size)
+    #     self.result_pop, self.logbook = algorithms.eaMuPlusLambda(
+    #         pop,
+    #         self.toolbox,
+    #         mu=self.population_size,
+    #         lambda_=self.population_size,
+    #         cxpb=self.crossover_probability,
+    #         mutpb=min(1.0 / self.num_variables, 0.2),
+    #         ngen=self.num_generations,
+    #         stats=self.stats,
+    #         verbose=False,
+    #     )
 
-    def run(self):
-        population = self.toolbox.population(n=self.population_size)
-        self.evaluate(population)
-
-        logbook = tools.Logbook()
-        logbook.header = ["gen", "nevals"] + self.stats.fields
-
-        record = self.stats.compile(population)
-        logbook.record(gen=0, nevals=len(population), **record)
-
-        for g in range(1, self.num_generations + 1):
-            self.evaluate(population)
-            offspring = NSGA2.varOr(
-                population,
-                self.toolbox,
-                self.population_size,
-                self.crossover_probability,
-                1.0 / self.num_variables,
-            )
-
-            # combine offspring and population
-            population = population + offspring
-            self.evaluate(population)
-            chosen = self.select(population, self.population_size)
-            population = chosen
-
-            record = self.stats.compile(population)
-            logbook.record(gen=g, nevals=len(population), **record)
-
-            self.print_stats(chosen)
-
-        self.result_pop = population
-        self.logbook = logbook
+    # def run(self):
+    #     population = self.toolbox.population(n=self.population_size)
+    #     self.evaluate(population)
+    #
+    #     logbook = tools.Logbook()
+    #     logbook.header = ["gen", "nevals"] + self.stats.fields
+    #
+    #     record = self.stats.compile(population)
+    #     logbook.record(gen=0, nevals=len(population), **record)
+    #
+    #     for g in range(1, self.num_generations + 1):
+    #         self.evaluate(population)
+    #         offspring = NSGA2.varOr(
+    #             population,
+    #             self.toolbox,
+    #             self.population_size,
+    #             self.crossover_probability,
+    #             1.0 / self.num_variables,
+    #         )
+    #
+    #         # combine offspring and population
+    #         population = population + offspring
+    #         self.evaluate(population)
+    #         chosen = self.select(population, self.population_size)
+    #         population = chosen
+    #
+    #         record = self.stats.compile(population)
+    #         logbook.record(gen=g, nevals=len(population), **record)
+    #
+    #         self.print_stats(chosen)
+    #
+    #     self.result_pop = population
+    #     self.logbook = logbook
