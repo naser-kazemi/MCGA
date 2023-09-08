@@ -239,27 +239,54 @@ class PrinterMCNSGA2(NSGA2):
         while (
             (avg_diff > self.front_frequency_threshold) or (mc_samples < min_mc_samples)
         ) and (mc_samples < max_mc_samples):
-            cr = np.random.rand()
-            ora = np.random.rand()
+            cr = np.random.rand(self.num_objectives - 1)
+            ora = np.random.rand(self.num_objectives - 1)
 
-            start_angle = self.polar_offset_limit[0] + ora * (
-                self.polar_offset_limit[1] - self.polar_offset_limit[0]
-            )
-            slice_count = self.num_max_sectors[0] + round(
+            # cr = np.random.rand()
+            # ora = np.random.rand()
+
+            # start_angle = self.polar_offset_limit[0] + ora * (self.polar_offset_limit[1] - self.polar_offset_limit[0])
+            start_angle = self.polar_offset_limit[0] * np.ones(self.num_objectives - 1)
+            end_angle = self.polar_offset_limit[1] * np.ones(self.num_objectives - 1)
+            slice_count = self.num_max_sectors[0] + np.round(
                 cr * (self.num_max_sectors[1] - self.num_max_sectors[0])
             )
-            rad_per_slice = (
-                self.polar_offset_limit[1] - self.polar_offset_limit[0]
-            ) / slice_count
+            # slice_count = self.num_max_sectors[0] + round(
+            #     cr * (self.num_max_sectors[1] - self.num_max_sectors[0])
+            # )
+            # rad_per_slice = (
+            #                         self.polar_offset_limit[1] - self.polar_offset_limit[0]
+            #                 ) / slice_count
+
             prev_point_fronts = point_fronts.copy()
-            for s in range(slice_count):
-                slx, sly = vector_to_cartesian(
-                    slice_radius, np.array([start_angle + s * rad_per_slice])
+
+            slices = []
+            for a, b, sc in zip(start_angle, end_angle, slice_count):
+                # slices.append([(a + i * r, a + (i + 1) * r) for i in range(int(sc))])
+                slice_points = np.linspace(a, b, int(sc) + 1)
+                slices.append([(slice_points[i], slice_points[i + 1]) for i in range(int(sc))])
+
+            # print(slices)
+
+            # all_mask = np.zeros(num_individuals, dtype=np.int32)
+            sectors = list(product(*slices))
+            # fig = plt.figure(figsize=(7, 7))
+            # ax = fig.add_subplot(111, projection='3d')
+            # point = np.array([ind.fitness.values for ind in individuals])
+            for s in sectors:
+                points_polar = list(product(*s))
+                poly = np.array(
+                    [[0.0] * self.num_objectives]
+                    + [vector_to_cartesian(slice_radius, p) for p in points_polar]
                 )
-                srx, sry = vector_to_cartesian(
-                    slice_radius, np.array([start_angle + (s + 1) * rad_per_slice])
-                )
-                poly = np.array([[0, 0], [slx, sly], [srx, sry], [0, 0]])
+                # for s in range(slice_count):
+                #     slx, sly = vector_to_cartesian(
+                #         slice_radius, np.array([start_angle + s * rad_per_slice])
+                #     )
+                #     srx, sry = vector_to_cartesian(
+                #         slice_radius, np.array([start_angle + (s + 1) * rad_per_slice])
+                #     )
+                #     poly = np.array([[0, 0], [slx, sly], [srx, sry], [0, 0]])
 
                 # point = np.column_stack([individuals.fitness.values[:, 1], individuals.fitness.values[:, 2]])
                 point = np.array(
