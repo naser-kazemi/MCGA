@@ -144,12 +144,18 @@ class MCNSGA2(NSGA2):
             cr = np.random.rand(self.num_objectives - 1)
             ora = np.random.rand(self.num_objectives - 1)
 
+            # cr = np.random.rand()
+            # ora = np.random.rand()
+
             # start_angle = self.polar_offset_limit[0] + ora * (self.polar_offset_limit[1] - self.polar_offset_limit[0])
             start_angle = self.polar_offset_limit[0] * np.ones(self.num_objectives - 1)
             end_angle = self.polar_offset_limit[1] * np.ones(self.num_objectives - 1)
             slice_count = self.num_max_sectors[0] + np.round(
                 cr * (self.num_max_sectors[1] - self.num_max_sectors[0])
             )
+            # slice_count = self.num_max_sectors[0] + round(
+            #     cr * (self.num_max_sectors[1] - self.num_max_sectors[0])
+            # )
             # rad_per_slice = (
             #                         self.polar_offset_limit[1] - self.polar_offset_limit[0]
             #                 ) / slice_count
@@ -175,6 +181,14 @@ class MCNSGA2(NSGA2):
                     [[0.0] * self.num_objectives]
                     + [vector_to_cartesian(slice_radius, p) for p in points_polar]
                 )
+            # for s in range(slice_count):
+            #     slx, sly = vector_to_cartesian(
+            #         slice_radius, np.array([start_angle + s * rad_per_slice])
+            #     )
+            #     srx, sry = vector_to_cartesian(
+            #         slice_radius, np.array([start_angle + (s + 1) * rad_per_slice])
+            #     )
+            #     poly = np.array([[0, 0], [slx, sly], [srx, sry], [0, 0]])
 
                 # print(points_polar)
                 # print(poly)

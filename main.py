@@ -12,15 +12,15 @@ from printer_model import printer_test
 
 if __name__ == "__main__":
     # zdt_test.run()
-    # dtlz_test.run()
+    dtlz_test.run()
     # nsag3_test.run()
     # nsag3_test.main()
     # cpft_test.run()
     # cpft_test.main()
     # cpft_moead_test.run()
     # f_test.run()
-    re_test.run()
+    # re_test.run()
     # re_test.main()
-    oka_test.run()
+    # oka_test.run()
     # printer_test.main()
     # plot_polar.run()

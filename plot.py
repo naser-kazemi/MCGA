@@ -81,7 +81,7 @@ def get_mean_population(test_suit, test, model_name):
 
 def plot_populations(test_suite, test, model_name, num_objectives):
     fig = plt.figure(figsize=(7, 7))
-    if num_objectives == 3:
+    if num_objectives >= 3:
         ax = fig.add_subplot(111, projection="3d")
         mean_population = get_mean_population(test_suite, test, model_name)
         ax.scatter(
@@ -111,9 +111,9 @@ def plot_populations(test_suite, test, model_name, num_objectives):
 
 
 def main():
-    test_suite = "dtlz"
-    test = "dtlz1"
-    num_objectives = 3
+    test_suite = "zdt"
+    test = "zdt3"
+    num_objectives = 5
     # model_names = ["nsga3", "mc_nsga3"]
     # model_names = ["nsga2", "mc_nsga2", "nsga3", "mc_nsga3"]
     model_names = ["nsga2", "mc_nsga2"]
@@ -132,7 +132,7 @@ def main():
                 label="Optimal Pareto Front",
                 s=5,
             )
-        elif test_suite == "dtlz":
+        elif test_suite == "dtlz3d":
             problem = get_problem(test)
             ax.scatter(
                 problem.pareto_front()[:, 0],

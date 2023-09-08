@@ -19,14 +19,14 @@ lower_bound = 0.0
 upper_bound = 1.0
 population_size = 300
 num_variables = pymoo_problem.n_var
-num_objectives = pymoo_problem.n_obj
+num_objectives = 5
 num_generations = 200
 num_divisions = 8
 eta_crossover = 20
 eta_mutation = 20
 crossover_probability = 0.8
 polar_offset_limit = (0, np.pi / 2)
-num_max_sectors = (60, 100)
+num_max_sectors = (3, 7)
 front_frequency_threshold = 0.1
 monte_carlo_frequency = 5
 log = ["hv"]
@@ -171,7 +171,7 @@ def run_nsga(selected_model=None):
     ax.set_zlabel("$f_3$", fontsize=15)
 
     # hv_ref should be the utopia point
-    hv_ref_point = np.max(pymoo_problem.pareto_front(), axis=0) + 100
+    hv_ref_point = np.ones(num_objectives) * 100
     # hv_ref_point = np.array([5, 5, 5])
     # hv_ref_point = np.array([2, 2, 2])
 
@@ -187,7 +187,7 @@ def run_nsga(selected_model=None):
     # plt.savefig("images/dtlz1_nsga3_hypervolume.png", dpi=300)
     # plt.show()
 
-    path = f"result/dtlz/{problem_name}/{model_name}"
+    path = f"result/dtlz5d/{problem_name}/{model_name}"
 
     with open(path + "/experiment.txt", "w") as f:
         f.write(f"problem: {problem_name}\n")
@@ -220,13 +220,13 @@ def run_nsga(selected_model=None):
 
 
 def run():
-    problem_names = ["dtlz2", "dtlz3", "dtlz4"]
-    # problem_names = ["dtlz1"]
+    # problem_names = ["dtlz2", "dtlz3", "dtlz4"]
+    problem_names = ["dtlz1"]
     problems = [
-        lambda ind: benchmarks.dtlz1(ind, 3),
-        lambda ind: benchmarks.dtlz2(ind, 3),
-        lambda ind: benchmarks.dtlz3(ind, 3),
-        lambda ind: benchmarks.dtlz4(ind, 3, 100),
+        lambda ind: benchmarks.dtlz1(ind, 5),
+        # lambda ind: benchmarks.dtlz2(ind, 5),
+        # lambda ind: benchmarks.dtlz3(ind, 5),
+        # lambda ind: benchmarks.dtlz4(ind, 5, 100),
     ]
     global problem_name
     global problem

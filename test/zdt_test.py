@@ -24,9 +24,9 @@ num_generations = 300
 eta_crossover = 20
 eta_mutation = 20
 crossover_probability = 0.8
-polar_offset_limit = (0, np.pi / 2)
-num_max_sectors = (60, 100)
-front_frequency_threshold = 0.1
+polar_offset_limit = (0, 2 * np.pi)
+num_max_sectors = (5, 30)
+front_frequency_threshold = 0.01
 num_divisions = 12
 monte_carlo_frequency = 2
 log = ["hv"]
@@ -214,11 +214,12 @@ def run_nsga(selected_model=None):
 
 
 def run():
-    problem_names = ["zdt1", "zdt2", "zdt3", "zdt4"]
+    # problem_names = ["zdt1", "zdt2", "zdt3", "zdt4"]
+    problem_names = ["zdt4"]
     problems = [
-        benchmarks.zdt1,
-        benchmarks.zdt2,
-        benchmarks.zdt3,
+        # benchmarks.zdt1,
+        # benchmarks.zdt2,
+        # benchmarks.zdt3,
         benchmarks.zdt4,
     ]
     global problem_name
