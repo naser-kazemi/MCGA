@@ -10,6 +10,6 @@ lower_bound: 0.0
 upper_bound: 1.0
 hv_ref_point: [101. 101. 101.]
 polar_offset_limit: (0, 1.5707963267948966)
-num_max_sectors: (30, 60)
+num_max_sectors: (60, 100)
 front_frequency_threshold: 0.1
 monte_carlo_frequency: 5

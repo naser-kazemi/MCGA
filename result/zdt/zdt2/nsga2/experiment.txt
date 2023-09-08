@@ -2,7 +2,7 @@ problem: zdt2
 population_size: 100
 num_variables: 30
 num_objectives: 2
-num_generations: 2000
+num_generations: 300
 eta_crossover: 20
 eta_mutation: 20
 crossover_probability: 0.8

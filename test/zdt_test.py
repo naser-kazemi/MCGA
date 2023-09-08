@@ -20,14 +20,14 @@ upper_bound = 1.0
 population_size = 100
 num_variables = pymoo_problem.n_var
 num_objectives = pymoo_problem.n_obj
-num_generations = 2000
+num_generations = 300
 eta_crossover = 20
 eta_mutation = 20
 crossover_probability = 0.8
-polar_offset_limit = np.pi
-num_max_sectors = 30
+polar_offset_limit = (0, np.pi / 2)
+num_max_sectors = (60, 100)
+front_frequency_threshold = 0.1
 num_divisions = 12
-front_frequency_threshold = 0.01
 monte_carlo_frequency = 2
 log = ["hv"]
 verbose = True
@@ -235,10 +235,10 @@ def run():
         num_variables = pymoo_problem.n_var
         for i in range(1, 5 + 1):
             expr = i
-            # run_nsga("nsga2")
-            # run_nsga("mc_nsga2")
-            run_nsga("nsga3")
-            run_nsga("mc_nsga3")
+            run_nsga("nsga2")
+            run_nsga("mc_nsga2")
+            # run_nsga("nsga3")
+            # run_nsga("mc_nsga3")
 
 
 if __name__ == "__main__":

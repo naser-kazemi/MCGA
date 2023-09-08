@@ -220,8 +220,8 @@ def run_nsga(selected_model=None):
 
 
 def run():
-    # problem_names = ["dtlz1", "dtlz2", "dtlz3", "dtlz4"]
-    problem_names = ["dtlz1"]
+    problem_names = ["dtlz2", "dtlz3", "dtlz4"]
+    # problem_names = ["dtlz1"]
     problems = [
         lambda ind: benchmarks.dtlz1(ind, 3),
         lambda ind: benchmarks.dtlz2(ind, 3),

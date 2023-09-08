@@ -121,8 +121,8 @@ sin, cos = np.sin(np.pi / 12), np.cos(np.pi / 12)
 lower_bound = [-np.pi, -5.0, -5.0]  # OKA2
 upper_bound = [np.pi, 5.0, 5.0]  # OKA2
 num_divisions = 8
-polar_offset_limit = np.pi
-num_max_sectors = 30
+polar_offset_limit = (0, np.pi / 2)
+num_max_sectors = (60, 100)
 front_frequency_threshold = 0.1
 niche_ratio = 0.15
 monte_carlo_frequency = 2
@@ -421,8 +421,8 @@ def run():
         num_variables = pymoo_problem.n_var
         for i in range(1, 5 + 1):
             expr = i
-            run_nsga("nsga3")
-            run_nsga("mc_nsga3")
+            run_nsga("nsga2")
+            run_nsga("mc_nsga2")
     # run_nsga("nsga3")
     # run_nsga("mc_nsga3")
 
