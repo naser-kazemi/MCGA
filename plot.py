@@ -111,8 +111,8 @@ def plot_populations(test_suite, test, model_name, num_objectives):
 
 
 def main():
-    test_suite = "zdt"
-    test = "zdt3"
+    test_suite = "dtlz5d"
+    test = "dtlz1"
     num_objectives = 5
     # model_names = ["nsga3", "mc_nsga3"]
     # model_names = ["nsga2", "mc_nsga2", "nsga3", "mc_nsga3"]
